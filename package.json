@@ -1,0 +1,12 @@
+{
+  "name": "fitbodypro",
+  "version": "1.0.0",
+  "description": "FitBodyPro Landing Page",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
