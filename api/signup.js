@@ -4,11 +4,24 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const { fullName, phone, email, password } = req.body
+        const { fullName, phone, email, password, plan, paymentStatus, paymentProvider, paymentId } = req.body
 
         if (!fullName || !phone || !email || !password) {
             return res.status(400).json({ message: 'Preencha todos os campos' })
         }
+
+        const body = {
+            fullName,
+            phone,
+            email,
+            password,
+            source: 'landing',
+            plan: plan || 'free'
+        }
+
+        if (paymentStatus) body.paymentStatus = paymentStatus
+        if (paymentProvider) body.paymentProvider = paymentProvider
+        if (paymentId) body.paymentId = paymentId
 
         const response = await fetch('https://cdtouwfxwuhnlzqhcagy.supabase.co/functions/v1/create-personal-account', {
             method: 'POST',
@@ -17,13 +30,7 @@ module.exports = async function handler(req, res) {
                 'apikey': 'sb_publishable_lq2T16dGip4Fvacb3uVFXQ_D6C-sJBa',
                 'Authorization': `Bearer ${process.env.LANDING_SIGNUP_TOKEN}`
             },
-            body: JSON.stringify({
-                fullName,
-                phone,
-                email,
-                password,
-                source: 'landing'
-            })
+            body: JSON.stringify(body)
         })
 
         const data = await response.json()
