@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Aprovado! - Fitborypro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .success-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+            padding: 100px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-content {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+        .success-title {
+            font-size: 2rem;
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .success-desc {
+            color: #555;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #00cc6a;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: #1a1a2e;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-family: 'Poppins', sans-serif;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
+        }
+        .message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <header class="header" style="position: absolute; top: 0; left: 0; right: 0;">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html"><img src="logo.png" alt="Fitborypro" class="logo-img"></a>
+            </div>
+            <nav class="nav">
+                <a href="quem-usa.html" class="nav-link">Sobre</a>
+                <a href="planos.html" class="nav-link">Planos</a>
+                <a href="contato.html" class="nav-link">Contato</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="success-container">
+        <div class="success-content">
+            <div class="success-icon">🎉</div>
+            <h1 class="success-title">Pagamento Aprovado!</h1>
+            <p class="success-desc">Agora crie sua conta para começar a usar o Fitborypro!</p>
+            <div id="messageArea"></div>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="fullName">Nome completo</label>
+                    <input type="text" id="fullName" name="fullName" required placeholder="Seu nome completo">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefone</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="(11) 99999-9999">
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required placeholder="Sua senha">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar senha</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirme sua senha">
+                </div>
+                <button type="submit" class="btn-submit">Criar Conta</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get plan and payment ID from URL query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const plan = urlParams.get('plan') || 'starter';
+        const paymentId = urlParams.get('payment_id');
+
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageArea = document.getElementById('messageArea');
+            
+            messageArea.innerHTML = '';
+
+            if (password !== confirmPassword) {
+                messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fullName, 
+                        phone, 
+                        email, 
+                        password, 
+                        plan,
+                        paymentStatus: 'approved',
+                        paymentProvider: 'mercadopago',
+                        paymentId: paymentId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    messageArea.innerHTML = '<div class="message success">' + data.message + '</div>';
+                    setTimeout(() => {
+                        window.location.href = data.loginUrl;
+                    }, 2000);
+                } else {
+                    messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
+                }
+            } catch (error) {
+                messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
+            }
+        });
+    </script>
+</body>
+</html>

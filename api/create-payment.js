@@ -17,10 +17,10 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const { fullName, phone, email, password, plan } = req.body
+        const { plan } = req.body
 
-        if (!fullName || !phone || !email || !password || !plan) {
-            return res.status(400).json({ message: 'Preencha todos os campos' })
+        if (!plan) {
+            return res.status(400).json({ message: 'Plano obrigatório' })
         }
 
         const planDetails = {
@@ -58,26 +58,13 @@ module.exports = async function handler(req, res) {
                         unit_price: selectedPlan.price
                     }
                 ],
-                payer: {
-                    name: fullName,
-                    email: email,
-                    phone: {
-                        number: phone.replace(/\D/g, '')
-                    }
-                },
                 back_urls: {
-                    success: 'https://fit-body-pro-one.vercel.app/',
+                    success: `https://fit-body-pro-one.vercel.app/success.html?plan=${plan}`,
                     failure: 'https://fit-body-pro-one.vercel.app/planos.html',
-                    pending: 'https://fit-body-pro-one.vercel.app/'
+                    pending: 'https://fit-body-pro-one.vercel.app/planos.html'
                 },
                 auto_return: 'approved',
-                metadata: {
-                    fullName,
-                    phone,
-                    email,
-                    password,
-                    plan
-                }
+                metadata: { plan }
             })
         })
 
