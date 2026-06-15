@@ -321,6 +321,58 @@ body {
     box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
 }
 
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.feature-card:hover {
+    border-color: #00cc6a;
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.feature-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+}
+
+.feature-desc {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+.download-section {
+    text-align: center;
+    padding: 60px 40px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.download-text {
+    font-size: 1.2rem;
+    color: #666;
+}
+
 .footer {
     background: #1a1a2e;
     padding: 60px 0 30px;
@@ -418,5 +470,9 @@ body {
     
     .plan-card.featured:hover {
         transform: translateY(-10px);
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
     }
 }
