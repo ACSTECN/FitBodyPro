@@ -174,7 +174,7 @@ body {
     box-shadow: 0 8px 25px rgba(0, 204, 106, 0.4);
 }
 
-.experiences-section {
+.plans-section {
     padding: 100px 0;
     background: white;
 }
@@ -188,41 +188,137 @@ body {
     line-height: 1.2;
 }
 
-.experiences-grid {
+.plans-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 40px;
+    align-items: start;
 }
 
-.experience-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    padding: 40px;
+.plan-card {
+    background: white;
+    border: 2px solid #e0e0e0;
     border-radius: 20px;
-    color: white;
+    padding: 40px 30px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+}
+
+.plan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.plan-card.featured {
+    border-color: #00cc6a;
+    transform: scale(1.05);
+    box-shadow: 0 10px 40px rgba(0, 204, 106, 0.3);
+}
+
+.plan-card.featured:hover {
+    transform: scale(1.05) translateY(-10px);
+    box-shadow: 0 25px 60px rgba(0, 204, 106, 0.4);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    color: #1a1a2e;
+    padding: 8px 25px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.plan-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+.plan-price {
+    margin-bottom: 20px;
+}
+
+.plan-price .currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.plan-price .value {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #1a1a2e;
+}
+
+.plan-price .period {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.plan-description {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 30px;
+    font-weight: 500;
+}
+
+.plan-features {
+    list-style: none;
+    text-align: left;
+    margin-bottom: 40px;
+}
+
+.plan-features li {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 1rem;
+    color: #555;
+}
+
+.plan-features li:last-child {
+    border-bottom: none;
+}
+
+.plan-btn {
+    display: inline-block;
+    width: 100%;
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.experience-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 50px rgba(26, 26, 46, 0.4);
+.plan-btn.free {
+    background: #f0f0f0;
+    color: #333;
 }
 
-.experience-text {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    margin-bottom: 25px;
+.plan-btn.free:hover {
+    background: #e0e0e0;
+    transform: translateY(-3px);
 }
 
-.experience-name {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 5px;
+.plan-btn.starter,
+.plan-btn.premium {
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    color: #1a1a2e;
 }
 
-.experience-role {
-    font-size: 1rem;
-    opacity: 0.9;
-    font-weight: 500;
+.plan-btn.starter:hover,
+.plan-btn.premium:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
 }
 
 .footer {
@@ -312,7 +408,15 @@ body {
         font-size: 2rem;
     }
     
-    .experiences-grid {
+    .plans-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .plan-card.featured {
+        transform: scale(1);
+    }
+    
+    .plan-card.featured:hover {
+        transform: translateY(-10px);
     }
 }
