@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
             headers: {
                 'Content-Type': 'application/json',
                 'apikey': 'sb_publishable_lq2T16dGip4Fvacb3uVFXQ_D6C-sJBa',
-                'Authorization': `Bearer ${process.env.LANDING_SIGNUP_TOKEN}`
+                'Authorization': 'Bearer 028f76b096714e85a6ca43ca7fded6a0062b7df6d1c146ccb4cf289d66eb6d53'
             },
             body: JSON.stringify(body)
         })
