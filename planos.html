@@ -97,6 +97,66 @@
             background: #f8d7da;
             color: #721c24;
         }
+        .payment-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .payment-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .payment-option.active {
+            border-color: #00cc6a;
+            background: rgba(0, 204, 106, 0.05);
+        }
+        .pix-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .qr-code-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        .pix-code {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .copy-btn {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 20px;
+        }
+        .price-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00cc6a;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -147,7 +207,7 @@
                         <li>✅ Até 10 alunos cadastrados</li>
                         <li>✅ Relatórios avançados</li>
                     </ul>
-                    <button class="plan-btn starter" onclick="startPayment('starter')">Adquirir</button>
+                    <button class="plan-btn starter" onclick="openPaymentModal('starter')">Adquirir</button>
                 </div>
 
                 <div class="plan-card">
@@ -164,16 +224,17 @@
                         <li>✅ Relatórios avançados</li>
                         <li>✅ Personalização completa</li>
                     </ul>
-                    <button class="plan-btn premium" onclick="startPayment('premium')">Adquirir</button>
+                    <button class="plan-btn premium" onclick="openPaymentModal('premium')">Adquirir</button>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Modal for Free Plan Signup -->
     <div id="signupModal" class="modal">
         <div class="modal-content">
             <button class="btn-close" onclick="closeModal()">Fechar</button>
-            <h2 id="modalTitle">Criar Conta</h2>
+            <h2 id="modalTitle">Criar Conta Free</h2>
             <div id="messageArea"></div>
             <form id="signupForm">
                 <div class="form-group">
@@ -201,6 +262,35 @@
         </div>
     </div>
 
+    <!-- Modal for Payment -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <button class="btn-close" onclick="closePaymentModal()">Fechar</button>
+            <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
+            <div class="price-display" id="priceDisplay"></div>
+            <div class="payment-options">
+                <div class="payment-option active" onclick="selectPayment('pix')" id="pixOption">
+                    📱 Pix
+                </div>
+                <div class="payment-option" onclick="selectPayment('mp')" id="mpOption">
+                    💳 Mercado Pago
+                </div>
+            </div>
+            <div id="pixSection" class="pix-section">
+                <div class="qr-code-container" id="qrCodeContainer">
+                    📷 Gerando QR Code...
+                </div>
+                <div class="pix-code" id="pixCode">Carregando código Pix...</div>
+                <button class="copy-btn" onclick="copyPixCode()">📋 Copiar Código Pix</button>
+                <p>Após o pagamento, você será redirecionado para criar sua conta!</p>
+            </div>
+            <div id="mpSection" style="display: none; text-align: center;">
+                <p>Você será redirecionado para o Mercado Pago para completar o pagamento.</p>
+                <button class="btn-submit" onclick="goToMercadoPago()">Ir para Mercado Pago</button>
+            </div>
+        </div>
+    </div>
+
     <footer id="contato" class="footer">
         <div class="container">
             <div class="footer-content">
@@ -219,6 +309,10 @@
     </footer>
 
     <script>
+        let selectedPlan = null;
+        let selectedPaymentMethod = 'pix';
+        let paymentData = null;
+
         function openModal() {
             document.getElementById('modalTitle').textContent = 'Criar Conta Free';
             document.getElementById('submitBtn').textContent = 'Criar Conta';
@@ -231,24 +325,123 @@
             document.getElementById('messageArea').innerHTML = '';
         }
 
-        async function startPayment(plan) {
+        async function openPaymentModal(plan) {
+            selectedPlan = plan;
+            const prices = {
+                starter: 'R$ 1,00',
+                premium: 'R$ 1,20'
+            };
+            const titles = {
+                starter: 'Fitbory Starter',
+                premium: 'Fit Bory Premium'
+            };
+            document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
+            document.getElementById('priceDisplay').textContent = prices[plan];
+            
+            await createPaymentIntent(plan);
+            
+            document.getElementById('paymentModal').classList.add('show');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('show');
+        }
+
+        function selectPayment(method) {
+            selectedPaymentMethod = method;
+            document.getElementById('pixOption').classList.remove('active');
+            document.getElementById('mpOption').classList.remove('active');
+            
+            if (method === 'pix') {
+                document.getElementById('pixOption').classList.add('active');
+                document.getElementById('pixSection').style.display = 'block';
+                document.getElementById('mpSection').style.display = 'none';
+            } else {
+                document.getElementById('mpOption').classList.add('active');
+                document.getElementById('pixSection').style.display = 'none';
+                document.getElementById('mpSection').style.display = 'block';
+            }
+        }
+
+        async function createPaymentIntent(plan) {
             try {
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plan })
+                    body: JSON.stringify({ plan, method: 'pix' })
                 });
-
+                
                 const data = await response.json();
-
-                if (response.ok && data.success) {
-                    // Redirect to Mercado Pago
-                    window.location.href = data.init_point || data.sandbox_init_point;
-                } else {
-                    alert('Ocorreu um erro ao criar o pagamento! Tente novamente.');
+                
+                if (data.success) {
+                    paymentData = data;
+                    if (data.pixCode) {
+                        document.getElementById('pixCode').textContent = data.pixCode;
+                        if (data.qrCode) {
+                            document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.qrCode}" alt="QR Code Pix" style="width:100%; height:100%; border-radius: 8px;">`;
+                        } else {
+                            document.getElementById('qrCodeContainer').innerHTML = '📱 Use o código abaixo';
+                        }
+                        startPaymentPolling(data.paymentId);
+                    } else {
+                        document.getElementById('pixSection').innerHTML = `
+                            <p>Redirecionando para o Mercado Pago...</p>
+                        `;
+                        setTimeout(() => {
+                            if (data.init_point) window.location.href = data.init_point;
+                        }, 1000);
+                    }
                 }
             } catch (error) {
-                alert('Erro de conexão. Tente novamente!');
+                console.error(error);
+            }
+        }
+
+        async function startPaymentPolling(paymentId) {
+            // Poll for payment status every 3 seconds
+            const pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/check-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.approved) {
+                        clearInterval(pollingInterval);
+                        closePaymentModal();
+                        window.location.href = `/success.html?plan=${selectedPlan}&paymentId=${paymentId}`;
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }, 3000);
+        }
+
+        function copyPixCode() {
+            const code = document.getElementById('pixCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Código Pix copiado!');
+            });
+        }
+
+        async function goToMercadoPago() {
+            try {
+                const response = await fetch('/api/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: selectedPlan, method: 'mp' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.init_point) {
+                    window.location.href = data.init_point;
+                }
+            } catch (error) {
+                console.error(error);
             }
         }
 
