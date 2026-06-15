@@ -147,7 +147,7 @@
                         <li>✅ Até 10 alunos cadastrados</li>
                         <li>✅ Relatórios avançados</li>
                     </ul>
-                    <a href="https://www.mercadopago.com.br/" class="plan-btn starter">Adquirir</a>
+                    <button class="plan-btn starter" onclick="openModal('starter')">Adquirir</button>
                 </div>
 
                 <div class="plan-card">
@@ -164,7 +164,7 @@
                         <li>✅ Relatórios avançados</li>
                         <li>✅ Personalização completa</li>
                     </ul>
-                    <a href="https://www.mercadopago.com.br/" class="plan-btn premium">Adquirir</a>
+                    <button class="plan-btn premium" onclick="openModal('premium')">Adquirir</button>
                 </div>
             </div>
         </div>
@@ -173,7 +173,7 @@
     <div id="signupModal" class="modal">
         <div class="modal-content">
             <button class="btn-close" onclick="closeModal()">Fechar</button>
-            <h2>Criar Conta Free</h2>
+            <h2 id="modalTitle">Criar Conta</h2>
             <div id="messageArea"></div>
             <form id="signupForm">
                 <div class="form-group">
@@ -196,7 +196,7 @@
                     <label for="confirmPassword">Confirmar senha</label>
                     <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirme sua senha">
                 </div>
-                <button type="submit" class="btn-submit">Criar Conta</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Criar Conta</button>
             </form>
         </div>
     </div>
@@ -219,7 +219,24 @@
     </footer>
 
     <script>
-        function openModal() {
+        let currentPlan = 'free';
+        
+        function openModal(plan = 'free') {
+            currentPlan = plan;
+            const modalTitle = document.getElementById('modalTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (plan === 'free') {
+                modalTitle.textContent = 'Criar Conta Free';
+                submitBtn.textContent = 'Criar Conta';
+            } else if (plan === 'starter') {
+                modalTitle.textContent = 'Criar Conta Starter - R$ 1,00';
+                submitBtn.textContent = 'Ir para pagamento';
+            } else if (plan === 'premium') {
+                modalTitle.textContent = 'Criar Conta Premium - R$ 1,20';
+                submitBtn.textContent = 'Ir para pagamento';
+            }
+            
             document.getElementById('signupModal').classList.add('show');
         }
         
@@ -247,21 +264,40 @@
             }
 
             try {
-                const response = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fullName, phone, email, password })
-                });
+                if (currentPlan === 'free') {
+                    // Free plan - create account directly
+                    const response = await fetch('/api/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fullName, phone, email, password, plan: 'free' })
+                    });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (response.ok && data.success) {
-                    messageArea.innerHTML = '<div class="message success">' + data.message + '</div>';
-                    setTimeout(() => {
-                        window.location.href = data.loginUrl;
-                    }, 2000);
+                    if (response.ok && data.success) {
+                        messageArea.innerHTML = '<div class="message success">' + data.message + '</div>';
+                        setTimeout(() => {
+                            window.location.href = data.loginUrl;
+                        }, 2000);
+                    } else {
+                        messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
+                    }
                 } else {
-                    messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
+                    // Paid plan - create payment preference
+                    const response = await fetch('/api/create-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fullName, phone, email, password, plan: currentPlan })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // Redirect to Mercado Pago
+                        window.location.href = data.init_point || data.sandbox_init_point;
+                    } else {
+                        messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro ao criar o pagamento!') + '</div>';
+                    }
                 }
             } catch (error) {
                 messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
