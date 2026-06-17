@@ -97,12 +97,77 @@
             background: #f8d7da;
             color: #721c24;
         }
+        .payment-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .payment-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .payment-option.active {
+            border-color: #00cc6a;
+            background: rgba(0, 204, 106, 0.05);
+        }
+        .pix-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .qr-code-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #666;
+            overflow: hidden;
+        }
+        .qr-code-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .pix-code {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin-bottom: 10px;
+            text-align: left;
+            color: #333;
+        }
+        .copy-btn {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 20px;
+        }
         .price-display {
             text-align: center;
             font-size: 2rem;
             font-weight: 700;
             color: #00cc6a;
             margin-bottom: 20px;
+        }
+        .loading-text {
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -213,11 +278,27 @@
     <div id="paymentModal" class="modal">
         <div class="modal-content">
             <button class="btn-close" onclick="closePaymentModal()">Fechar</button>
-            <h2 id="paymentModalTitle">Pagamento</h2>
+            <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
             <div class="price-display" id="priceDisplay"></div>
             <div id="messagePaymentArea"></div>
-            <div style="text-align: center;">
-                <p>Você será redirecionado para o Mercado Pago para completar o pagamento!</p>
+            <div class="payment-options">
+                <div class="payment-option" onclick="selectPayment('pix')" id="pixOption">
+                    📱 Pix
+                </div>
+                <div class="payment-option active" onclick="selectPayment('checkout-pro')" id="mpOption">
+                    💳 Todos os métodos<br><small>(Mercado Pago)</small>
+                </div>
+            </div>
+            <div id="pixSection" class="pix-section" style="display: none;">
+                <div class="qr-code-container" id="qrCodeContainer">
+                    <span class="loading-text">Gerando QR Code...</span>
+                </div>
+                <div class="pix-code" id="pixCode">Aguarde...</div>
+                <button class="copy-btn" onclick="copyPixCode()">📋 Copiar Código Pix</button>
+                <p><small>Após o pagamento, você será redirecionado automaticamente para criar sua conta!</small></p>
+            </div>
+            <div id="mpSection" style="text-align: center;">
+                <p>Você será redirecionado para o Mercado Pago para completar o pagamento com qualquer método!</p>
                 <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn">Ir para o Mercado Pago</button>
             </div>
         </div>
@@ -242,7 +323,9 @@
 
     <script>
         let selectedPlan = null;
+        let selectedPaymentMethod = 'checkout-pro';
         let paymentData = null;
+        let pollingInterval = null;
 
         function openModal() {
             document.getElementById('signupModal').classList.add('show');
@@ -267,6 +350,10 @@
             document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
             document.getElementById('priceDisplay').textContent = prices[plan];
             document.getElementById('messagePaymentArea').innerHTML = '';
+            
+            // Reset UI
+            document.getElementById('qrCodeContainer').innerHTML = '<span class="loading-text">Gerando QR Code...</span>';
+            document.getElementById('pixCode').textContent = 'Aguarde...';
             document.getElementById('mpBtn').disabled = true;
             
             await createPaymentIntent(plan);
@@ -275,6 +362,29 @@
 
         function closePaymentModal() {
             document.getElementById('paymentModal').classList.remove('show');
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        function selectPayment(method) {
+            selectedPaymentMethod = method;
+            document.getElementById('pixOption').classList.remove('active');
+            document.getElementById('mpOption').classList.remove('active');
+            
+            if (method === 'pix') {
+                document.getElementById('pixOption').classList.add('active');
+                document.getElementById('pixSection').style.display = 'block';
+                document.getElementById('mpSection').style.display = 'none';
+                if (!paymentData?.pixCode) {
+                    createPaymentIntent(selectedPlan);
+                }
+            } else {
+                document.getElementById('mpOption').classList.add('active');
+                document.getElementById('pixSection').style.display = 'none';
+                document.getElementById('mpSection').style.display = 'block';
+            }
         }
 
         async function createPaymentIntent(plan) {
@@ -282,21 +392,70 @@
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plan, method: 'checkout-pro' })
+                    body: JSON.stringify({ plan, method: selectedPaymentMethod })
                 });
                 
                 const data = await response.json();
+                console.log('Payment response:', data);
                 
                 if (data.success) {
                     paymentData = data;
-                    document.getElementById('mpBtn').disabled = false;
+                    
+                    if (selectedPaymentMethod === 'pix' && data.pixCode) {
+                        document.getElementById('pixCode').textContent = data.pixCode;
+                        if (data.qrCode) {
+                            document.getElementById('qrCodeContainer').innerHTML = `<img src="data:image/png;base64,${data.qrCode}" alt="QR Code Pix">`;
+                        }
+                        startPaymentPolling(data.paymentId);
+                    } else {
+                        document.getElementById('mpBtn').disabled = false;
+                    }
                 } else {
-                    document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">${data.message || 'Erro ao criar pagamento. Tente novamente!'}</div>`;
+                    document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">${data.message || data.cause || data.error || 'Erro ao criar pagamento. Tente novamente!'}</div>`;
                     console.error('Payment Error:', data);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">Erro de conexão. Tente novamente!</div>`;
+            }
+        }
+
+        async function startPaymentPolling(paymentId) {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/check-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId })
+                    });
+                    
+                    const data = await response.json();
+                    console.log('Polling result:', data);
+                    
+                    if (data.approved) {
+                        clearInterval(pollingInterval);
+                        pollingInterval = null;
+                        closePaymentModal();
+                        window.location.href = `/success.html?plan=${selectedPlan}&paymentId=${paymentId}`;
+                    }
+                } catch (error) {
+                    console.error('Polling Error:', error);
+                }
+            }, 3000);
+        }
+
+        function copyPixCode() {
+            const code = document.getElementById('pixCode').textContent;
+            if (code && code !== 'Aguarde...') {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('Código Pix copiado com sucesso!');
+                }).catch(() => {
+                    alert('Não foi possível copiar. Selecione e copie manualmente!');
+                });
             }
         }
 
