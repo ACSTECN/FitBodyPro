@@ -272,73 +272,101 @@
     </footer>
 
     <script>
-        let selectedPlan = null;
-        let selectedPaymentMethod = 'pix';
-        let paymentData = null;
+    let selectedPlan = null;
+    let selectedPaymentMethod = 'pix';
+    let paymentData = null;
 
-        function openModal() {
-            document.getElementById('signupModal').classList.add('show');
-        }
-        
-        function closeModal() {
-            document.getElementById('signupModal').classList.remove('show');
-            document.getElementById('signupForm').reset();
-            document.getElementById('messageArea').innerHTML = '';
-        }
+    function openModal() {
+        document.getElementById('signupModal').classList.add('show');
+    }
 
-        async function openPaymentModal(plan) {
-            selectedPlan = plan;
-            const prices = {
-                starter: 'R$ 1,00',
-                premium: 'R$ 1,20'
-            };
-            const titles = {
-                starter: 'Fitbory Starter',
-                premium: 'Fit Bory Premium'
-            };
-            document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
-            document.getElementById('priceDisplay').textContent = prices[plan];
-            document.getElementById('messagePaymentArea').innerHTML = '';
-            document.getElementById('mpBtn').disabled = true;
-            
-            await createPaymentIntent(plan);
-            document.getElementById('paymentModal').classList.add('show');
-        }
+    function closeModal() {
+        document.getElementById('signupModal').classList.remove('show');
+        document.getElementById('signupForm').reset();
+        document.getElementById('messageArea').innerHTML = '';
+    }
 
-        function closePaymentModal() {
-            document.getElementById('paymentModal').classList.remove('show');
-        }
+    function openPaymentModal(plan) {
+        selectedPlan = plan;
+        selectedPaymentMethod = 'pix';
+        paymentData = null;
 
-        function selectPayment(method) {
-            selectedPaymentMethod = method;
-            document.getElementById('pixOption').classList.remove('active');
-            document.getElementById('mpOption').classList.remove('active');
-            
-            if (method === 'pix') {
-                document.getElementById('pixOption').classList.add('active');
-            } else {
-                document.getElementById('mpOption').classList.add('active');
+        const prices = {
+            starter: 'R$ 1,00',
+            premium: 'R$ 1,20'
+        };
+
+        const titles = {
+            starter: 'Fitbory Starter',
+            premium: 'Fit Bory Premium'
+        };
+
+        document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
+        document.getElementById('priceDisplay').textContent = prices[plan];
+        document.getElementById('messagePaymentArea').innerHTML = '';
+
+        document.getElementById('paymentModal').classList.add('show');
+
+        selectPayment('pix');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.remove('show');
+        document.getElementById('messagePaymentArea').innerHTML = '';
+    }
+
+    function selectPayment(method) {
+        selectedPaymentMethod = method;
+
+        document.getElementById('pixOption').classList.remove('active');
+        document.getElementById('mpOption').classList.remove('active');
+
+        const btn = document.getElementById('mpBtn');
+        btn.style.display = 'block';
+        btn.disabled = false;
+
+        if (method === 'pix') {
+            document.getElementById('pixOption').classList.add('active');
+            btn.textContent = 'Gerar QR Code do Pix';
+        } else {
+            document.getElementById('mpOption').classList.add('active');
+            btn.textContent = 'Continuar para Mercado Pago';
+        }
+    }
+
+    async function createPaymentIntent(plan, method) {
+        try {
+            const response = await fetch('/api/create-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    plan,
+                    method,
+                    email: 'cliente@email.com'
+                })
+            });
+
+            const data = await response.json();
+            console.log('Payment response:', data);
+
+            paymentData = data;
+
+            if (method === 'checkout-pro') {
+                if (data.success && data.init_point) {
+                    window.location.href = data.init_point;
+                    return;
+                }
+
+                document.getElementById('messagePaymentArea').innerHTML = `
+                    <div class="message error">
+                        Erro ao gerar link do Mercado Pago.
+                    </div>
+                `;
+                return;
             }
-        }
 
-        async function createPaymentIntent(plan) {
-            try {
-                const response = await fetch('/api/create-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        plan, 
-                        method: 'pix',
-                        email: 'cliente@email.com'
-                    })
-                });
-                
-                const data = await response.json();
-                console.log('Pix response:', data);
-                
+            if (method === 'pix') {
                 if (data.success && data.qrCode) {
-                    paymentData = data;
-
                     document.getElementById('messagePaymentArea').innerHTML = `
                         <div class="message success">
                             <p><strong>Escaneie o QR Code Pix:</strong></p>
@@ -356,77 +384,77 @@
                             >${data.pixCode}</textarea>
                         </div>
                     `;
-
-                    document.getElementById('mpBtn').style.display = 'none';
-
-                } else {
-                    document.getElementById('messagePaymentArea').innerHTML = `
-                        <div class="message error">
-                            Erro ao gerar QR Code Pix.
-                        </div>
-                    `;
-                    console.error('Erro Pix:', data);
+                    return;
                 }
 
-            } catch (error) {
-                console.error('Error:', error);
                 document.getElementById('messagePaymentArea').innerHTML = `
-                    <div class="message error">Erro de conexão! Tente novamente.</div>
+                    <div class="message error">
+                        ${data.message || data.error?.message || 'Erro ao gerar QR Code Pix.'}
+                    </div>
                 `;
             }
+
+        } catch (error) {
+            console.error('Payment Error:', error);
+            document.getElementById('messagePaymentArea').innerHTML = `
+                <div class="message error">
+                    Erro de conexão. Tente novamente.
+                </div>
+            `;
+        }
+    }
+
+    async function goToMercadoPago() {
+        await createPaymentIntent(selectedPlan, selectedPaymentMethod);
+    }
+
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName').value;
+        const phone = document.getElementById('phone').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const messageArea = document.getElementById('messageArea');
+
+        messageArea.innerHTML = '';
+
+        if (password !== confirmPassword) {
+            messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
+            return;
         }
 
-        async function goToMercadoPago() {
-            if (!paymentData || !paymentData.init_point) {
-                await createPaymentIntent(selectedPlan);
-            }
-            
-            if (paymentData && paymentData.init_point) {
-                window.location.href = paymentData.init_point;
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName,
+                    phone,
+                    email,
+                    password,
+                    plan: 'free'
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
+
+                setTimeout(() => {
+                    window.location.href = data.loginUrl;
+                }, 2000);
             } else {
-                alert('Erro ao gerar link de pagamento. Tente novamente!');
+                messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
             }
+
+        } catch (error) {
+            console.error('Signup Error:', error);
+            messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
         }
-
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const fullName = document.getElementById('fullName').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const messageArea = document.getElementById('messageArea');
-            
-            messageArea.innerHTML = '';
-
-            if (password !== confirmPassword) {
-                messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fullName, phone, email, password, plan: 'free' })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
-                    setTimeout(() => {
-                        window.location.href = data.loginUrl;
-                    }, 2000);
-                } else {
-                    messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
-                }
-            } catch (error) {
-                console.error('Signup Error:', error);
-                messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
-            }
-        });
-    </script>
+    });
+</script>
 </body>
 </html>
