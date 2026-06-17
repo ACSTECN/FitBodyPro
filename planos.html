@@ -128,17 +128,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
+            font-size: 1rem;
+            color: #666;
+        }
+        .qr-code-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .pix-code {
             background: #f5f5f5;
             padding: 15px;
             border-radius: 10px;
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             word-break: break-all;
             margin-bottom: 10px;
             text-align: left;
+            color: #333;
         }
         .copy-btn {
             background: #1a1a2e;
@@ -157,6 +164,10 @@
             color: #00cc6a;
             margin-bottom: 20px;
         }
+        .loading-text {
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -166,7 +177,7 @@
                 <a href="index.html"><img src="logo.png" alt="Fitborypro" class="logo-img"></a>
             </div>
             <nav class="nav">
-                <a href="quem-usa.html" class="nav-link">Sobre</a>
+                <a href="sobre.html" class="nav-link">Sobre</a>
                 <a href="planos.html" class="nav-link">Planos</a>
                 <a href="contato.html" class="nav-link">Contato</a>
             </nav>
@@ -234,7 +245,7 @@
     <div id="signupModal" class="modal">
         <div class="modal-content">
             <button class="btn-close" onclick="closeModal()">Fechar</button>
-            <h2 id="modalTitle">Criar Conta Free</h2>
+            <h2>Criar Conta Free</h2>
             <div id="messageArea"></div>
             <form id="signupForm">
                 <div class="form-group">
@@ -257,7 +268,7 @@
                     <label for="confirmPassword">Confirmar senha</label>
                     <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirme sua senha">
                 </div>
-                <button type="submit" class="btn-submit" id="submitBtn">Criar Conta</button>
+                <button type="submit" class="btn-submit">Criar Conta</button>
             </form>
         </div>
     </div>
@@ -268,25 +279,26 @@
             <button class="btn-close" onclick="closePaymentModal()">Fechar</button>
             <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
             <div class="price-display" id="priceDisplay"></div>
+            <div id="messagePaymentArea"></div>
             <div class="payment-options">
                 <div class="payment-option active" onclick="selectPayment('pix')" id="pixOption">
                     📱 Pix
                 </div>
-                <div class="payment-option" onclick="selectPayment('mp')" id="mpOption">
-                    💳 Mercado Pago
+                <div class="payment-option" onclick="selectPayment('checkout-pro')" id="mpOption">
+                    💳 Todos os métodos<br><small>(Mercado Pago)</small>
                 </div>
             </div>
             <div id="pixSection" class="pix-section">
                 <div class="qr-code-container" id="qrCodeContainer">
-                    📷 Gerando QR Code...
+                    <span class="loading-text">Gerando QR Code...</span>
                 </div>
-                <div class="pix-code" id="pixCode">Carregando código Pix...</div>
+                <div class="pix-code" id="pixCode">Aguarde...</div>
                 <button class="copy-btn" onclick="copyPixCode()">📋 Copiar Código Pix</button>
-                <p>Após o pagamento, você será redirecionado para criar sua conta!</p>
+                <p><small>Após o pagamento, você será redirecionado automaticamente para criar sua conta!</small></p>
             </div>
             <div id="mpSection" style="display: none; text-align: center;">
-                <p>Você será redirecionado para o Mercado Pago para completar o pagamento.</p>
-                <button class="btn-submit" onclick="goToMercadoPago()">Ir para Mercado Pago</button>
+                <p>Você será redirecionado para o Mercado Pago para completar o pagamento com qualquer método!</p>
+                <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn">Ir para o Mercado Pago</button>
             </div>
         </div>
     </div>
@@ -312,10 +324,9 @@
         let selectedPlan = null;
         let selectedPaymentMethod = 'pix';
         let paymentData = null;
+        let pollingInterval = null;
 
         function openModal() {
-            document.getElementById('modalTitle').textContent = 'Criar Conta Free';
-            document.getElementById('submitBtn').textContent = 'Criar Conta';
             document.getElementById('signupModal').classList.add('show');
         }
         
@@ -337,6 +348,12 @@
             };
             document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
             document.getElementById('priceDisplay').textContent = prices[plan];
+            document.getElementById('messagePaymentArea').innerHTML = '';
+            
+            // Reset UI
+            document.getElementById('qrCodeContainer').innerHTML = '<span class="loading-text">Gerando QR Code...</span>';
+            document.getElementById('pixCode').textContent = 'Aguarde...';
+            document.getElementById('mpBtn').disabled = true;
             
             await createPaymentIntent(plan);
             
@@ -345,6 +362,10 @@
 
         function closePaymentModal() {
             document.getElementById('paymentModal').classList.remove('show');
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
         }
 
         function selectPayment(method) {
@@ -368,38 +389,43 @@
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plan, method: 'pix' })
+                    body: JSON.stringify({ plan, method: selectedPaymentMethod })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
                     paymentData = data;
-                    if (data.pixCode) {
-                        document.getElementById('pixCode').textContent = data.pixCode;
-                        if (data.qrCode) {
-                            document.getElementById('qrCodeContainer').innerHTML = `<img src="${data.qrCode}" alt="QR Code Pix" style="width:100%; height:100%; border-radius: 8px;">`;
+                    
+                    if (selectedPaymentMethod === 'pix') {
+                        if (data.pixCode && data.qrCode) {
+                            document.getElementById('pixCode').textContent = data.pixCode;
+                            document.getElementById('qrCodeContainer').innerHTML = `<img src="data:image/png;base64,${data.qrCode}" alt="QR Code Pix">`;
+                            startPaymentPolling(data.paymentId);
                         } else {
-                            document.getElementById('qrCodeContainer').innerHTML = '📱 Use o código abaixo';
+                            document.getElementById('qrCodeContainer').innerHTML = '<span class="loading-text">Não foi possível gerar o QR Code. Tente a outra opção de pagamento!</span>';
                         }
-                        startPaymentPolling(data.paymentId);
                     } else {
-                        document.getElementById('pixSection').innerHTML = `
-                            <p>Redirecionando para o Mercado Pago...</p>
-                        `;
-                        setTimeout(() => {
-                            if (data.init_point) window.location.href = data.init_point;
-                        }, 1000);
+                        document.getElementById('mpBtn').disabled = false;
                     }
+                } else {
+                    document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">${data.message || 'Erro ao criar pagamento. Tente novamente!'}</div>`;
+                    console.error('Payment Error:', data);
                 }
             } catch (error) {
-                console.error(error);
+                console.error('Error:', error);
+                document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">Erro de conexão. Tente novamente!</div>`;
             }
         }
 
         async function startPaymentPolling(paymentId) {
+            // Clear any existing interval
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            
             // Poll for payment status every 3 seconds
-            const pollingInterval = setInterval(async () => {
+            pollingInterval = setInterval(async () => {
                 try {
                     const response = await fetch('/api/check-payment', {
                         method: 'POST',
@@ -411,37 +437,37 @@
                     
                     if (data.approved) {
                         clearInterval(pollingInterval);
+                        pollingInterval = null;
                         closePaymentModal();
                         window.location.href = `/success.html?plan=${selectedPlan}&paymentId=${paymentId}`;
                     }
                 } catch (error) {
-                    console.error(error);
+                    console.error('Polling Error:', error);
                 }
             }, 3000);
         }
 
         function copyPixCode() {
             const code = document.getElementById('pixCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                alert('Código Pix copiado!');
-            });
+            if (code && code !== 'Aguarde...') {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('Código Pix copiado com sucesso!');
+                }).catch(() => {
+                    alert('Não foi possível copiar. Selecione e copie manualmente!');
+                });
+            }
         }
 
         async function goToMercadoPago() {
-            try {
-                const response = await fetch('/api/create-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plan: selectedPlan, method: 'mp' })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.init_point) {
-                    window.location.href = data.init_point;
-                }
-            } catch (error) {
-                console.error(error);
+            if (!paymentData || !paymentData.init_point) {
+                // If not already loaded, load now
+                await createPaymentIntent(selectedPlan);
+            }
+            
+            if (paymentData && paymentData.init_point) {
+                window.location.href = paymentData.init_point;
+            } else {
+                alert('Erro ao gerar link de pagamento. Tente novamente!');
             }
         }
 
@@ -472,7 +498,7 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    messageArea.innerHTML = '<div class="message success">' + data.message + '</div>';
+                    messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
                     setTimeout(() => {
                         window.location.href = data.loginUrl;
                     }, 2000);
@@ -480,6 +506,7 @@
                     messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
                 }
             } catch (error) {
+                console.error('Signup Error:', error);
                 messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
             }
         });
