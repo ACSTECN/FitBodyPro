@@ -140,59 +140,90 @@
         </div>
     </div>
 
-    <script>
-        // Get plan and payment ID from URL query params
-        const urlParams = new URLSearchParams(window.location.search);
-        const plan = urlParams.get('plan') || 'starter';
-        const paymentId = urlParams.get('payment_id');
+<script>
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const fullName = document.getElementById('fullName').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const messageArea = document.getElementById('messageArea');
-            
-            messageArea.innerHTML = '';
+    const urlParams = new URLSearchParams(window.location.search);
 
-            if (password !== confirmPassword) {
-                messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
-                return;
-            }
+    const plan = urlParams.get('plan') || 'starter';
 
-            try {
-                const response = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        fullName, 
-                        phone, 
-                        email, 
-                        password, 
-                        plan,
-                        paymentStatus: 'approved',
-                        paymentProvider: 'mercadopago',
-                        paymentId: paymentId
-                    })
-                });
+    let paymentId =
+        urlParams.get('paymentId') ||
+        urlParams.get('paymentid') ||
+        urlParams.get('payment_id') ||
+        urlParams.get('collection_id') ||
+        urlParams.get('id');
 
-                const data = await response.json();
+    if (!paymentId) {
+        const match = window.location.href.match(/[?&]paymentId=([^&]+)/i);
+        paymentId = match ? decodeURIComponent(match[1]) : null;
+    }
 
-                if (response.ok && data.success) {
-                    messageArea.innerHTML = '<div class="message success">' + data.message + '</div>';
-                    setTimeout(() => {
-                        window.location.href = data.loginUrl;
-                    }, 2000);
-                } else {
-                    messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
-                }
-            } catch (error) {
-                messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
-            }
+    console.log('URL COMPLETA:', window.location.href);
+    console.log('PLAN:', plan);
+    console.log('PAYMENT ID FINAL:', paymentId);
+
+    const name = document.getElementById('fullName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const messageArea = document.getElementById('messageArea');
+
+    messageArea.innerHTML = '';
+
+    if (password !== confirmPassword) {
+        messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
+        return;
+    }
+
+    if (plan !== 'free' && !paymentId) {
+        messageArea.innerHTML = '<div class="message error">ID do pagamento não encontrado.</div>';
+        return;
+    }
+
+    alert("PAYMENT ID: " + paymentId);
+
+    const payload = {
+        fullName: name,
+        phone,
+        email,
+        password,
+        plan,
+        paymentStatus: "approved",
+        paymentProvider: "mercadopago",
+        paymentId: paymentId
+    };
+        console.log('ENVIANDO PARA /api/signup:', payload);
+
+    try {
+        const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
-    </script>
+
+        const data = await response.json();
+
+        console.log('RETORNO /api/signup:', data);
+
+        if (response.ok && data.success) {
+            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso!</div>';
+
+            setTimeout(() => {
+                window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
+            }, 2000);
+        } else {
+            messageArea.innerHTML = '<div class="message error">' + (data.message || data.error || 'Ocorreu um erro!') + '</div>';
+        }
+
+    } catch (error) {
+        console.error('Signup Error:', error);
+        messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
+    }
+});
+</script>
+
 </body>
 </html>
