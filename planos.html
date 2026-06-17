@@ -73,6 +73,10 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
         }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
         .btn-close {
             background: #e0e0e0;
             color: #555;
@@ -289,17 +293,27 @@
                     💳 Todos os métodos<br><small>(Mercado Pago)</small>
                 </div>
             </div>
+            
+            <!-- Pix Section -->
             <div id="pixSection" class="pix-section" style="display: none;">
-                <div class="qr-code-container" id="qrCodeContainer">
+                <div class="form-group">
+                    <label for="pixEmail">Seu e-mail (para o pagamento)</label>
+                    <input type="email" id="pixEmail" placeholder="seu@email.com">
+                </div>
+                <button class="btn-submit" onclick="generatePixQrCode()">Gerar QR Code do Pix</button>
+                
+                <div class="qr-code-container" id="qrCodeContainer" style="display: none; margin-top: 20px;">
                     <span class="loading-text">Gerando QR Code...</span>
                 </div>
-                <div class="pix-code" id="pixCode">Aguarde...</div>
-                <button class="copy-btn" onclick="copyPixCode()">📋 Copiar Código Pix</button>
+                <div class="pix-code" id="pixCode" style="display: none;">Aguarde...</div>
+                <button class="copy-btn" id="copyBtn" onclick="copyPixCode()" style="display: none;">📋 Copiar Código Pix</button>
                 <p><small>Após o pagamento, você será redirecionado automaticamente para criar sua conta!</small></p>
             </div>
+
+            <!-- Checkout Pro Section -->
             <div id="mpSection" style="text-align: center;">
                 <p>Você será redirecionado para o Mercado Pago para completar o pagamento com qualquer método!</p>
-                <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn">Ir para o Mercado Pago</button>
+                <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn" disabled>Ir para o Mercado Pago</button>
             </div>
         </div>
     </div>
@@ -351,11 +365,7 @@
             document.getElementById('priceDisplay').textContent = prices[plan];
             document.getElementById('messagePaymentArea').innerHTML = '';
             
-            // Reset UI
-            document.getElementById('qrCodeContainer').innerHTML = '<span class="loading-text">Gerando QR Code...</span>';
-            document.getElementById('pixCode').textContent = 'Aguarde...';
-            document.getElementById('mpBtn').disabled = true;
-            
+            resetPaymentUI();
             await createPaymentIntent(plan);
             document.getElementById('paymentModal').classList.add('show');
         }
@@ -368,6 +378,14 @@
             }
         }
 
+        function resetPaymentUI() {
+            document.getElementById('qrCodeContainer').style.display = 'none';
+            document.getElementById('qrCodeContainer').innerHTML = '<span class="loading-text">Gerando QR Code...</span>';
+            document.getElementById('pixCode').style.display = 'none';
+            document.getElementById('copyBtn').style.display = 'none';
+            document.getElementById('mpBtn').disabled = true;
+        }
+
         function selectPayment(method) {
             selectedPaymentMethod = method;
             document.getElementById('pixOption').classList.remove('active');
@@ -377,13 +395,51 @@
                 document.getElementById('pixOption').classList.add('active');
                 document.getElementById('pixSection').style.display = 'block';
                 document.getElementById('mpSection').style.display = 'none';
-                if (!paymentData?.pixCode) {
-                    createPaymentIntent(selectedPlan);
-                }
             } else {
                 document.getElementById('mpOption').classList.add('active');
                 document.getElementById('pixSection').style.display = 'none';
                 document.getElementById('mpSection').style.display = 'block';
+            }
+        }
+
+        async function generatePixQrCode() {
+            const email = document.getElementById('pixEmail').value;
+            if (!email) {
+                document.getElementById('messagePaymentArea').innerHTML = '<div class="message error">Por favor, informe seu e-mail!</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: selectedPlan, method: 'pix', email: email })
+                });
+                
+                const data = await response.json();
+                console.log('Payment response:', data);
+                
+                if (data.success) {
+                    paymentData = data;
+                    if (data.pixCode) {
+                        document.getElementById('messagePaymentArea').innerHTML = '';
+                        document.getElementById('qrCodeContainer').style.display = 'flex';
+                        document.getElementById('pixCode').style.display = 'block';
+                        document.getElementById('copyBtn').style.display = 'inline-block';
+                        
+                        document.getElementById('pixCode').textContent = data.pixCode;
+                        if (data.qrCode) {
+                            document.getElementById('qrCodeContainer').innerHTML = `<img src="data:image/png;base64,${data.qrCode}" alt="QR Code Pix">`;
+                        }
+                        startPaymentPolling(data.paymentId);
+                    }
+                } else {
+                    document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">${data.message || data.cause || data.error || 'Erro ao gerar QR Code! Por favor, use o Checkout Pro.'}</div>`;
+                    console.error('Payment Error:', data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">Erro de conexão! Por favor, use o Checkout Pro.</div>`;
             }
         }
 
@@ -401,22 +457,20 @@
                 if (data.success) {
                     paymentData = data;
                     
-                    if (selectedPaymentMethod === 'pix' && data.pixCode) {
-                        document.getElementById('pixCode').textContent = data.pixCode;
-                        if (data.qrCode) {
-                            document.getElementById('qrCodeContainer').innerHTML = `<img src="data:image/png;base64,${data.qrCode}" alt="QR Code Pix">`;
-                        }
-                        startPaymentPolling(data.paymentId);
-                    } else {
+                    if (selectedPaymentMethod === 'checkout-pro') {
                         document.getElementById('mpBtn').disabled = false;
                     }
                 } else {
-                    document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">${data.message || data.cause || data.error || 'Erro ao criar pagamento. Tente novamente!'}</div>`;
+                    if (selectedPaymentMethod === 'checkout-pro') {
+                        document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">${data.message || data.cause || data.error || 'Erro ao criar pagamento! Tente novamente.'}</div>`;
+                    }
                     console.error('Payment Error:', data);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">Erro de conexão. Tente novamente!</div>`;
+                if (selectedPaymentMethod === 'checkout-pro') {
+                    document.getElementById('messagePaymentArea').innerHTML = `<div class="message error">Erro de conexão! Tente novamente.</div>`;
+                }
             }
         }
 

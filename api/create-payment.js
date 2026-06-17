@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const { plan, method } = req.body;
+        const { plan, method, email } = req.body;
 
         if (!plan) {
             return res.status(400).json({ message: 'Plano obrigatório' });
@@ -68,7 +68,11 @@ module.exports = async function handler(req, res) {
                 transaction_amount: selectedPlan.price,
                 description: selectedPlan.title,
                 payment_method_id: 'pix',
-                payer: { email: 'test_user_123456@testuser.com', first_name: 'Test', last_name: 'User' },
+                payer: { 
+                    email: email || 'test@test.com', 
+                    first_name: 'Cliente',
+                    last_name: 'Fitbory'
+                },
                 metadata: { plan },
                 notification_url: 'https://fit-body-pro-one.vercel.app/api/webhook'
             };
@@ -77,7 +81,11 @@ module.exports = async function handler(req, res) {
 
             const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MP_ACCESS_TOKEN}`, 'X-Idempotency-Key': idempotencyKey },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 body: JSON.stringify(paymentBody)
             });
 
