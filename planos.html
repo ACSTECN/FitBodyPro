@@ -274,189 +274,262 @@
     </footer>
 
     <script>
-    let selectedPlan = null;
-    let selectedPaymentMethod = 'pix';
-    let paymentData = null;
 
-    function openModal() {
-        document.getElementById('signupModal').classList.add('show');
+let selectedPlan = null;
+let selectedPaymentMethod = 'pix';
+let paymentData = null;
+let paymentCheckInterval = null;
+
+function openModal() {
+    document.getElementById('signupModal').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('signupModal').classList.remove('show');
+    document.getElementById('signupForm').reset();
+    document.getElementById('messageArea').innerHTML = '';
+}
+
+function openPaymentModal(plan) {
+    selectedPlan = plan;
+    selectedPaymentMethod = 'pix';
+    paymentData = null;
+
+    if (paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+        paymentCheckInterval = null;
     }
 
-    function closeModal() {
-        document.getElementById('signupModal').classList.remove('show');
-        document.getElementById('signupForm').reset();
-        document.getElementById('messageArea').innerHTML = '';
+    const prices = {
+        starter: 'R$ 1,00',
+        premium: 'R$ 1,20'
+    };
+
+    const titles = {
+        starter: 'Fitbory Starter',
+        premium: 'Fit Bory Premium'
+    };
+
+    document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
+    document.getElementById('priceDisplay').textContent = prices[plan];
+    document.getElementById('messagePaymentArea').innerHTML = '';
+
+    document.getElementById('paymentModal').classList.add('show');
+    selectPayment('pix');
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('show');
+    document.getElementById('messagePaymentArea').innerHTML = '';
+
+    if (paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+        paymentCheckInterval = null;
     }
+}
 
-    function openPaymentModal(plan) {
-        selectedPlan = plan;
-        selectedPaymentMethod = 'pix';
-        paymentData = null;
+function selectPayment(method) {
+    selectedPaymentMethod = method;
 
-        const prices = {
-            starter: 'R$ 1,00',
-            premium: 'R$ 1,20'
-        };
+    document.getElementById('pixOption').classList.remove('active');
+    document.getElementById('mpOption').classList.remove('active');
 
-        const titles = {
-            starter: 'Fitbory Starter',
-            premium: 'Fit Bory Premium'
-        };
+    const btn = document.getElementById('mpBtn');
+    btn.style.display = 'block';
+    btn.disabled = false;
 
-        document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
-        document.getElementById('priceDisplay').textContent = prices[plan];
-        document.getElementById('messagePaymentArea').innerHTML = '';
+    document.getElementById('messagePaymentArea').innerHTML = '';
 
-        document.getElementById('paymentModal').classList.add('show');
-
-        selectPayment('pix');
+    if (method === 'pix') {
+        document.getElementById('pixOption').classList.add('active');
+        btn.textContent = 'Gerar QR Code do Pix';
+    } else {
+        document.getElementById('mpOption').classList.add('active');
+        btn.textContent = 'Continuar para Mercado Pago';
     }
+}
 
-    function closePaymentModal() {
-        document.getElementById('paymentModal').classList.remove('show');
-        document.getElementById('messagePaymentArea').innerHTML = '';
-    }
+async function createPaymentIntent(plan, method) {
+    const btn = document.getElementById('mpBtn');
 
-    function selectPayment(method) {
-        selectedPaymentMethod = method;
+    try {
+        btn.disabled = true;
+        btn.textContent = method === 'pix' ? 'Gerando Pix...' : 'Gerando link...';
 
-        document.getElementById('pixOption').classList.remove('active');
-        document.getElementById('mpOption').classList.remove('active');
+        const response = await fetch('/api/create-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                plan,
+                method,
+                email: 'cliente@email.com'
+            })
+        });
 
-        const btn = document.getElementById('mpBtn');
-        btn.style.display = 'block';
-        btn.disabled = false;
+        const data = await response.json();
+        console.log('Payment response:', data);
 
-        if (method === 'pix') {
-            document.getElementById('pixOption').classList.add('active');
-            btn.textContent = 'Gerar QR Code do Pix';
-        } else {
-            document.getElementById('mpOption').classList.add('active');
-            btn.textContent = 'Continuar para Mercado Pago';
-        }
-    }
+        paymentData = data;
 
-    async function createPaymentIntent(plan, method) {
-        try {
-            const response = await fetch('/api/create-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    method,
-                    email: 'cliente@email.com'
-                })
-            });
-
-            const data = await response.json();
-            console.log('Payment response:', data);
-
-            paymentData = data;
-
-            if (method === 'checkout-pro') {
-                if (data.success && data.init_point) {
-                    window.location.href = data.init_point;
-                    return;
-                }
-
-                document.getElementById('messagePaymentArea').innerHTML = `
-                    <div class="message error">
-                        Erro ao gerar link do Mercado Pago.
-                    </div>
-                `;
+        if (method === 'checkout-pro') {
+            if (data.success && data.init_point) {
+                window.location.href = data.init_point;
                 return;
             }
 
-            if (method === 'pix') {
-                if (data.success && data.qrCode) {
-                    document.getElementById('messagePaymentArea').innerHTML = `
-                        <div class="message success">
-                            <p><strong>Escaneie o QR Code Pix:</strong></p>
-
-                            <img 
-                                src="data:image/png;base64,${data.qrCode}" 
-                                style="max-width:250px;width:100%;margin:15px auto;display:block;"
-                            >
-
-                            <p><strong>Pix Copia e Cola:</strong></p>
-
-                            <textarea 
-                                readonly 
-                                style="width:100%;height:120px;padding:10px;border-radius:8px;"
-                            >${data.pixCode}</textarea>
-                        </div>
-                    `;
-                    return;
-                }
-
-                document.getElementById('messagePaymentArea').innerHTML = `
-                    <div class="message error">
-                        ${data.message || data.error?.message || 'Erro ao gerar QR Code Pix.'}
-                    </div>
-                `;
-            }
-
-        } catch (error) {
-            console.error('Payment Error:', error);
             document.getElementById('messagePaymentArea').innerHTML = `
                 <div class="message error">
-                    Erro de conexão. Tente novamente.
+                    Erro ao gerar link do Mercado Pago.
                 </div>
             `;
-        }
-    }
 
-    async function goToMercadoPago() {
-        await createPaymentIntent(selectedPlan, selectedPaymentMethod);
-    }
-
-    document.getElementById('signupForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const fullName = document.getElementById('fullName').value;
-        const phone = document.getElementById('phone').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const messageArea = document.getElementById('messageArea');
-
-        messageArea.innerHTML = '';
-
-        if (password !== confirmPassword) {
-            messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
+            btn.disabled = false;
+            btn.textContent = 'Continuar para Mercado Pago';
             return;
         }
 
+        if (method === 'pix') {
+            if (data.success && data.qrCode && data.paymentId) {
+                document.getElementById('messagePaymentArea').innerHTML = `
+                    <div class="message success">
+                        <p><strong>Escaneie o QR Code Pix:</strong></p>
+
+                        <img
+                            src="data:image/png;base64,${data.qrCode}"
+                            style="max-width:250px;width:100%;margin:15px auto;display:block;"
+                        >
+
+                        <p><strong>Pix Copia e Cola:</strong></p>
+
+                        <textarea
+                            readonly
+                            style="width:100%;height:120px;padding:10px;border-radius:8px;"
+                        >${data.pixCode}</textarea>
+
+                        <p id="paymentStatus"><strong>Aguardando pagamento...</strong></p>
+                    </div>
+                `;
+
+                btn.disabled = false;
+                btn.textContent = 'Gerar novo QR Code Pix';
+
+                startPaymentCheck(data.paymentId, plan);
+                return;
+            }
+
+            document.getElementById('messagePaymentArea').innerHTML = `
+                <div class="message error">
+                    ${data.message || data.error?.message || 'Erro ao gerar QR Code Pix.'}
+                </div>
+            `;
+
+            btn.disabled = false;
+            btn.textContent = 'Gerar QR Code do Pix';
+        }
+
+    } catch (error) {
+        console.error('Payment Error:', error);
+
+        document.getElementById('messagePaymentArea').innerHTML = `
+            <div class="message error">
+                Erro de conexão. Tente novamente.
+            </div>
+        `;
+
+        btn.disabled = false;
+        btn.textContent = method === 'pix' ? 'Gerar QR Code do Pix' : 'Continuar para Mercado Pago';
+    }
+}
+
+async function goToMercadoPago() {
+    await createPaymentIntent(selectedPlan, selectedPaymentMethod);
+}
+
+function startPaymentCheck(paymentId, plan) {
+    if (paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+    }
+
+    paymentCheckInterval = setInterval(async () => {
         try {
-            const response = await fetch('/api/signup', {
+            const response = await fetch('/api/check-payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fullName,
-                    phone,
-                    email,
-                    password,
-                    plan: 'free'
-                })
+                body: JSON.stringify({ paymentId })
             });
 
             const data = await response.json();
+            console.log('Check payment:', data);
 
-            if (response.ok && data.success) {
-                messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
+            if (data.approved) {
+                clearInterval(paymentCheckInterval);
+                paymentCheckInterval = null;
+
+                const statusEl = document.getElementById('paymentStatus');
+
+                if (statusEl) {
+                    statusEl.innerHTML = '<strong>Pagamento aprovado! Redirecionando...</strong>';
+                }
 
                 setTimeout(() => {
-                    window.location.href = data.loginUrl;
-                }, 2000);
-            } else {
-                messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
+                    window.location.href = `/success.html?plan=${plan}&paymentId=${paymentId}`;
+                }, 1500);
             }
 
         } catch (error) {
-            console.error('Signup Error:', error);
-            messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
+            console.error('Erro ao verificar pagamento:', error);
         }
-    });
+    }, 5000);
+}
+
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const fullName = document.getElementById('fullName').value;
+    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const messageArea = document.getElementById('messageArea');
+
+    messageArea.innerHTML = '';
+
+    if (password !== confirmPassword) {
+        messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fullName,
+                phone,
+                email,
+                password,
+                plan: 'free'
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
+
+            setTimeout(() => {
+                window.location.href = data.loginUrl;
+            }, 2000);
+        } else {
+            messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
+        }
+
+    } catch (error) {
+        console.error('Signup Error:', error);
+        messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
+    }
+});
 </script>
+
 </body>
 </html>
