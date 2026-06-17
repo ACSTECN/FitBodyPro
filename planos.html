@@ -281,14 +281,14 @@
             <div class="price-display" id="priceDisplay"></div>
             <div id="messagePaymentArea"></div>
             <div class="payment-options">
-                <div class="payment-option active" onclick="selectPayment('pix')" id="pixOption">
+                <div class="payment-option" onclick="selectPayment('pix')" id="pixOption">
                     📱 Pix
                 </div>
-                <div class="payment-option" onclick="selectPayment('checkout-pro')" id="mpOption">
+                <div class="payment-option active" onclick="selectPayment('checkout-pro')" id="mpOption">
                     💳 Todos os métodos<br><small>(Mercado Pago)</small>
                 </div>
             </div>
-            <div id="pixSection" class="pix-section">
+            <div id="pixSection" class="pix-section" style="display: none;">
                 <div class="qr-code-container" id="qrCodeContainer">
                     <span class="loading-text">Gerando QR Code...</span>
                 </div>
@@ -296,7 +296,7 @@
                 <button class="copy-btn" onclick="copyPixCode()">📋 Copiar Código Pix</button>
                 <p><small>Após o pagamento, você será redirecionado automaticamente para criar sua conta!</small></p>
             </div>
-            <div id="mpSection" style="display: none; text-align: center;">
+            <div id="mpSection" style="text-align: center;">
                 <p>Você será redirecionado para o Mercado Pago para completar o pagamento com qualquer método!</p>
                 <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn">Ir para o Mercado Pago</button>
             </div>
@@ -322,7 +322,7 @@
 
     <script>
         let selectedPlan = null;
-        let selectedPaymentMethod = 'pix';
+        let selectedPaymentMethod = 'checkout-pro';
         let paymentData = null;
         let pollingInterval = null;
 
