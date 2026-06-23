@@ -495,7 +495,12 @@ body {
     .plan-card.featured:hover {
         transform: translateY(-10px);
     }
-
+.gradient-green {
+    background: linear-gradient(90deg, #1ee4b7 0%, #9cff00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
     .features-grid {
         grid-template-columns: 1fr;
     }
