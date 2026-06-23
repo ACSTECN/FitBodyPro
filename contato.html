@@ -7,6 +7,33 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
+<style>
+    .login-btn{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    background:#184a78;
+    color:#fff;
+    text-decoration:none;
+
+    padding:12px 24px;
+    border-radius:0;
+
+    font-weight:600;
+    font-size:20px;
+
+    transition:.3s;
+}
+
+.login-btn:hover{
+    background:#205b92;
+}
+
+.login-icon{
+    font-size:20px;
+}
+</style>
 <body>
     <header class="header">
         <div class="container">
@@ -17,7 +44,10 @@
                 <a href="sobre.html" class="nav-link">Sobre</a>
                 <a href="planos.html" class="nav-link">Planos</a>
                 <a href="contato.html" class="nav-link">Contato</a>
-                 <a href="https://gerenciaralunos.vercel.app/login" class="login-btn">🚀 Entrar</a>
+                 <a href="https://gerenciaralunos.vercel.app/login" class="login-btn">
+                    <span class="login-icon">◉</span>
+                    Entrar
+                </a>
             </nav>
         </div>
     </header>

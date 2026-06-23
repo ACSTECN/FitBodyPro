@@ -14,6 +14,31 @@ background: linear-gradient(90deg,#1ee4b7 0%,#9cff00 100%);
 -webkit-text-fill-color: transparent;
 background-clip: text;
 }
+.login-btn{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    background:#184a78;
+    color:#fff;
+    text-decoration:none;
+
+    padding:12px 24px;
+    border-radius:0;
+
+    font-weight:600;
+    font-size:20px;
+
+    transition:.3s;
+}
+
+.login-btn:hover{
+    background:#205b92;
+}
+
+.login-icon{
+    font-size:20px;
+}
 
 </style>
 <body>
@@ -26,7 +51,10 @@ background-clip: text;
                 <a href="sobre.html" class="nav-link">Sobre</a>
                 <a href="planos.html" class="nav-link">Planos</a>
                 <a href="contato.html" class="nav-link">Contato</a>
-                <a href="https://gerenciaralunos.vercel.app/login" class="login-btn">🚀 Entrar</a>
+                <a href="https://gerenciaralunos.vercel.app/login" class="login-btn">
+                    <span class="login-icon">◉</span>
+                    Entrar
+                </a>
             </nav>
         </div>
     </header>
