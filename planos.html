@@ -37,25 +37,27 @@
     .header {
         background: #05070d;
     }
-
-    .hero-placeholder {
-        background: radial-gradient(circle at top, #101827 0%, #05070d 70%);
-        padding: 60px 20px 80px;
+    .hero-placeholder{
+        width:100%;
+        padding:0;
+        margin:0;
+        background:#05070d;
     }
 
-    .hero-box {
-        height: 500px;
-        border-radius: 30px;
-        background: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
-        border: 1px solid rgba(156,255,0,.25);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #9cff00;
-        font-size: 28px;
-        font-weight: 700;
-        overflow: hidden;
-        box-shadow: 0 0 60px rgba(156,255,0,.08);
+    .hero-placeholder .container{
+        max-width:100%;
+        width:100%;
+        padding:0;
+    }
+
+    .hero-box{
+        width:100%;
+        height:auto;
+        border:none;
+        border-radius:0;
+        background:none;
+        box-shadow:none;
+        overflow:hidden;
     }
 
     /* ===========================
@@ -346,9 +348,8 @@
     }
     .hero-banner{
         width:100%;
-        height:100%;
+        display:block;
         object-fit:cover;
-        border-radius:30px;
     }
     .price-display {
         text-align: center;
@@ -375,12 +376,12 @@
 <section class="hero-placeholder">
     <div class="container">
         <div class="hero-box">
-            <img src="BANNER PLANOS.jpg"
+            <img src="banner-planos.jpg"
                  alt="Banner FitBody Pro"
                  class="hero-banner">
         </div>
     </div>
-</section>
+
 </section>
     <section id="planos" class="plans-section">
         <div class="container">
