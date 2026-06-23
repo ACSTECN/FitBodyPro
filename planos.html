@@ -127,20 +127,30 @@
         transform: scale(1.03);
     }
 
+    .plan-card.featured {
+        border: 2px solid #9cff00;
+        box-shadow: 0 0 50px rgba(156,255,0,.25);
+        transform: scale(1.03);
+        padding-top: 65px;
+    }
+
     .plan-badge {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
+        width: 100%;
+
         background: #9cff00;
         color: #000;
         text-align: center;
         font-weight: 800;
-        padding: 10px;
+        padding: 10px 0;
         font-size: 13px;
         text-transform: uppercase;
-    }
 
+        border-radius: 20px 20px 0 0;
+    }
     .plan-name {
         color: #fff;
         font-size: 30px;
@@ -428,7 +438,7 @@
                 </div>
 
                 <div class="plan-card featured">
-                    <div class="plan-badge">Mais Popular</div>
+                    <div class="plan-badge">MAIS POPULAR</div>
                     <h3 class="plan-name">Fitbory Starter</h3>
                     <div class="plan-price">
                         <span class="currency">R$</span>
