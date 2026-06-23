@@ -518,7 +518,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
             messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
 
             setTimeout(() => {
-                window.location.href = data.loginUrl;
+                window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
             }, 2000);
         } else {
             messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
