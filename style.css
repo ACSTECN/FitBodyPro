@@ -348,6 +348,80 @@ body {
     margin-top: 48px;
 }
 
+.differential-spotlight {
+    margin-top: 42px;
+    padding: 34px;
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, rgba(156,255,0,.16), transparent 32%),
+        linear-gradient(180deg,#111827 0%,#090d15 100%);
+    border: 1px solid rgba(156,255,0,.18);
+    box-shadow: 0 22px 60px rgba(0,0,0,.28);
+}
+
+.differential-spotlight-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    gap: 28px;
+    align-items: center;
+}
+
+.differential-copy h3 {
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 14px;
+}
+
+.differential-copy p {
+    color: #b9c1cf;
+    font-size: 1.05rem;
+    max-width: 660px;
+}
+
+.differential-pills {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.differential-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    color: #e8edf7;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.differential-card-stack {
+    display: grid;
+    gap: 14px;
+}
+
+.differential-mini-card {
+    padding: 18px 20px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+.differential-mini-card strong {
+    display: block;
+    color: #9cff00;
+    font-size: 1.02rem;
+    margin-bottom: 6px;
+}
+
+.differential-mini-card span {
+    color: #c0c8d5;
+    font-size: 0.95rem;
+}
+
 .benefit-card,
 .quote-card,
 .audience-card,
@@ -965,6 +1039,7 @@ body {
     }
 
     .hero-grid,
+    .differential-spotlight-grid,
     .benefit-grid,
     .proof-grid,
     .audience-grid,
