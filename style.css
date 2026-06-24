@@ -40,6 +40,7 @@ body {
 .nav {
     display: flex;
     gap: 30px;
+    align-items: center;
 }
 
 .nav-link {
@@ -51,6 +52,42 @@ body {
 
 .nav-link:hover {
     color: #9cff00;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 10px;
+}
+
+.login-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 140px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s, color 0.3s;
+}
+
+.login-btn.primary {
+    background: linear-gradient(90deg, #1ee4b7, #9cff00);
+    color: #05070d;
+}
+
+.login-btn.secondary {
+    background: transparent;
+    border: 1px solid rgba(156,255,0,.55);
+    color: #fff;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(156,255,0,.25);
 }
 
 .hero {
@@ -433,6 +470,69 @@ body {
     margin-bottom: 30px;
 }
 
+.store-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.store-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 220px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(180deg, #0d111c 0%, #080b12 100%);
+    color: #fff;
+    text-decoration: none;
+    text-align: left;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.store-badge:hover {
+    transform: translateY(-2px);
+    border-color: rgba(156,255,0,.6);
+    box-shadow: 0 12px 25px rgba(156,255,0,.12);
+}
+
+.store-badge.disabled {
+    opacity: 0.72;
+    cursor: default;
+}
+
+.store-badge.disabled:hover {
+    transform: none;
+    border-color: rgba(255,255,255,0.18);
+    box-shadow: none;
+}
+
+.store-badge-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.store-badge-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.store-badge-label {
+    font-size: 0.72rem;
+    opacity: 0.72;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.store-badge-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
 .social-link {
     color: white;
     text-decoration: none;
@@ -459,7 +559,20 @@ body {
     }
 
     .nav {
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 20px;
+    }
+
+    .nav-actions {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+    }
+
+    .login-btn {
+        min-width: 0;
+        flex: 1 1 180px;
     }
 
     .logo-img {
@@ -517,5 +630,15 @@ body {
     }
     .features-grid {
         grid-template-columns: 1fr;
+    }
+
+    .store-links {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .store-badge {
+        width: 100%;
+        max-width: 320px;
     }
 }

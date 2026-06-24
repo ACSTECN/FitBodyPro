@@ -14,28 +14,6 @@ background: linear-gradient(90deg,#1ee4b7 0%,#9cff00 100%);
 -webkit-text-fill-color: transparent;
 background-clip: text;
 }
-.login-btn{
-    display:flex;
-    align-items:center;
-    gap:10px;
-
-    background:linear-gradient(90deg,#1ee4b7,#9cff00);
-    color:#05070d;
-
-    padding:12px 24px;
-    border-radius:12px;
-
-    text-decoration:none;
-    font-weight:700;
-
-    transition:.3s;
-}
-
-.login-btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 0 20px rgba(156,255,0,.35);
-}
-
 </style>
 <body>
     <header class="header">
@@ -47,9 +25,10 @@ background-clip: text;
                 <a href="sobre.html" class="nav-link">Sobre</a>
                 <a href="planos.html" class="nav-link">Planos</a>
                 <a href="contato.html" class="nav-link">Contato</a>
-                <a href="https://gerenciaralunos.vercel.app/login" class="login-btn">
-                Entrar
-                </a>
+                <div class="nav-actions">
+                    <a href="https://alunos-lovat.vercel.app/login" class="login-btn secondary">Area Aluno</a>
+                    <a href="https://gerenciaralunos.vercel.app/login" class="login-btn primary">Area Personal</a>
+                </div>
             </nav>
         </div>
     </header>
@@ -177,6 +156,22 @@ background-clip: text;
                     <a href="index.html"><img src="logo.png" alt="Fitborypro" class="footer-logo-img"></a>
                 </div>
                 <p class="footer-text">Transforme sua carreira com Fitborypro</p>
+                <div class="store-links">
+                    <a href="https://apps.apple.com/br/app/fitbody-pro/id6760191189" class="store-badge" target="_blank" rel="noopener noreferrer">
+                        <span class="store-badge-icon"></span>
+                        <span class="store-badge-text">
+                            <span class="store-badge-label">Download na</span>
+                            <span class="store-badge-name">App Store</span>
+                        </span>
+                    </a>
+                    <span class="store-badge disabled">
+                        <span class="store-badge-icon">▶</span>
+                        <span class="store-badge-text">
+                            <span class="store-badge-label">Disponivel em breve</span>
+                            <span class="store-badge-name">Google Play</span>
+                        </span>
+                    </span>
+                </div>
                 <div class="social-links">
                     <a href="#" class="social-link">Instagram</a>
                     <a href="#" class="social-link">Facebook</a>
