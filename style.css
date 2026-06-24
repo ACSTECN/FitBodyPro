@@ -19,7 +19,7 @@ body {
 
 .header {
     background: #05070d;
-    padding: 20px 0;
+    padding: 80px 0;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -33,7 +33,7 @@ body {
 }
 
 .logo-img {
-    height: 300px;
+    height: 120px;
     transform: translateX(-20px);
 }
 
