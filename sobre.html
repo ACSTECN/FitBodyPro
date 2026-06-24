@@ -14,6 +14,233 @@ background: linear-gradient(90deg,#1ee4b7 0%,#9cff00 100%);
 -webkit-text-fill-color: transparent;
 background-clip: text;
 }
+
+.about-hero {
+    padding: 85px 0 55px;
+}
+
+.about-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    gap: 38px;
+    align-items: center;
+}
+
+.about-hero-copy {
+    text-align: left;
+}
+
+.about-hero-copy .hero-title {
+    margin-bottom: 18px;
+}
+
+.about-hero-copy .hero-subtitle-2 {
+    max-width: 720px;
+    color: #c3cad6;
+    margin-bottom: 22px;
+}
+
+.about-hero-text {
+    color: #aeb7c6;
+    font-size: 1.06rem;
+    max-width: 680px;
+    margin-bottom: 30px;
+}
+
+.about-hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.about-side-panel {
+    padding: 28px;
+    border-radius: 26px;
+    border: 1px solid rgba(156,255,0,.16);
+    background:
+        radial-gradient(circle at top right, rgba(156,255,0,.10), transparent 35%),
+        linear-gradient(180deg,#0d111c 0%,#080b12 100%);
+    box-shadow: 0 20px 55px rgba(0,0,0,.28);
+}
+
+.about-side-panel h3 {
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.about-side-panel p {
+    color: #b8c0ce;
+    margin-bottom: 22px;
+}
+
+.about-side-list {
+    display: grid;
+    gap: 14px;
+}
+
+.about-side-item {
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+}
+
+.about-side-item strong {
+    display: block;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.about-side-item span {
+    color: #adb7c7;
+    font-size: 0.95rem;
+}
+
+.about-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 38px;
+}
+
+.about-strip-card {
+    padding: 20px;
+    border-radius: 18px;
+    background: linear-gradient(180deg,#0d111c 0%,#080b12 100%);
+    border: 1px solid rgba(156,255,0,.14);
+    text-align: left;
+}
+
+.about-strip-card strong {
+    display: block;
+    font-size: 1.2rem;
+    color: #9cff00;
+    margin-bottom: 8px;
+}
+
+.about-strip-card span {
+    color: #c1c8d4;
+    font-size: 0.95rem;
+}
+
+.about-section {
+    padding: 90px 0;
+}
+
+.about-section.alt {
+    background: linear-gradient(180deg,#070a12 0%,#05070d 100%);
+}
+
+.about-lead {
+    max-width: 780px;
+    margin: -30px auto 0;
+    text-align: center;
+    color: #b7bfcd;
+    font-size: 1.05rem;
+}
+
+.about-cards,
+.about-modules,
+.about-values {
+    display: grid;
+    gap: 24px;
+    margin-top: 46px;
+}
+
+.about-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-card,
+.about-module,
+.about-value {
+    background: linear-gradient(180deg,#0d111c 0%,#080b12 100%);
+    border: 1px solid rgba(156,255,0,.14);
+    border-radius: 22px;
+    padding: 28px;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.about-card:hover,
+.about-module:hover,
+.about-value:hover {
+    transform: translateY(-6px);
+    border-color: rgba(156,255,0,.35);
+    box-shadow: 0 24px 55px rgba(156,255,0,.08);
+}
+
+.about-card-tag,
+.about-module-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    height: 52px;
+    padding: 0 14px;
+    border-radius: 14px;
+    background: linear-gradient(90deg,#1ee4b7,#9cff00);
+    color: #05070d;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.about-card h3,
+.about-module h3,
+.about-value h3 {
+    color: #fff;
+    margin-bottom: 12px;
+    font-size: 1.35rem;
+}
+
+.about-card p,
+.about-module p,
+.about-value p {
+    color: #b8c0ce;
+}
+
+.about-modules {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-values {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-cta {
+    max-width: 860px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 48px 34px;
+    border-radius: 24px;
+    background: linear-gradient(180deg,#0d111c 0%,#080b12 100%);
+    border: 1px solid rgba(156,255,0,.18);
+    box-shadow: 0 18px 48px rgba(156,255,0,.08);
+}
+
+.about-cta p {
+    color: #bcc4d2;
+    font-size: 1.08rem;
+    margin-bottom: 22px;
+}
+
+@media (max-width: 768px) {
+    .about-hero-grid,
+    .about-strip,
+    .about-cards,
+    .about-modules,
+    .about-values {
+        grid-template-columns: 1fr;
+    }
+
+    .about-hero-copy {
+        text-align: center;
+    }
+
+    .about-hero-actions {
+        justify-content: center;
+    }
+}
 </style>
 <body>
     <header class="header">
@@ -33,112 +260,152 @@ background-clip: text;
         </div>
     </header>
 
-    <section class="hero" style="padding: 80px 0 60px;">
+    <section class="about-hero">
         <div class="container">
-            <div class="hero-content" style="text-align:center;">
-                <span class="section-eyebrow">Sobre a plataforma</span>
-                <h1 class="hero-title" style="font-size:4rem;">
-                    A estrutura certa para transformar a
-                    <span class="gradient-green">sua consultoria fitness</span>
-                </h1>
-                <p class="hero-subtitle-2" style="font-size:1.3rem; margin-top:20px;">
-                    Menos improviso, mais posicionamento, mais resultado para voce e para seus alunos.
-                </p>
+            <div class="about-hero-grid">
+                <div class="about-hero-copy">
+                    <span class="section-eyebrow" style="text-align:left;">Sobre a plataforma</span>
+                    <h1 class="hero-title">A Fitborypro foi criada para deixar sua operação <span class="gradient-green">mais profissional</span></h1>
+                    <p class="hero-subtitle-2">Uma plataforma pensada para personal trainers, coaches e consultorias fitness que querem vender melhor, atender melhor e crescer com mais controle.</p>
+                    <p class="about-hero-text">A proposta da Fitborypro é simples: tirar sua rotina do improviso e transformar o seu serviço em uma experiência mais premium, com gestão centralizada, melhor apresentação de marca e mais eficiência no dia a dia.</p>
+                    <div class="about-hero-actions">
+                        <a href="planos.html" class="btn-primary">Ver Planos</a>
+                        <a href="APRESENTACAO-INSTITUCIONAL.pdf" target="_blank" class="btn-secondary" style="background:#fff;color:#1a1a2e;">Baixar Material</a>
+                    </div>
+                </div>
+                <div class="about-side-panel">
+                    <h3>O que muda na prática</h3>
+                    <p>Você passa a ter uma estrutura de produto mais séria, mais organizada e mais escalável para atender e crescer.</p>
+                    <div class="about-side-list">
+                        <div class="about-side-item">
+                            <strong>Mais percepção de valor</strong>
+                            <span>Seu aluno entende que está entrando em uma consultoria estruturada e não em um atendimento improvisado.</span>
+                        </div>
+                        <div class="about-side-item">
+                            <strong>Mais controle da operação</strong>
+                            <span>Treino, dieta, evolução, vendas e financeiro passam a funcionar dentro da mesma lógica.</span>
+                        </div>
+                        <div class="about-side-item">
+                            <strong>Mais base para escalar</strong>
+                            <span>Você ganha processo para crescer sem perder qualidade no acompanhamento.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="about-strip">
+                <div class="about-strip-card">
+                    <strong>CRM</strong>
+                    <span>Mais organização comercial para converter novos alunos.</span>
+                </div>
+                <div class="about-strip-card">
+                    <strong>Treinos</strong>
+                    <span>Entrega mais clara, profissional e personalizada.</span>
+                </div>
+                <div class="about-strip-card">
+                    <strong>Evolução</strong>
+                    <span>Acompanhamento visual e estratégico dos resultados.</span>
+                </div>
+                <div class="about-strip-card">
+                    <strong>App</strong>
+                    <span>Ecossistema moderno para personal e aluno.</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="content-section">
+    <section class="about-section alt">
         <div class="container">
-            <div class="about-intro">
-                <p>A <span class="gradient-green"><strong>Fitborypro</strong></span> foi pensada para personal trainers, coaches e profissionais de educacao fisica que querem sair do atendimento amador e entregar uma experiencia premium.</p>
-                <p>Em vez de depender de varias ferramentas separadas, voce organiza sua operacao em um ambiente unico, com mais controle, mais autoridade e mais capacidade de crescimento.</p>
-            </div>
-
             <span class="section-eyebrow">Para quem serve</span>
-            <h2 class="section-title">Ideal para profissionais que querem crescer com metodo</h2>
-            <div class="audience-grid">
-                <div class="audience-card">
-                    <span class="mini-tag">Personal Trainer</span>
-                    <h3 class="audience-title">Atendimento mais profissional</h3>
-                    <p class="audience-text">Entregue treinos, acompanhe evolução e mantenha seus alunos organizados com uma presença mais premium.</p>
+            <h2 class="section-title">Ideal para profissionais que querem crescer com método</h2>
+            <p class="about-lead">A página agora deixa mais claro onde a Fitborypro se encaixa e qual o tipo de profissional que mais extrai valor da plataforma.</p>
+            <div class="about-cards">
+                <article class="about-card">
+                    <span class="about-card-tag">01</span>
+                    <h3>Personal trainer</h3>
+                    <p>Para quem quer organizar alunos, entregar treinos com mais padrão e transmitir mais autoridade em cada etapa do atendimento.</p>
+                </article>
+                <article class="about-card">
+                    <span class="about-card-tag">02</span>
+                    <h3>Coach fitness</h3>
+                    <p>Para quem precisa unir acompanhamento, crescimento comercial e relacionamento com o cliente em uma estrutura única.</p>
+                </article>
+                <article class="about-card">
+                    <span class="about-card-tag">03</span>
+                    <h3>Consultoria online</h3>
+                    <p>Para operações que querem sair do modelo artesanal e ganhar base para escalar com mais organização e consistência.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section">
+        <div class="container">
+            <span class="section-eyebrow">Modulos principais</span>
+            <h2 class="section-title">Recursos apresentados de forma mais limpa, forte e comercial</h2>
+            <p class="about-lead">No lugar de ícones simples, a página passa a vender melhor o produto com blocos mais profissionais e foco no benefício real.</p>
+            <div class="about-modules">
+                <article class="about-module">
+                    <span class="about-module-tag">01</span>
+                    <h3>Dashboard e visão geral</h3>
+                    <p>Acompanhe indicadores, pendências e visão operacional para tomar decisões com mais clareza.</p>
+                </article>
+                <article class="about-module">
+                    <span class="about-module-tag">02</span>
+                    <h3>Gestão de alunos</h3>
+                    <p>Centralize alunos, históricos, limites por plano e toda a estrutura de acompanhamento em um só ambiente.</p>
+                </article>
+                <article class="about-module">
+                    <span class="about-module-tag">03</span>
+                    <h3>Treinos personalizados</h3>
+                    <p>Prescreva treinos com mais padronização e eleve a experiência de entrega do seu serviço.</p>
+                </article>
+                <article class="about-module">
+                    <span class="about-module-tag">04</span>
+                    <h3>Dieta e estratégia alimentar</h3>
+                    <p>Organize orientações de alimentação e fortaleça a percepção de cuidado contínuo com o aluno.</p>
+                </article>
+                <article class="about-module">
+                    <span class="about-module-tag">05</span>
+                    <h3>CRM e vendas</h3>
+                    <p>Gerencie leads, acompanhe negociações e tenha mais processo para transformar interesse em matrícula.</p>
+                </article>
+                <article class="about-module">
+                    <span class="about-module-tag">06</span>
+                    <h3>Financeiro e recorrência</h3>
+                    <p>Tenha previsibilidade sobre mensalidades, pagamentos e a saúde financeira da sua operação.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section alt">
+        <div class="container">
+            <span class="section-eyebrow">Valor percebido</span>
+            <h2 class="section-title">Por que isso fortalece a sua marca</h2>
+            <div class="about-values">
+                <div class="about-value">
+                    <h3>Mais autoridade</h3>
+                    <p>Você deixa de parecer um serviço informal e passa a se apresentar como uma operação bem estruturada.</p>
                 </div>
-                <div class="audience-card">
-                    <span class="mini-tag">Coach</span>
-                    <h3 class="audience-title">Processo mais escalavel</h3>
-                    <p class="audience-text">Centralize rotina operacional, vendas e relacionamento para crescer sem perder qualidade no acompanhamento.</p>
+                <div class="about-value">
+                    <h3>Mais retenção</h3>
+                    <p>Quando o aluno percebe organização, acompanhamento e clareza, a tendência é aumentar confiança e permanência.</p>
                 </div>
-                <div class="audience-card">
-                    <span class="mini-tag">Consultoria Fitness</span>
-                    <h3 class="audience-title">Marca mais forte</h3>
-                    <p class="audience-text">Use uma estrutura moderna para posicionar melhor sua consultoria e passar mais confiança desde a primeira impressão.</p>
+                <div class="about-value">
+                    <h3>Mais crescimento</h3>
+                    <p>Com processo, gestão e experiência melhores, fica mais fácil vender, atender e crescer sem bagunça.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="content-section alt">
+    <section class="about-section">
         <div class="container">
-            <span class="section-eyebrow">Capacidades da plataforma</span>
-            <h2 class="section-title">Recursos apresentados de forma mais profissional e chamativa</h2>
-            <p class="section-lead">Substitui os icones simples por blocos visuais mais consistentes, com linguagem de produto e foco no valor real da ferramenta.</p>
-            <div class="capability-grid">
-                <div class="capability-card">
-                    <span class="capability-marker">01</span>
-                    <h3 class="capability-title">Dashboard e visão geral</h3>
-                    <p class="capability-text">Tenha uma leitura clara da sua operação com indicadores, pendências, performance e organização do dia a dia.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">02</span>
-                    <h3 class="capability-title">Gestão de alunos</h3>
-                    <p class="capability-text">Centralize alunos, históricos, evolução, limite por plano e relacionamento com muito mais ordem.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">03</span>
-                    <h3 class="capability-title">Treinos personalizados</h3>
-                    <p class="capability-text">Prescreva treinos com mais padronização, clareza e percepção de valor para o aluno final.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">04</span>
-                    <h3 class="capability-title">Dieta e estratégia alimentar</h3>
-                    <p class="capability-text">Estruture orientações e acompanhamento para complementar a jornada de evolução do aluno.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">05</span>
-                    <h3 class="capability-title">Financeiro e mensalidades</h3>
-                    <p class="capability-text">Monitore cobranças, previsibilidade e receita com uma visão mais segura do seu negócio.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">06</span>
-                    <h3 class="capability-title">CRM de vendas</h3>
-                    <p class="capability-text">Acompanhe leads, negociações e oportunidades para converter mais alunos com processo.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">07</span>
-                    <h3 class="capability-title">Evolução fotográfica</h3>
-                    <p class="capability-text">Mostre progresso real com registros visuais que reforçam resultado e retenção do aluno.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">08</span>
-                    <h3 class="capability-title">Anamneses e avaliação inicial</h3>
-                    <p class="capability-text">Colete informações importantes logo na entrada do aluno e comece o acompanhamento com mais profundidade.</p>
-                </div>
-                <div class="capability-card">
-                    <span class="capability-marker">09</span>
-                    <h3 class="capability-title">Ecossistema com app</h3>
-                    <p class="capability-text">Prepare sua operação para uma experiência sincronizada entre plataforma web, App Store e futuro Google Play.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="content-section">
-        <div class="container">
-            <div class="download-section download-card">
+            <div class="about-cta">
                 <span class="section-eyebrow">Material institucional</span>
                 <h2 class="section-title">Baixe a apresentação da Fitborypro</h2>
-                <p class="download-text">Use esse material para entender melhor a proposta da plataforma e apresentar a solução de forma mais estratégica.</p>
-                <a href="APRESENTACAO-INSTITUCIONAL.pdf" target="_blank" class="btn-primary" style="margin-top: 20px;">Baixar Apresentacao em PDF</a>
+                <p>Use o PDF institucional para conhecer melhor a proposta da plataforma e apresentar a solução com mais segurança e estratégia.</p>
+                <a href="APRESENTACAO-INSTITUCIONAL.pdf" target="_blank" class="btn-primary">Baixar Apresentacao em PDF</a>
             </div>
         </div>
     </section>
