@@ -23,8 +23,8 @@ module.exports = async function handler(req, res) {
         }
 
         const planDetails = {
-            starter: { title: 'Fitbory Starter', price: 0.01 },
-            premium: { title: 'Fit Bory Premium', price: 0.01 }
+            starter: { title: 'Fitbory Starter', price: 1.00 },
+            premium: { title: 'Fit Bory Premium', price: 1.00 }
         };
         const selectedPlan = planDetails[plan];
         if (!selectedPlan) {
