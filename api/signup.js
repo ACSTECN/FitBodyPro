@@ -35,6 +35,15 @@ function getLandingToken() {
     );
 }
 
+function getSupabaseAuthToken() {
+    return (
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_EDGE_FUNCTION_JWT ||
+        null
+    );
+}
+
 function buildRecurringFields(reqBody, mpPaymentData) {
     return {
         paymentAmount: pickFirstDefined(
@@ -166,6 +175,14 @@ module.exports = async function handler(req, res) {
         console.log("BODY SUPABASE:", body);
 
         const landingToken = getLandingToken();
+        const supabaseAuthToken = getSupabaseAuthToken();
+
+        if (!supabaseAuthToken) {
+            return res.status(500).json({
+                success: false,
+                message: 'Configure SUPABASE_SERVICE_ROLE_KEY ou SUPABASE_ANON_KEY para chamar a Edge Function protegida.'
+            });
+        }
 
         const response = await fetch(
             'https://cdtouwfxwuhnlzqhcagy.supabase.co/functions/v1/create-personal-account',
@@ -173,7 +190,7 @@ module.exports = async function handler(req, res) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${landingToken}`,
+                    'Authorization': `Bearer ${supabaseAuthToken}`,
                     'x-landing-token': landingToken
                 },
                 body: JSON.stringify(body)
