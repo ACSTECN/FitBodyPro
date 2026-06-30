@@ -745,7 +745,28 @@ async function createPaymentIntent(plan, method) {
 
         if (method === 'checkout-pro') {
             if (data.success && data.init_point) {
-                window.location.href = data.init_point;
+                const paymentWindow = window.open(data.init_point, '_blank', 'noopener,noreferrer');
+
+                if (!paymentWindow) {
+                    document.getElementById('messagePaymentArea').innerHTML = `
+                        <div class="message error">
+                            O navegador bloqueou a nova aba. Libere pop-ups e tente novamente.
+                        </div>
+                    `;
+
+                    btn.disabled = false;
+                    btn.textContent = 'Continuar para Mercado Pago';
+                    return;
+                }
+
+                document.getElementById('messagePaymentArea').innerHTML = `
+                    <div class="message success">
+                        O Mercado Pago foi aberto em uma nova aba. Voce pode concluir o pagamento la e manter esta pagina aberta.
+                    </div>
+                `;
+
+                btn.disabled = false;
+                btn.textContent = 'Abrir Mercado Pago novamente';
                 return;
             }
 
