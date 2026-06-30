@@ -1,0 +1,136 @@
+MERCADO PAGO - BLOCO DE NOTAS
+Projeto: Fitborypro / FitBodyPro
+
+1. ARQUIVOS RELACIONADOS
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\mercado-pago-integration.js
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\api\create-payment.js
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\api\check-payment.js
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\api\webhook.js
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\planos.html
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\success.html
+
+2. VARIAVEL DE AMBIENTE
+- MERCADO_PAGO_ACCESS_TOKEN
+
+Observacao:
+- O token secreto nao deve ser compartilhado em texto aberto.
+- Se for integrar em outro projeto, configure o token via .env ou painel da hospedagem.
+
+3. URL BASE DO PROJETO
+- https://fit-body-pro-one.vercel.app
+
+4. ROTAS INTERNAS DO PROJETO
+- Criar pagamento: /api/create-payment
+- Checar pagamento: /api/check-payment
+- Webhook: /api/webhook
+
+5. ENDPOINTS DO MERCADO PAGO
+- Checkout Pro: https://api.mercadopago.com/checkout/preferences
+- Criar pagamento Pix: https://api.mercadopago.com/v1/payments
+- Consultar pagamento: https://api.mercadopago.com/v1/payments/{paymentId}
+
+6. CABECALHOS USADOS
+- Authorization: Bearer <MERCADO_PAGO_ACCESS_TOKEN>
+- Content-Type: application/json
+- X-Idempotency-Key: <valor-unico>  (usado no Pix)
+
+7. PLANOS EM USO
+- starter
+  titulo: Fitbory Starter
+  valor: 14.90
+
+- premium
+  titulo: Fit Bory Premium
+  valor: 39.90
+
+8. URLS DE RETORNO
+- success: https://fit-body-pro-one.vercel.app/success.html?plan={plan}
+- failure: https://fit-body-pro-one.vercel.app/planos.html
+- pending: https://fit-body-pro-one.vercel.app/planos.html
+
+9. WEBHOOK
+- notification_url: https://fit-body-pro-one.vercel.app/api/webhook
+- evento tratado: payment
+- campo usado no webhook: data.id
+
+10. METODOS DE PAGAMENTO USADOS
+- checkout-pro
+- pix
+
+11. PAYLOAD DE EXEMPLO - CHECKOUT PRO
+{
+  "items": [
+    {
+      "title": "Fitbory Starter",
+      "description": "Fitbory Starter",
+      "quantity": 1,
+      "currency_id": "BRL",
+      "unit_price": 14.90
+    }
+  ],
+  "back_urls": {
+    "success": "https://fit-body-pro-one.vercel.app/success.html?plan=starter",
+    "failure": "https://fit-body-pro-one.vercel.app/planos.html",
+    "pending": "https://fit-body-pro-one.vercel.app/planos.html"
+  },
+  "auto_return": "approved",
+  "metadata": {
+    "plan": "starter"
+  }
+}
+
+12. PAYLOAD DE EXEMPLO - PIX
+{
+  "transaction_amount": 14.90,
+  "description": "Fitbory Starter",
+  "payment_method_id": "pix",
+  "payer": {
+    "email": "cliente@email.com",
+    "first_name": "Cliente",
+    "last_name": "Fitbory"
+  },
+  "metadata": {
+    "plan": "starter"
+  },
+  "notification_url": "https://fit-body-pro-one.vercel.app/api/webhook"
+}
+
+13. RETORNO ESPERADO DO PIX
+- paymentId
+- pixCode
+- qrCode
+- ticketUrl
+
+14. CHECAGEM DE PAGAMENTO
+Entrada:
+{
+  "paymentId": "ID_DO_PAGAMENTO"
+}
+
+Saida esperada:
+{
+  "approved": true,
+  "status": "approved",
+  "data": {}
+}
+
+15. FLUXO ATUAL
+- Plano free: cadastro direto
+- Plano pago: cria pagamento
+- Se for Checkout Pro: redireciona para o Mercado Pago
+- Se for Pix: gera QR Code e Pix copia e cola
+- Front faz polling em /api/check-payment
+- Quando approved = true, redireciona para success.html
+- Em success.html o usuario cria a conta
+
+16. PONTOS IMPORTANTES PARA INTEGRAR EM OUTRO CODIGO
+- Levar create-payment
+- Levar check-payment
+- Levar webhook
+- Configurar MERCADO_PAGO_ACCESS_TOKEN
+- Ajustar baseUrl para o dominio novo
+- Ajustar success/failure/pending URLs
+- Ajustar notification_url do webhook
+
+17. ARQUIVO CONSOLIDADO PRONTO PARA COPIAR
+- c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\mercado-pago-integration.js

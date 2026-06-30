@@ -92,6 +92,10 @@
             background: #f8d7da;
             color: #721c24;
         }
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
 .login-btn{
     display:flex;
     align-items:center;
@@ -275,6 +279,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         email,
         password,
         plan,
+        billingCycle: "monthly",
         paymentStatus: "approved",
         paymentProvider: "mercadopago",
         paymentId: paymentId
@@ -293,7 +298,15 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         console.log('RETORNO /api/signup:', data);
 
         if (response.ok && data.success) {
-            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso!</div>';
+            const recurringReady = data.recurringReady === true;
+
+            if (plan !== 'free' && !recurringReady) {
+                messageArea.innerHTML = '<div class="message warning">Conta criada com sucesso, mas a recorrencia automatica ainda nao ficou pronta. Verifique os dados do pagamento recorrente no Mercado Pago.</div>';
+            } else if (plan !== 'free') {
+                messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Cartao pronto para renovacao automatica.</div>';
+            } else {
+                messageArea.innerHTML = '<div class="message success">Conta criada com sucesso!</div>';
+            }
 
             setTimeout(() => {
                 window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
