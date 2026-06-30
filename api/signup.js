@@ -27,6 +27,14 @@ async function fetchMercadoPagoPayment(paymentId) {
     return data;
 }
 
+function getLandingToken() {
+    return (
+        process.env.LANDING_SIGNUP_TOKEN ||
+        process.env.X_LANDING_TOKEN ||
+        'fb69dfaf8f4d4f52a3c39eacdebb398dfe23d98f6c914acab7bf0ec62bd2075a'
+    );
+}
+
 function buildRecurringFields(reqBody, mpPaymentData) {
     return {
         paymentAmount: pickFirstDefined(
@@ -157,13 +165,16 @@ module.exports = async function handler(req, res) {
         console.log("REQ BODY RECEBIDO:", req.body);
         console.log("BODY SUPABASE:", body);
 
+        const landingToken = getLandingToken();
+
         const response = await fetch(
             'https://cdtouwfxwuhnlzqhcagy.supabase.co/functions/v1/create-personal-account',
             {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-landing-token': 'fb69dfaf8f4d4f52a3c39eacdebb398dfe23d98f6c914acab7bf0ec62bd2075a'
+                    'Authorization': `Bearer ${landingToken}`,
+                    'x-landing-token': landingToken
                 },
                 body: JSON.stringify(body)
             }
