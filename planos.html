@@ -651,6 +651,7 @@ let selectedPlan = null;
 let selectedPaymentMethod = 'pix';
 let paymentData = null;
 let paymentCheckInterval = null;
+let checkoutProWindow = null;
 
 function openModal() {
     document.getElementById('signupModal').classList.add('show');
@@ -693,6 +694,7 @@ function openPaymentModal(plan) {
 function closePaymentModal() {
     document.getElementById('paymentModal').classList.remove('show');
     document.getElementById('messagePaymentArea').innerHTML = '';
+    checkoutProWindow = null;
 
     if (paymentCheckInterval) {
         clearInterval(paymentCheckInterval);
@@ -721,7 +723,7 @@ function selectPayment(method) {
     }
 }
 
-async function createPaymentIntent(plan, method) {
+async function createPaymentIntent(plan, method, preOpenedWindow) {
     const btn = document.getElementById('mpBtn');
 
     try {
@@ -745,12 +747,28 @@ async function createPaymentIntent(plan, method) {
 
         if (method === 'checkout-pro') {
             if (data.success && data.init_point) {
-                const paymentWindow = window.open(data.init_point, '_blank', 'noopener,noreferrer');
+                let opened = false;
 
-                if (!paymentWindow) {
+                if (preOpenedWindow && !preOpenedWindow.closed) {
+                    try {
+                        preOpenedWindow.location.href = data.init_point;
+                        opened = true;
+                    } catch (e) {
+                        opened = false;
+                    }
+                }
+
+                if (!opened) {
+                    const popup = window.open(data.init_point, '_blank');
+                    opened = !!popup;
+                }
+
+                if (!opened) {
                     document.getElementById('messagePaymentArea').innerHTML = `
                         <div class="message error">
-                            O navegador bloqueou a nova aba. Libere pop-ups e tente novamente.
+                            O navegador bloqueou a nova aba. Clique no link para abrir o Mercado Pago:
+                            <br><br>
+                            <a href="${data.init_point}" target="_blank" rel="noopener noreferrer">${data.init_point}</a>
                         </div>
                     `;
 
@@ -835,7 +853,13 @@ async function createPaymentIntent(plan, method) {
 }
 
 async function goToMercadoPago() {
-    await createPaymentIntent(selectedPlan, selectedPaymentMethod);
+    if (selectedPaymentMethod === 'checkout-pro') {
+        checkoutProWindow = window.open('about:blank', '_blank');
+    } else {
+        checkoutProWindow = null;
+    }
+
+    await createPaymentIntent(selectedPlan, selectedPaymentMethod, checkoutProWindow);
 }
 
 function startPaymentCheck(paymentId, plan) {
