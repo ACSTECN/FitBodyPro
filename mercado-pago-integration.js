@@ -1,6 +1,6 @@
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 1.00 },
-    premium: { title: 'Fit Bory Premium', price: 1.00 }
+    starter: { title: 'Fitbory Starter', price: 4.00 },
+    premium: { title: 'Fit Bory Premium', price: 4.00 }
 };
 
 const DEFAULT_CONFIG = {
