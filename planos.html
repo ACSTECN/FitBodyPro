@@ -358,6 +358,82 @@
         border-color: #00cc6a;
         background: rgba(0,204,106,.05);
     }
+
+    .payment-helper {
+        text-align: center;
+        color: #555;
+        margin-bottom: 18px;
+    }
+
+    .card-payment-area {
+        display: none;
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 16px;
+        background: #f7f9fc;
+        border: 1px solid #e5ebf4;
+    }
+
+    .card-payment-area.show {
+        display: block;
+    }
+
+    .card-payment-note {
+        color: #334155;
+        font-size: .95rem;
+        margin-bottom: 16px;
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .card-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .card-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .card-field label {
+        color: #334155;
+        font-size: .92rem;
+        font-weight: 600;
+    }
+
+    .card-field input,
+    .card-field select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #d7dee8;
+        border-radius: 10px;
+        font-size: .95rem;
+        font-family: 'Poppins', sans-serif;
+        background: #fff;
+    }
+
+    .mp-field {
+        min-height: 48px;
+        border: 1px solid #d7dee8;
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px 12px;
+    }
+
+    .payment-warning {
+        color: #8a5a00;
+        background: #fff3cd;
+        border: 1px solid #ffe69c;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-top: 14px;
+        font-size: .92rem;
+    }
     .hero-banner{
         width:100%;
         display:block;
@@ -438,6 +514,10 @@
 
         .payment-options {
             flex-direction: column;
+        }
+
+        .card-grid {
+            grid-template-columns: 1fr;
         }
     }
 
@@ -602,13 +682,63 @@
                 <div class="payment-option active" onclick="selectPayment('pix')" id="pixOption">
                     📱 Pix
                 </div>
-                <div class="payment-option" onclick="selectPayment('checkout-pro')" id="mpOption">
-                    💳 Todos os métodos<br><small>(Mercado Pago)</small>
+                <div class="payment-option" onclick="selectPayment('card')" id="mpOption">
+                    💳 Cartao<br><small>(recorrencia automatica)</small>
+                </div>
+            </div>
+            <p class="payment-helper" id="paymentHelper">Escolha Pix ou pague com cartao para ja preparar a renovacao automatica.</p>
+            <div id="cardPaymentArea" class="card-payment-area">
+                <div class="card-payment-note">
+                    Preencha os dados do cartao para aprovar o primeiro pagamento e salvar o customer/card-on-file no Mercado Pago.
+                </div>
+                <form id="cardPaymentForm">
+                    <div class="card-grid">
+                        <div class="card-field full">
+                            <label for="form-checkout__cardholderEmail">E-mail do pagador</label>
+                            <input type="email" id="form-checkout__cardholderEmail" placeholder="seu@email.com" required>
+                        </div>
+                        <div class="card-field full">
+                            <label>Numero do cartao</label>
+                            <div id="form-checkout__cardNumber" class="mp-field"></div>
+                        </div>
+                        <div class="card-field">
+                            <label>Validade</label>
+                            <div id="form-checkout__expirationDate" class="mp-field"></div>
+                        </div>
+                        <div class="card-field">
+                            <label>CVV</label>
+                            <div id="form-checkout__securityCode" class="mp-field"></div>
+                        </div>
+                        <div class="card-field full">
+                            <label for="form-checkout__cardholderName">Nome no cartao</label>
+                            <input type="text" id="form-checkout__cardholderName" placeholder="Nome impresso no cartao" required>
+                        </div>
+                        <div class="card-field">
+                            <label for="form-checkout__issuer">Banco emissor</label>
+                            <select id="form-checkout__issuer"></select>
+                        </div>
+                        <div class="card-field">
+                            <label for="form-checkout__installments">Parcelas</label>
+                            <select id="form-checkout__installments"></select>
+                        </div>
+                        <div class="card-field">
+                            <label for="form-checkout__identificationType">Documento</label>
+                            <select id="form-checkout__identificationType"></select>
+                        </div>
+                        <div class="card-field">
+                            <label for="form-checkout__identificationNumber">Numero do documento</label>
+                            <input type="text" id="form-checkout__identificationNumber" placeholder="CPF" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="cardPaymentHiddenSubmit" style="display:none">Pagar</button>
+                </form>
+                <div class="payment-warning">
+                    Esse fluxo salva o customer e o cartao corretos no Mercado Pago para habilitar renovacao automatica.
                 </div>
             </div>
             
             <div style="text-align: center;">
-                <p>Você será redirecionado para o Mercado Pago para completar o pagamento!</p>
+                <p id="paymentActionText">Voce sera direcionado para concluir o pagamento.</p>
                 <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn" disabled>
     Continuar para pagamento
 </button>
@@ -645,6 +775,7 @@
         </div>
     </footer>
 
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script>
 
 let selectedPlan = null;
@@ -652,6 +783,192 @@ let selectedPaymentMethod = 'pix';
 let paymentData = null;
 let paymentCheckInterval = null;
 let checkoutProWindow = null;
+let mercadoPagoPublicKey = null;
+let mercadoPagoInstance = null;
+let mercadoPagoCardForm = null;
+
+const priceValues = {
+    starter: 4.0,
+    premium: 4.0
+};
+
+async function loadMercadoPagoPublicKey() {
+    if (mercadoPagoPublicKey) {
+        return mercadoPagoPublicKey;
+    }
+
+    const response = await fetch('/api/mp-config');
+    const data = await response.json();
+
+    if (!response.ok || !data.publicKey) {
+        throw new Error('Configure MERCADO_PAGO_PUBLIC_KEY na Vercel para habilitar o fluxo de cartao.');
+    }
+
+    mercadoPagoPublicKey = data.publicKey;
+    return mercadoPagoPublicKey;
+}
+
+async function ensureCardForm() {
+    if (mercadoPagoCardForm) {
+        return mercadoPagoCardForm;
+    }
+
+    const publicKey = await loadMercadoPagoPublicKey();
+    mercadoPagoInstance = new MercadoPago(publicKey, { locale: 'pt-BR' });
+
+    mercadoPagoCardForm = mercadoPagoInstance.cardForm({
+        amount: String((priceValues[selectedPlan] || 4).toFixed(2)),
+        iframe: true,
+        form: {
+            id: 'cardPaymentForm',
+            cardNumber: {
+                id: 'form-checkout__cardNumber',
+                placeholder: 'Numero do cartao'
+            },
+            expirationDate: {
+                id: 'form-checkout__expirationDate',
+                placeholder: 'MM/AA'
+            },
+            securityCode: {
+                id: 'form-checkout__securityCode',
+                placeholder: 'CVV'
+            },
+            cardholderName: {
+                id: 'form-checkout__cardholderName',
+                placeholder: 'Titular do cartao'
+            },
+            issuer: {
+                id: 'form-checkout__issuer',
+                placeholder: 'Banco emissor'
+            },
+            installments: {
+                id: 'form-checkout__installments',
+                placeholder: 'Parcelas'
+            },
+            identificationType: {
+                id: 'form-checkout__identificationType',
+                placeholder: 'Tipo de documento'
+            },
+            identificationNumber: {
+                id: 'form-checkout__identificationNumber',
+                placeholder: 'Numero do documento'
+            },
+            cardholderEmail: {
+                id: 'form-checkout__cardholderEmail',
+                placeholder: 'E-mail'
+            }
+        },
+        callbacks: {
+            onFormMounted: (error) => {
+                if (error) {
+                    console.error('Erro ao montar o card form:', error);
+                }
+            },
+            onSubmit: (event) => {
+                event.preventDefault();
+                const cardFormData = mercadoPagoCardForm.getCardFormData();
+                submitCardPayment(cardFormData);
+            },
+            onFetching: () => {
+                const btn = document.getElementById('mpBtn');
+                btn.disabled = true;
+                btn.textContent = 'Validando cartao...';
+                return () => {
+                    btn.disabled = false;
+                };
+            }
+        }
+    });
+
+    return mercadoPagoCardForm;
+}
+
+function buildRecurringStorageKey(paymentId) {
+    return `fitboryRecurring:${paymentId}`;
+}
+
+function storeRecurringData(paymentId, recurringData) {
+    if (!paymentId || !recurringData) {
+        return;
+    }
+    sessionStorage.setItem(buildRecurringStorageKey(paymentId), JSON.stringify(recurringData));
+}
+
+async function submitCardPayment(cardFormData) {
+    const btn = document.getElementById('mpBtn');
+    const messageArea = document.getElementById('messagePaymentArea');
+
+    try {
+        btn.disabled = true;
+        btn.textContent = 'Processando cartao...';
+        messageArea.innerHTML = '';
+
+        const response = await fetch('/api/create-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                plan: selectedPlan,
+                method: 'card',
+                token: cardFormData.token,
+                email: cardFormData.cardholderEmail,
+                cardholderName: cardFormData.cardholderName,
+                identificationType: cardFormData.identificationType,
+                identificationNumber: cardFormData.identificationNumber,
+                paymentMethodId: cardFormData.paymentMethodId,
+                issuerId: cardFormData.issuerId,
+                installments: cardFormData.installments
+            })
+        });
+
+        const data = await response.json();
+        console.log('Card payment response:', data);
+
+        if (!response.ok || !data.success) {
+            messageArea.innerHTML = `
+                <div class="message error">
+                    ${data.message || data.error?.message || data.statusDetail || 'Nao foi possivel processar o cartao.'}
+                </div>
+            `;
+            btn.disabled = false;
+            btn.textContent = 'Pagar com cartao';
+            return;
+        }
+
+        if (data.paymentId && data.recurringData) {
+            storeRecurringData(data.paymentId, data.recurringData);
+        }
+
+        if (data.approved) {
+            messageArea.innerHTML = `
+                <div class="message success">
+                    Pagamento aprovado! Redirecionando para criar sua conta.
+                </div>
+            `;
+
+            setTimeout(() => {
+                window.location.href = `/success.html?plan=${selectedPlan}&paymentId=${data.paymentId}`;
+            }, 900);
+            return;
+        }
+
+        messageArea.innerHTML = `
+            <div class="message error">
+                Pagamento retornou com status ${data.status || 'desconhecido'}. ${data.statusDetail || ''}
+            </div>
+        `;
+        btn.disabled = false;
+        btn.textContent = 'Pagar com cartao';
+    } catch (error) {
+        console.error('Card Payment Error:', error);
+        messageArea.innerHTML = `
+            <div class="message error">
+                ${error.message || 'Erro ao processar pagamento com cartao.'}
+            </div>
+        `;
+        btn.disabled = false;
+        btn.textContent = 'Pagar com cartao';
+    }
+}
 
 function openModal() {
     document.getElementById('signupModal').classList.add('show');
@@ -686,6 +1003,7 @@ function openPaymentModal(plan) {
     document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
     document.getElementById('priceDisplay').textContent = prices[plan];
     document.getElementById('messagePaymentArea').innerHTML = '';
+    document.getElementById('paymentActionText').textContent = 'Voce sera direcionado para concluir o pagamento.';
 
     document.getElementById('paymentModal').classList.add('show');
     selectPayment('pix');
@@ -707,6 +1025,7 @@ function selectPayment(method) {
 
     document.getElementById('pixOption').classList.remove('active');
     document.getElementById('mpOption').classList.remove('active');
+    document.getElementById('cardPaymentArea').classList.remove('show');
 
     const btn = document.getElementById('mpBtn');
     btn.style.display = 'block';
@@ -717,9 +1036,19 @@ function selectPayment(method) {
     if (method === 'pix') {
         document.getElementById('pixOption').classList.add('active');
         btn.textContent = 'Gerar QR Code do Pix';
+        document.getElementById('paymentActionText').textContent = 'Voce gera o QR Code e paga direto pelo Pix.';
     } else {
         document.getElementById('mpOption').classList.add('active');
-        btn.textContent = 'Continuar para Mercado Pago';
+        document.getElementById('cardPaymentArea').classList.add('show');
+        document.getElementById('paymentActionText').textContent = 'Preencha o cartao para aprovar o primeiro pagamento e salvar a recorrencia.';
+        btn.textContent = 'Pagar com cartao';
+        ensureCardForm().catch((error) => {
+            document.getElementById('messagePaymentArea').innerHTML = `
+                <div class="message error">
+                    ${error.message}
+                </div>
+            `;
+        });
     }
 }
 
@@ -728,7 +1057,7 @@ async function createPaymentIntent(plan, method, preOpenedWindow) {
 
     try {
         btn.disabled = true;
-        btn.textContent = method === 'pix' ? 'Gerando Pix...' : 'Gerando link...';
+        btn.textContent = method === 'pix' ? 'Gerando Pix...' : 'Processando cartao...';
 
         const response = await fetch('/api/create-payment', {
             method: 'POST',
@@ -744,60 +1073,6 @@ async function createPaymentIntent(plan, method, preOpenedWindow) {
         console.log('Payment response:', data);
 
         paymentData = data;
-
-        if (method === 'checkout-pro') {
-            if (data.success && data.init_point) {
-                let opened = false;
-
-                if (preOpenedWindow && !preOpenedWindow.closed) {
-                    try {
-                        preOpenedWindow.location.href = data.init_point;
-                        opened = true;
-                    } catch (e) {
-                        opened = false;
-                    }
-                }
-
-                if (!opened) {
-                    const popup = window.open(data.init_point, '_blank');
-                    opened = !!popup;
-                }
-
-                if (!opened) {
-                    document.getElementById('messagePaymentArea').innerHTML = `
-                        <div class="message error">
-                            O navegador bloqueou a nova aba. Clique no link para abrir o Mercado Pago:
-                            <br><br>
-                            <a href="${data.init_point}" target="_blank" rel="noopener noreferrer">${data.init_point}</a>
-                        </div>
-                    `;
-
-                    btn.disabled = false;
-                    btn.textContent = 'Continuar para Mercado Pago';
-                    return;
-                }
-
-                document.getElementById('messagePaymentArea').innerHTML = `
-                    <div class="message success">
-                        O Mercado Pago foi aberto em uma nova aba. Voce pode concluir o pagamento la e manter esta pagina aberta.
-                    </div>
-                `;
-
-                btn.disabled = false;
-                btn.textContent = 'Abrir Mercado Pago novamente';
-                return;
-            }
-
-            document.getElementById('messagePaymentArea').innerHTML = `
-                <div class="message error">
-                    Erro ao gerar link do Mercado Pago.
-                </div>
-            `;
-
-            btn.disabled = false;
-            btn.textContent = 'Continuar para Mercado Pago';
-            return;
-        }
 
         if (method === 'pix') {
             if (data.success && data.qrCode && data.paymentId) {
@@ -848,17 +1123,22 @@ async function createPaymentIntent(plan, method, preOpenedWindow) {
         `;
 
         btn.disabled = false;
-        btn.textContent = method === 'pix' ? 'Gerar QR Code do Pix' : 'Continuar para Mercado Pago';
+        btn.textContent = method === 'pix' ? 'Gerar QR Code do Pix' : 'Pagar com cartao';
     }
 }
 
 async function goToMercadoPago() {
-    if (selectedPaymentMethod === 'checkout-pro') {
-        checkoutProWindow = window.open('about:blank', '_blank');
-    } else {
-        checkoutProWindow = null;
+    if (selectedPaymentMethod === 'card') {
+        const form = document.getElementById('cardPaymentForm');
+        if (form.requestSubmit) {
+            form.requestSubmit();
+        } else {
+            document.getElementById('cardPaymentHiddenSubmit').click();
+        }
+        return;
     }
 
+    checkoutProWindow = null;
     await createPaymentIntent(selectedPlan, selectedPaymentMethod, checkoutProWindow);
 }
 

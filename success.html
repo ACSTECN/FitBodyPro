@@ -273,6 +273,16 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         return;
     }
 
+    let recurringData = null;
+
+    try {
+        recurringData = paymentId
+            ? JSON.parse(sessionStorage.getItem(`fitboryRecurring:${paymentId}`) || 'null')
+            : null;
+    } catch (error) {
+        recurringData = null;
+    }
+
     const payload = {
         fullName: name,
         phone,
@@ -282,7 +292,8 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         billingCycle: "monthly",
         paymentStatus: "approved",
         paymentProvider: "mercadopago",
-        paymentId: paymentId
+        paymentId: paymentId,
+        ...(recurringData || {})
     };
         console.log('ENVIANDO PARA /api/signup:', payload);
 
@@ -311,6 +322,9 @@ document.getElementById('signupForm').addEventListener('submit', async function(
             setTimeout(() => {
                 window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
             }, 2000);
+            if (paymentId) {
+                sessionStorage.removeItem(`fitboryRecurring:${paymentId}`);
+            }
         } else {
             messageArea.innerHTML = '<div class="message error">' + (data.message || data.error || 'Ocorreu um erro!') + '</div>';
         }

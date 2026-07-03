@@ -45,58 +45,75 @@ function getSupabaseAuthToken() {
 }
 
 function buildRecurringFields(reqBody, mpPaymentData) {
+    const explicitRawPayload = reqBody.paymentRawPayload || {};
+
     return {
         paymentAmount: pickFirstDefined(
             reqBody.paymentAmount,
+            explicitRawPayload?.payment?.transaction_amount,
             mpPaymentData?.transaction_amount
         ),
         paymentCurrency: pickFirstDefined(
             reqBody.paymentCurrency,
+            explicitRawPayload?.payment?.currency_id,
             mpPaymentData?.currency_id
         ),
         providerReference: pickFirstDefined(
             reqBody.providerReference,
+            explicitRawPayload?.payment?.order?.id,
+            explicitRawPayload?.payment?.external_reference,
             mpPaymentData?.order?.id,
             mpPaymentData?.external_reference,
             mpPaymentData?.id
         ),
         paymentDescription: pickFirstDefined(
             reqBody.paymentDescription,
+            explicitRawPayload?.payment?.description,
             mpPaymentData?.description
         ),
         providerCustomerId: pickFirstDefined(
             reqBody.providerCustomerId,
-            mpPaymentData?.payer?.id,
+            explicitRawPayload?.customer?.id,
+            explicitRawPayload?.savedCard?.customer_id,
             mpPaymentData?.customer?.id
         ),
         providerCardId: pickFirstDefined(
             reqBody.providerCardId,
+            explicitRawPayload?.savedCard?.id,
             mpPaymentData?.card?.id
         ),
         paymentMethodId: pickFirstDefined(
             reqBody.paymentMethodId,
+            explicitRawPayload?.savedCard?.payment_method?.id,
+            explicitRawPayload?.payment?.payment_method_id,
             mpPaymentData?.payment_method_id
         ),
         issuerId: pickFirstDefined(
             reqBody.issuerId,
+            explicitRawPayload?.savedCard?.issuer?.id,
+            explicitRawPayload?.payment?.issuer_id,
             mpPaymentData?.issuer_id,
             mpPaymentData?.issuer?.id
         ),
         cardBrand: pickFirstDefined(
             reqBody.cardBrand,
+            explicitRawPayload?.savedCard?.payment_method?.id,
             mpPaymentData?.payment_method?.id,
             mpPaymentData?.card?.brand
         ),
         cardLastFour: pickFirstDefined(
             reqBody.cardLastFour,
+            explicitRawPayload?.savedCard?.last_four_digits,
             mpPaymentData?.card?.last_four_digits
         ),
         firstPaymentProviderPaymentId: pickFirstDefined(
             reqBody.firstPaymentProviderPaymentId,
+            explicitRawPayload?.payment?.id,
             mpPaymentData?.id
         ),
         providerSubscriptionId: pickFirstDefined(
             reqBody.providerSubscriptionId,
+            explicitRawPayload?.payment?.metadata?.providerSubscriptionId,
             mpPaymentData?.subscription_id,
             mpPaymentData?.recurring_id,
             mpPaymentData?.metadata?.providerSubscriptionId
