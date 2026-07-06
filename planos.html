@@ -311,6 +311,7 @@
         cursor: pointer;
         font-family: 'Poppins', sans-serif;
         margin-bottom: 15px;
+        flex-shrink: 0;
     }
 
     /* ===========================
@@ -361,6 +362,10 @@
 
     .payment-modal-content {
         max-width: 640px;
+        max-height: min(90vh, 860px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
         border-radius: 28px;
         padding: 30px;
         background:
@@ -375,6 +380,12 @@
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 12px;
+        position: sticky;
+        top: -30px;
+        z-index: 20;
+        padding-bottom: 14px;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(247,250,252,.96) 100%);
     }
 
     .payment-modal-copy {
@@ -594,6 +605,12 @@
 
         .payment-modal-content {
             padding: 24px 18px;
+            max-height: calc(100vh - 32px);
+        }
+
+        .payment-modal-head {
+            top: -24px;
+            align-items: stretch;
         }
     }
 
@@ -628,6 +645,15 @@
         .form-group input,
         .btn-close {
             font-size: 0.95rem;
+        }
+
+        .payment-modal-head {
+            flex-direction: column;
+        }
+
+        .payment-modal-head .btn-close {
+            width: 100%;
+            margin-bottom: 0;
         }
     }
     </style>
