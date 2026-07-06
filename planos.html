@@ -366,7 +366,7 @@
         overflow-y: auto;
         overflow-x: hidden;
         position: relative;
-        scroll-padding-top: 140px;
+        scroll-padding-top: 32px;
         border-radius: 28px;
         padding: 30px;
         background:
@@ -380,16 +380,8 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
-        margin: -30px -30px 12px;
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        padding: 22px 30px 14px;
-        padding-bottom: 14px;
-        border-radius: 28px 28px 20px 20px;
-        background:
-            linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(247,250,252,.96) 100%);
-        box-shadow: 0 10px 24px rgba(15,23,42,.06);
+        margin: 0 0 16px;
+        padding: 0;
     }
 
     .payment-modal-copy {
@@ -412,9 +404,22 @@
 
     .payment-modal-subtitle {
         color: #526072;
-        text-align: center;
+        text-align: left;
         margin: 8px 0 0;
         line-height: 1.65;
+    }
+
+    .payment-close-floating {
+        position: sticky;
+        top: 12px;
+        z-index: 30;
+        margin-left: auto;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 92px;
+        box-shadow: 0 10px 24px rgba(15,23,42,.12);
     }
 
     .payment-panel {
@@ -450,8 +455,8 @@
     }
 
     .brick-shell {
-        min-height: 260px;
-        padding: 16px;
+        min-height: 520px;
+        padding: 12px;
         border-radius: 18px;
         background: #fff;
         border: 1px solid #dbe4ef;
@@ -611,14 +616,16 @@
         .payment-modal-content {
             padding: 24px 18px;
             max-height: calc(100vh - 32px);
-            scroll-padding-top: 124px;
+            scroll-padding-top: 24px;
         }
 
         .payment-modal-head {
-            top: 0;
             align-items: stretch;
-            margin: -24px -18px 12px;
-            padding: 18px 18px 14px;
+            margin: 0 0 14px;
+        }
+
+        .payment-close-floating {
+            top: 8px;
         }
     }
 
@@ -659,9 +666,14 @@
             flex-direction: column;
         }
 
-        .payment-modal-head .btn-close {
+        .payment-close-floating {
             width: 100%;
             margin-bottom: 0;
+        }
+
+        .brick-shell {
+            min-height: 580px;
+            padding: 8px;
         }
     }
     </style>
@@ -784,13 +796,13 @@
     <!-- Modal for Payment -->
     <div id="paymentModal" class="modal">
         <div class="modal-content payment-modal-content">
+            <button class="btn-close payment-close-floating" onclick="closePaymentModal()">Fechar</button>
             <div class="payment-modal-head">
                 <div class="payment-modal-copy">
                     <span class="payment-kicker">Pagamento Seguro</span>
                     <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
                     <p class="payment-modal-subtitle">Pague com Pix agora ou use o cartao direto no Mercado Pago para deixar a renovacao automatica pronta.</p>
                 </div>
-                <button class="btn-close" onclick="closePaymentModal()">Fechar</button>
             </div>
             <div class="price-display" id="priceDisplay"></div>
             <div id="messagePaymentArea"></div>
