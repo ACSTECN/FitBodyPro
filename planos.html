@@ -950,7 +950,7 @@ async function renderCardPaymentBrick() {
                         paymentModalContent.scrollTop = 0;
                     }
                 },
-                onSubmit: ({ formData }) => {
+                onSubmit: (formData) => {
                     // #region debug-point B:brick-submit
                     fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"B",location:"planos.html:onSubmit",msg:"[DEBUG] onSubmit do Brick disparou",data:{hasFormData:!!formData,keys:formData?Object.keys(formData):[],selectedPlan},ts:Date.now()})}).catch(()=>{});
                     // #endregion
@@ -987,17 +987,22 @@ function storeRecurringData(paymentId, recurringData) {
 async function submitCardPayment(cardFormData) {
     const btn = document.getElementById('mpBtn');
     const messageArea = document.getElementById('messagePaymentArea');
-    const payer = cardFormData.payer || {};
-    const identification = payer.identification || {};
-    const paymentMethodId = cardFormData.payment_method_id || cardFormData.paymentMethodId;
-    const issuerId = cardFormData.issuer_id || cardFormData.issuerId;
-    const installments = cardFormData.installments;
-    const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
-    const cardholderName = cardFormData.cardholderName || payerFullName || payer.first_name || 'Cliente Fitbory';
-    const email = payer.email || cardFormData.email || cardFormData.cardholderEmail;
-    const token = cardFormData.token;
 
     try {
+        if (!cardFormData || typeof cardFormData !== 'object') {
+            throw new Error('O Mercado Pago nao retornou os dados do cartao. Tente preencher novamente ou recarregue a pagina.');
+        }
+
+        const payer = cardFormData.payer || {};
+        const identification = payer.identification || {};
+        const paymentMethodId = cardFormData.payment_method_id || cardFormData.paymentMethodId;
+        const issuerId = cardFormData.issuer_id || cardFormData.issuerId;
+        const installments = cardFormData.installments;
+        const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
+        const cardholderName = cardFormData.cardholderName || payerFullName || payer.first_name || 'Cliente Fitbory';
+        const email = payer.email || cardFormData.email || cardFormData.cardholderEmail;
+        const token = cardFormData.token;
+
         // #region debug-point D:submit-entry
         fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"D",location:"planos.html:submitCardPayment:start",msg:"[DEBUG] Entrou em submitCardPayment",data:{selectedPlan,hasToken:!!token,paymentMethodId,issuerId,installments,emailPresent:!!email,identificationType:identification.type||cardFormData.identificationType||null},ts:Date.now()})}).catch(()=>{});
         // #endregion
