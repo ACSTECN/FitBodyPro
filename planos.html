@@ -366,6 +366,7 @@
         overflow-y: auto;
         overflow-x: hidden;
         position: relative;
+        scroll-padding-top: 140px;
         border-radius: 28px;
         padding: 30px;
         background:
@@ -379,13 +380,16 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 12px;
+        margin: -30px -30px 12px;
         position: sticky;
-        top: -30px;
+        top: 0;
         z-index: 20;
+        padding: 22px 30px 14px;
         padding-bottom: 14px;
+        border-radius: 28px 28px 20px 20px;
         background:
             linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(247,250,252,.96) 100%);
+        box-shadow: 0 10px 24px rgba(15,23,42,.06);
     }
 
     .payment-modal-copy {
@@ -452,6 +456,7 @@
         background: #fff;
         border: 1px solid #dbe4ef;
         box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+        overflow: visible;
     }
 
     .payment-warning {
@@ -606,11 +611,14 @@
         .payment-modal-content {
             padding: 24px 18px;
             max-height: calc(100vh - 32px);
+            scroll-padding-top: 124px;
         }
 
         .payment-modal-head {
-            top: -24px;
+            top: 0;
             align-items: stretch;
+            margin: -24px -18px 12px;
+            padding: 18px 18px 14px;
         }
     }
 
@@ -922,11 +930,24 @@ async function renderCardPaymentBrick() {
             },
             callbacks: {
                 onReady: () => {
-                    console.log('Brick do Mercado Pago pronto.');
+                    // #region debug-point A:brick-ready
+                    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"A",location:"planos.html:onReady",msg:"[DEBUG] Brick do Mercado Pago pronto",data:{selectedPlan,selectedPaymentMethod},ts:Date.now()})}).catch(()=>{});
+                    // #endregion
+                    const paymentModalContent = document.querySelector('.payment-modal-content');
+                    if (paymentModalContent) {
+                        paymentModalContent.scrollTop = 0;
+                    }
                 },
-                onSubmit: ({ formData }) => submitCardPayment(formData),
+                onSubmit: ({ formData }) => {
+                    // #region debug-point B:brick-submit
+                    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"B",location:"planos.html:onSubmit",msg:"[DEBUG] onSubmit do Brick disparou",data:{hasFormData:!!formData,keys:formData?Object.keys(formData):[],selectedPlan},ts:Date.now()})}).catch(()=>{});
+                    // #endregion
+                    return submitCardPayment(formData);
+                },
                 onError: (error) => {
-                    console.error('Erro no Brick do Mercado Pago:', error);
+                    // #region debug-point C:brick-error
+                    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"C",location:"planos.html:onError",msg:"[DEBUG] Brick do Mercado Pago retornou erro",data:{message:error?.message||null,name:error?.name||null,type:error?.type||null,cause:error?.cause||null},ts:Date.now()})}).catch(()=>{});
+                    // #endregion
                     document.getElementById('messagePaymentArea').innerHTML = `
                         <div class="message error">
                             Nao foi possivel carregar o formulario do Mercado Pago.
@@ -965,8 +986,18 @@ async function submitCardPayment(cardFormData) {
     const token = cardFormData.token;
 
     try {
-        messageArea.innerHTML = '';
+        // #region debug-point D:submit-entry
+        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"D",location:"planos.html:submitCardPayment:start",msg:"[DEBUG] Entrou em submitCardPayment",data:{selectedPlan,hasToken:!!token,paymentMethodId,issuerId,installments,emailPresent:!!email,identificationType:identification.type||cardFormData.identificationType||null},ts:Date.now()})}).catch(()=>{});
+        // #endregion
+        messageArea.innerHTML = `
+            <div class="message success">
+                Processando pagamento...
+            </div>
+        `;
 
+        // #region debug-point E:before-fetch
+        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"E",location:"planos.html:submitCardPayment:beforeFetch",msg:"[DEBUG] Enviando requisicao para create-payment",data:{plan:selectedPlan,method:"card",email,cardholderName,identificationType:identification.type||cardFormData.identificationType||null,identificationNumberPresent:!!(identification.number||cardFormData.identificationNumber),paymentMethodId,issuerId,installments},ts:Date.now()})}).catch(()=>{});
+        // #endregion
         const response = await fetch('/api/create-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -985,7 +1016,9 @@ async function submitCardPayment(cardFormData) {
         });
 
         const data = await response.json();
-        console.log('Card payment response:', data);
+        // #region debug-point F:after-fetch
+        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"F",location:"planos.html:submitCardPayment:afterFetch",msg:"[DEBUG] Resposta recebida de create-payment",data:{ok:response.ok,status:response.status,success:data?.success,approved:data?.approved,paymentId:data?.paymentId||null,statusValue:data?.status||null,statusDetail:data?.statusDetail||null,message:data?.message||null,errorMessage:data?.error?.message||null},ts:Date.now()})}).catch(()=>{});
+        // #endregion
 
         if (!response.ok || !data.success) {
             messageArea.innerHTML = `
@@ -1019,7 +1052,9 @@ async function submitCardPayment(cardFormData) {
             </div>
         `;
     } catch (error) {
-        console.error('Card Payment Error:', error);
+        // #region debug-point G:submit-catch
+        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"G",location:"planos.html:submitCardPayment:catch",msg:"[DEBUG] submitCardPayment caiu no catch",data:{message:error?.message||null,name:error?.name||null,stack:error?.stack||null},ts:Date.now()})}).catch(()=>{});
+        // #endregion
         messageArea.innerHTML = `
             <div class="message error">
                 ${error.message || 'Erro ao processar pagamento com cartao.'}
@@ -1101,9 +1136,16 @@ function selectPayment(method) {
         btn.textContent = 'Gerar QR Code do Pix';
         document.getElementById('paymentActionText').textContent = 'Voce gera o QR Code e paga direto pelo Pix.';
     } else {
+        // #region debug-point H:select-card
+        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"H",location:"planos.html:selectPayment",msg:"[DEBUG] Usuario selecionou cartao",data:{selectedPlan,method},ts:Date.now()})}).catch(()=>{});
+        // #endregion
         document.getElementById('mpOption').classList.add('active');
         document.getElementById('cardPaymentArea').classList.add('show');
         document.getElementById('paymentActionText').textContent = 'Preencha os dados do cartao dentro do Mercado Pago para concluir o primeiro pagamento.';
+        const paymentModalContent = document.querySelector('.payment-modal-content');
+        if (paymentModalContent) {
+            paymentModalContent.scrollTop = 0;
+        }
         renderCardPaymentBrick().catch((error) => {
             document.getElementById('messagePaymentArea').innerHTML = `
                 <div class="message error">
