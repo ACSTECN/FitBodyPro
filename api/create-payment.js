@@ -180,9 +180,9 @@ async function createCardPayment(reqBody) {
                 identification:
                     identificationType && identificationNumber
                         ? {
-                              type: identificationType,
-                              number: cleanDigits(identificationNumber)
-                          }
+                            type: identificationType,
+                            number: cleanDigits(identificationNumber)
+                        }
                         : undefined
             },
             metadata: {
@@ -191,6 +191,23 @@ async function createCardPayment(reqBody) {
                 source: 'landing-card-recurring',
                 providerSubscriptionId: subscriptionId,
                 providerCardId: savedCard.id
+            },
+            point_of_interaction: {
+                type: 'SUBSCRIPTIONS',
+                transaction_data: {
+                    first_time_use: true,
+                    subscription_id: subscriptionId,
+                    subscription_sequence: {
+                        number: 1,
+                        total: null
+                    },
+                    invoice_period: {
+                        period: 1,
+                        type: 'monthly'
+                    },
+                    billing_date: new Date().toISOString(),
+                    user_present: true
+                }
             }
         }
     });
