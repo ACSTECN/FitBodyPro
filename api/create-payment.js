@@ -126,8 +126,38 @@ async function createCardPayment(reqBody) {
         identificationNumber
     });
 
-    const { firstName, lastName } = splitFullName(cardholderName);
     const subscriptionId = buildRecurringSubscriptionId(plan);
+
+    let savedCard;
+
+    try {
+        savedCard = await mercadoPagoRequest(`/v1/customers/${customer.id}/cards`, {
+            method: 'POST',
+            body: {
+                token
+            }
+        });
+    } catch (error) {
+        const mpMessage =
+            error.data?.message ||
+            error.data?.error ||
+            error.message ||
+            'Não foi possível salvar o cartão.';
+
+        const customError = new Error(`Cartão não foi salvo no Mercado Pago: ${mpMessage}`);
+        customError.status = 400;
+        customError.data = error.data || error.message;
+        throw customError;
+    }
+
+    if (!savedCard?.id) {
+        const error = new Error('Cartão não retornou providerCardId. Pagamento não será cobrado.');
+        error.status = 400;
+        error.data = { savedCard };
+        throw error;
+    }
+
+    const { firstName, lastName } = splitFullName(cardholderName);
 
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
@@ -159,7 +189,8 @@ async function createCardPayment(reqBody) {
                 plan,
                 billingCycle: 'monthly',
                 source: 'landing-card-recurring',
-                providerSubscriptionId: subscriptionId
+                providerSubscriptionId: subscriptionId,
+                providerCardId: savedCard.id
             }
         }
     });
@@ -167,6 +198,7 @@ async function createCardPayment(reqBody) {
     return {
         payment,
         customer,
+        savedCard,
         subscriptionId
     };
 }
@@ -202,14 +234,28 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const { payment, customer, subscriptionId } = await createCardPayment(req.body);
+        const { payment, customer, savedCard, subscriptionId } =
+            await createCardPayment(req.body);
 
-        const providerCardId = payment.card?.id || null;
-        const cardLastFour = payment.card?.last_four_digits || null;
-        const cardBrand = payment.payment_method_id || payment.payment_method?.id || null;
+        const providerCardId = savedCard.id;
+        const cardLastFour = savedCard.last_four_digits || payment.card?.last_four_digits || null;
+        const cardBrand =
+            savedCard.payment_method?.id ||
+            payment.payment_method_id ||
+            payment.payment_method?.id ||
+            null;
+
+        if (!providerCardId) {
+            return res.status(400).json({
+                success: false,
+                approved: false,
+                message: 'Pagamento bloqueado: providerCardId não foi gerado.',
+                recurringReady: false
+            });
+        }
 
         return res.status(200).json({
-            version: 'create-payment-card-from-payment-card-id-v2',
+            version: 'save-card-first-no-provider-card-no-payment-v1',
             success: payment.status === 'approved' || payment.status === 'in_process',
             approved: payment.status === 'approved',
             paymentId: payment.id,
@@ -225,7 +271,7 @@ module.exports = async function handler(req, res) {
                 providerCustomerId: customer.id,
                 providerCardId,
                 paymentMethodId: payment.payment_method_id || req.body.paymentMethodId,
-                issuerId: payment.issuer_id || payment.issuer?.id || null,
+                issuerId: savedCard.issuer?.id || payment.issuer_id || payment.issuer?.id || null,
                 cardBrand,
                 cardLastFour,
                 firstPaymentProviderPaymentId: payment.id,
@@ -233,7 +279,8 @@ module.exports = async function handler(req, res) {
 
                 paymentRawPayload: {
                     payment,
-                    customer
+                    customer,
+                    savedCard
                 }
             }
         });
@@ -242,6 +289,8 @@ module.exports = async function handler(req, res) {
 
         return res.status(error.status || 500).json({
             success: false,
+            approved: false,
+            recurringReady: false,
             message: error.message || 'Erro interno do servidor',
             error: error.data || error.message
         });
