@@ -158,7 +158,7 @@ async function createCardPayment(reqBody) {
     }
 
     const { firstName, lastName } = splitFullName(cardholderName);
-
+    const billingDate = new Date().toISOString().split('T')[0];
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
         headers: {
@@ -205,7 +205,7 @@ async function createCardPayment(reqBody) {
                         period: 1,
                         type: 'monthly'
                     },
-                    billing_date: new Date().toISOString(),
+                    billing_date: billingDate,
                     user_present: true
                 }
             }
