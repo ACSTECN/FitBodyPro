@@ -1,6 +1,6 @@
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 0.50 },
-    premium: { title: 'Fit Bory Premium', price: 0.50 }
+    starter: { title: 'Fitbory Starter', price: 0.5 },
+    premium: { title: 'Fit Bory Premium', price: 0.5 }
 };
 
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
@@ -128,17 +128,15 @@ async function createCardPayment(reqBody) {
 
     const subscriptionId = buildRecurringSubscriptionId(plan);
 
-    // 1. Primeiro salva o cartão no customer
     const savedCard = await mercadoPagoRequest(`/v1/customers/${customer.id}/cards`, {
         method: 'POST',
         body: {
-            token,
-            payment_method_id: paymentMethodId,
-            issuer: issuerId ? { id: String(issuerId) } : undefined
+            token
         }
     });
 
-    // 2. Depois cobra usando customer_id + card_id salvo
+    const { firstName, lastName } = splitFullName(cardholderName);
+
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
         headers: {
@@ -146,6 +144,7 @@ async function createCardPayment(reqBody) {
         },
         body: {
             transaction_amount: selectedPlan.price,
+            token,
             description: selectedPlan.title,
             installments: Number(installments) || 1,
             payment_method_id: paymentMethodId,
@@ -153,9 +152,17 @@ async function createCardPayment(reqBody) {
             payer: {
                 type: 'customer',
                 id: customer.id,
-                email
+                email,
+                first_name: firstName,
+                last_name: lastName,
+                identification:
+                    identificationType && identificationNumber
+                        ? {
+                              type: identificationType,
+                              number: cleanDigits(identificationNumber)
+                          }
+                        : undefined
             },
-            card_id: savedCard.id,
             metadata: {
                 plan,
                 billingCycle: 'monthly',
