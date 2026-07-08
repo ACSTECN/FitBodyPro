@@ -133,8 +133,8 @@ async function createCardPayment(reqBody) {
         method: 'POST',
         body: {
             token,
-            issuer_id: issuerId || undefined,
-            payment_method_id: paymentMethodId
+            payment_method_id: paymentMethodId,
+            issuer: issuerId ? { id: String(issuerId) } : undefined
         }
     });
 
