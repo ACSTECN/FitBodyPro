@@ -126,16 +126,8 @@ async function createCardPayment(reqBody) {
         identificationNumber
     });
 
-    const subscriptionId = buildRecurringSubscriptionId(plan);
-
-    const savedCard = await mercadoPagoRequest(`/v1/customers/${customer.id}/cards`, {
-        method: 'POST',
-        body: {
-            token
-        }
-    });
-
     const { firstName, lastName } = splitFullName(cardholderName);
+    const subscriptionId = buildRecurringSubscriptionId(plan);
 
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
@@ -175,7 +167,6 @@ async function createCardPayment(reqBody) {
     return {
         payment,
         customer,
-        savedCard,
         subscriptionId
     };
 }
@@ -211,16 +202,20 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const { payment, customer, savedCard, subscriptionId } =
-            await createCardPayment(req.body);
+        const { payment, customer, subscriptionId } = await createCardPayment(req.body);
+
+        const providerCardId = payment.card?.id || null;
+        const cardLastFour = payment.card?.last_four_digits || null;
+        const cardBrand = payment.payment_method_id || payment.payment_method?.id || null;
 
         return res.status(200).json({
+            version: 'create-payment-card-from-payment-card-id-v2',
             success: payment.status === 'approved' || payment.status === 'in_process',
             approved: payment.status === 'approved',
             paymentId: payment.id,
             status: payment.status,
             statusDetail: payment.status_detail,
-            recurringReady: Boolean(customer?.id && savedCard?.id),
+            recurringReady: Boolean(customer?.id && providerCardId),
             recurringData: {
                 paymentAmount: payment.transaction_amount,
                 paymentCurrency: payment.currency_id,
@@ -228,18 +223,17 @@ module.exports = async function handler(req, res) {
                 paymentDescription: payment.description,
 
                 providerCustomerId: customer.id,
-                providerCardId: savedCard.id,
+                providerCardId,
                 paymentMethodId: payment.payment_method_id || req.body.paymentMethodId,
-                issuerId: savedCard?.issuer?.id || payment.issuer_id || payment.issuer?.id || null,
-                cardBrand: savedCard?.payment_method?.id || payment.payment_method_id || null,
-                cardLastFour: savedCard?.last_four_digits || payment.card?.last_four_digits || null,
+                issuerId: payment.issuer_id || payment.issuer?.id || null,
+                cardBrand,
+                cardLastFour,
                 firstPaymentProviderPaymentId: payment.id,
                 providerSubscriptionId: subscriptionId,
 
                 paymentRawPayload: {
                     payment,
-                    customer,
-                    savedCard
+                    customer
                 }
             }
         });
