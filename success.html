@@ -235,7 +235,6 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     e.preventDefault();
 
     const urlParams = new URLSearchParams(window.location.search);
-
     const plan = urlParams.get('plan') || 'starter';
 
     let paymentId =
@@ -244,15 +243,6 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         urlParams.get('payment_id') ||
         urlParams.get('collection_id') ||
         urlParams.get('id');
-
-    if (!paymentId) {
-        const match = window.location.href.match(/[?&]paymentId=([^&]+)/i);
-        paymentId = match ? decodeURIComponent(match[1]) : null;
-    }
-
-    console.log('URL COMPLETA:', window.location.href);
-    console.log('PLAN:', plan);
-    console.log('PAYMENT ID FINAL:', paymentId);
 
     const name = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
@@ -283,19 +273,45 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         recurringData = null;
     }
 
+    console.log('PAYMENT ID:', paymentId);
+    console.log('RECURRING DATA:', recurringData);
+
+    if (plan !== 'free') {
+        if (
+            !recurringData ||
+            !recurringData.providerCustomerId ||
+            !recurringData.providerCardId ||
+            !recurringData.paymentMethodId ||
+            !recurringData.cardBrand ||
+            !recurringData.cardLastFour ||
+            !recurringData.firstPaymentProviderPaymentId
+        ) {
+            messageArea.innerHTML = `
+                <div class="message error">
+                    Pagamento aprovado, mas os dados do cartão recorrente não chegaram completos.
+                    Volte para a página de planos e tente novamente com cartão.
+                </div>
+            `;
+
+            console.error('DADOS RECORRENTES INCOMPLETOS:', recurringData);
+            return;
+        }
+    }
+
     const payload = {
         fullName: name,
         phone,
         email,
         password,
         plan,
-        billingCycle: "monthly",
-        paymentStatus: "approved",
-        paymentProvider: "mercadopago",
-        paymentId: paymentId,
+        billingCycle: 'monthly',
+        paymentStatus: plan !== 'free' ? 'approved' : undefined,
+        paymentProvider: plan !== 'free' ? 'mercadopago' : undefined,
+        paymentId: plan !== 'free' ? paymentId : undefined,
         ...(recurringData || {})
     };
-        console.log('ENVIANDO PARA /api/signup:', payload);
+
+    console.log('ENVIANDO PARA /api/signup:', payload);
 
     try {
         const response = await fetch('/api/signup', {
@@ -309,22 +325,15 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         console.log('RETORNO /api/signup:', data);
 
         if (response.ok && data.success) {
-            const recurringReady = data.recurringReady === true;
+            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Cartão pronto para renovação automática.</div>';
 
-            if (plan !== 'free' && !recurringReady) {
-                messageArea.innerHTML = '<div class="message warning">Conta criada com sucesso, mas a recorrencia automatica ainda nao ficou pronta. Verifique os dados do pagamento recorrente no Mercado Pago.</div>';
-            } else if (plan !== 'free') {
-                messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Cartao pronto para renovacao automatica.</div>';
-            } else {
-                messageArea.innerHTML = '<div class="message success">Conta criada com sucesso!</div>';
+            if (paymentId) {
+                sessionStorage.removeItem(`fitboryRecurring:${paymentId}`);
             }
 
             setTimeout(() => {
                 window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
             }, 2000);
-            if (paymentId) {
-                sessionStorage.removeItem(`fitboryRecurring:${paymentId}`);
-            }
         } else {
             messageArea.innerHTML = '<div class="message error">' + (data.message || data.error || 'Ocorreu um erro!') + '</div>';
         }
@@ -335,6 +344,5 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     }
 });
 </script>
-
 </body>
 </html>

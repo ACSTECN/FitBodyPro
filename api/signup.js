@@ -8,31 +8,29 @@ function pickFirstDefined(...values) {
 }
 
 async function fetchMercadoPagoPayment(paymentId) {
-    const MP_ACCESS_TOKEN =
-        process.env.MERCADO_PAGO_ACCESS_TOKEN ||
-        'APP_USR-1299466235883241-102116-24fec28f28914fa1efa5da0c7d739d40-231219998';
+    const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+
+    if (!MP_ACCESS_TOKEN) {
+        throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
+    }
 
     const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
-            'Authorization': `Bearer ${MP_ACCESS_TOKEN}`
+            Authorization: `Bearer ${MP_ACCESS_TOKEN}`
         }
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || 'Nao foi possivel consultar o pagamento no Mercado Pago');
+        throw new Error(data.message || 'Não foi possível consultar o pagamento no Mercado Pago');
     }
 
     return data;
 }
 
 function getLandingToken() {
-    return (
-        process.env.LANDING_SIGNUP_TOKEN ||
-        process.env.X_LANDING_TOKEN ||
-        'fb69dfaf8f4d4f52a3c39eacdebb398dfe23d98f6c914acab7bf0ec62bd2075a'
-    );
+    return process.env.LANDING_SIGNUP_TOKEN || process.env.X_LANDING_TOKEN;
 }
 
 function getSupabaseAuthToken() {
@@ -125,9 +123,38 @@ function buildRecurringFields(reqBody, mpPaymentData) {
     };
 }
 
+function validateRequiredFields({ finalName, email, password, phone }) {
+    const missing = [];
+
+    if (!finalName) missing.push('name');
+    if (!email) missing.push('email');
+    if (!password) missing.push('password');
+    if (!phone) missing.push('phone');
+
+    return missing;
+}
+
+function validateRecurringFields(recurringFields) {
+    const missing = [];
+
+    if (!recurringFields.providerCustomerId) missing.push('providerCustomerId');
+    if (!recurringFields.providerCardId) missing.push('providerCardId');
+    if (!recurringFields.paymentMethodId) missing.push('paymentMethodId');
+    if (!recurringFields.cardBrand) missing.push('cardBrand');
+    if (!recurringFields.cardLastFour) missing.push('cardLastFour');
+    if (!recurringFields.firstPaymentProviderPaymentId) {
+        missing.push('firstPaymentProviderPaymentId');
+    }
+
+    return missing;
+}
+
 module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Método não permitido' });
+        return res.status(405).json({
+            success: false,
+            message: 'Método não permitido'
+        });
     }
 
     try {
@@ -144,14 +171,29 @@ module.exports = async function handler(req, res) {
             paymentStatus,
             paymentProvider,
             paymentId
-        } = req.body;
+        } = req.body || {};
 
         const finalName = fullName || name;
         const finalPlan = plan || 'free';
         const finalBrandName = brandName || finalName;
         const isPaidPlan = finalPlan !== 'free';
 
-        if (finalPlan !== 'free' && !paymentId) {
+        const missingBaseFields = validateRequiredFields({
+            finalName,
+            email,
+            password,
+            phone
+        });
+
+        if (missingBaseFields.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Campos obrigatórios ausentes.',
+                missingFields: missingBaseFields
+            });
+        }
+
+        if (isPaidPlan && !paymentId) {
             return res.status(400).json({
                 success: false,
                 message: 'PaymentId não chegou na API',
@@ -159,9 +201,17 @@ module.exports = async function handler(req, res) {
             });
         }
 
+        if (isPaidPlan && paymentProvider !== 'mercadopago') {
+            return res.status(400).json({
+                success: false,
+                message: 'PaymentProvider inválido para plano pago.',
+                recebido: paymentProvider
+            });
+        }
+
         let mercadoPagoPayment = null;
 
-        if (isPaidPlan && paymentProvider === 'mercadopago' && paymentId) {
+        if (isPaidPlan && paymentId) {
             try {
                 mercadoPagoPayment = await fetchMercadoPagoPayment(paymentId);
             } catch (mpError) {
@@ -173,31 +223,52 @@ module.exports = async function handler(req, res) {
             ? buildRecurringFields(req.body, mercadoPagoPayment)
             : {};
 
+        if (isPaidPlan) {
+            const missingRecurringFields = validateRecurringFields(recurringFields);
+
+            if (missingRecurringFields.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Dados recorrentes incompletos. Conta paga não criada.',
+                    missingRecurringFields,
+                    recebido: req.body,
+                    recurringFields
+                });
+            }
+        }
+
         const body = {
             name: finalName,
             email,
             password,
             phone,
             brandName: finalBrandName,
-            logoUrl: logoUrl || "",
+            logoUrl: logoUrl || '',
             plan: finalPlan,
             billingCycle: isPaidPlan ? (billingCycle || 'monthly') : undefined,
-            paymentStatus,
-            paymentProvider,
-            paymentId,
+            paymentStatus: isPaidPlan ? paymentStatus : undefined,
+            paymentProvider: isPaidPlan ? paymentProvider : undefined,
+            paymentId: isPaidPlan ? paymentId : undefined,
             ...recurringFields
         };
 
-        console.log("REQ BODY RECEBIDO:", req.body);
-        console.log("BODY SUPABASE:", body);
+        console.log('REQ BODY RECEBIDO:', req.body);
+        console.log('BODY SUPABASE:', body);
 
         const landingToken = getLandingToken();
         const supabaseAuthToken = getSupabaseAuthToken();
 
+        if (!landingToken) {
+            return res.status(500).json({
+                success: false,
+                message: 'Configure LANDING_SIGNUP_TOKEN ou X_LANDING_TOKEN.'
+            });
+        }
+
         if (!supabaseAuthToken) {
             return res.status(500).json({
                 success: false,
-                message: 'Configure SUPABASE_SERVICE_ROLE_KEY ou SUPABASE_ANON_KEY para chamar a Edge Function protegida.'
+                message: 'Configure SUPABASE_SERVICE_ROLE_KEY ou SUPABASE_ANON_KEY.'
             });
         }
 
@@ -207,7 +278,7 @@ module.exports = async function handler(req, res) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${supabaseAuthToken}`,
+                    Authorization: `Bearer ${supabaseAuthToken}`,
                     'x-landing-token': landingToken
                 },
                 body: JSON.stringify(body)
@@ -226,7 +297,10 @@ module.exports = async function handler(req, res) {
         });
 
     } catch (error) {
+        console.error('Signup Error:', error);
+
         return res.status(500).json({
+            success: false,
             message: 'Erro interno',
             error: error.message
         });

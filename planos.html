@@ -808,18 +808,11 @@
             <div id="messagePaymentArea"></div>
             <div class="payment-panel">
                 <div class="payment-options">
-                    <div class="payment-option active" onclick="selectPayment('pix')" id="pixOption">
-                        <span class="payment-option-icon">PIX</span>
-                        <span class="payment-option-copy">
-                            <span class="payment-option-title">Pix</span>
-                            <span class="payment-option-subtitle">Aprova rapido com QR Code</span>
-                        </span>
-                    </div>
-                    <div class="payment-option" onclick="selectPayment('card')" id="mpOption">
+                    <div class="payment-option active" onclick="selectPayment('card')" id="mpOption">
                         <span class="payment-option-icon">CARD</span>
                         <span class="payment-option-copy">
-                            <span class="payment-option-title">Cartao</span>
-                            <span class="payment-option-subtitle">Preenche tudo no Mercado Pago</span>
+                            <span class="payment-option-title">Cartão</span>
+                            <span class="payment-option-subtitle">Pagamento recorrente automático</span>
                         </span>
                     </div>
                 </div>
@@ -876,13 +869,11 @@
     </footer>
 
     <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <script>
-
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
 let selectedPlan = null;
-let selectedPaymentMethod = 'pix';
+let selectedPaymentMethod = 'card';
 let paymentData = null;
-let paymentCheckInterval = null;
-let checkoutProWindow = null;
 let mercadoPagoPublicKey = null;
 let mercadoPagoInstance = null;
 let mercadoPagoBricksBuilder = null;
@@ -894,15 +885,13 @@ const priceValues = {
 };
 
 async function loadMercadoPagoPublicKey() {
-    if (mercadoPagoPublicKey) {
-        return mercadoPagoPublicKey;
-    }
+    if (mercadoPagoPublicKey) return mercadoPagoPublicKey;
 
     const response = await fetch('/api/mp-config');
     const data = await response.json();
 
     if (!response.ok || !data.publicKey) {
-        throw new Error('Configure MERCADO_PAGO_PUBLIC_KEY na Vercel para habilitar o fluxo de cartao.');
+        throw new Error('Configure MERCADO_PAGO_PUBLIC_KEY na Vercel.');
     }
 
     mercadoPagoPublicKey = data.publicKey;
@@ -911,6 +900,7 @@ async function loadMercadoPagoPublicKey() {
 
 async function renderCardPaymentBrick() {
     const publicKey = await loadMercadoPagoPublicKey();
+
     if (!mercadoPagoInstance) {
         mercadoPagoInstance = new MercadoPago(publicKey, { locale: 'pt-BR' });
         mercadoPagoBricksBuilder = mercadoPagoInstance.bricks();
@@ -932,9 +922,7 @@ async function renderCardPaymentBrick() {
             },
             customization: {
                 visual: {
-                    style: {
-                        theme: 'default'
-                    }
+                    style: { theme: 'default' }
                 },
                 paymentMethods: {
                     maxInstallments: 1
@@ -942,35 +930,22 @@ async function renderCardPaymentBrick() {
             },
             callbacks: {
                 onReady: () => {
-                    // #region debug-point A:brick-ready
-                    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"A",location:"planos.html:onReady",msg:"[DEBUG] Brick do Mercado Pago pronto",data:{selectedPlan,selectedPaymentMethod},ts:Date.now()})}).catch(()=>{});
-                    // #endregion
-                    const paymentModalContent = document.querySelector('.payment-modal-content');
-                    if (paymentModalContent) {
-                        paymentModalContent.scrollTop = 0;
-                    }
+                    console.log('Brick Mercado Pago pronto');
                 },
                 onSubmit: (formData) => {
-                    // #region debug-point B:brick-submit
-                    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"B",location:"planos.html:onSubmit",msg:"[DEBUG] onSubmit do Brick disparou",data:{hasFormData:!!formData,keys:formData?Object.keys(formData):[],selectedPlan},ts:Date.now()})}).catch(()=>{});
-                    // #endregion
                     return submitCardPayment(formData);
                 },
                 onError: (error) => {
-                    // #region debug-point C:brick-error
-                    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"C",location:"planos.html:onError",msg:"[DEBUG] Brick do Mercado Pago retornou erro",data:{message:error?.message||null,name:error?.name||null,type:error?.type||null,cause:error?.cause||null},ts:Date.now()})}).catch(()=>{});
-                    // #endregion
+                    console.error('Erro Brick Mercado Pago:', error);
                     document.getElementById('messagePaymentArea').innerHTML = `
                         <div class="message error">
-                            Nao foi possivel carregar o formulario do Mercado Pago.
+                            Não foi possível carregar o formulário do Mercado Pago.
                         </div>
                     `;
                 }
             }
         }
     );
-
-    return mercadoPagoCardBrickController;
 }
 
 function buildRecurringStorageKey(paymentId) {
@@ -978,43 +953,45 @@ function buildRecurringStorageKey(paymentId) {
 }
 
 function storeRecurringData(paymentId, recurringData) {
-    if (!paymentId || !recurringData) {
-        return;
-    }
+    if (!paymentId || !recurringData) return;
     sessionStorage.setItem(buildRecurringStorageKey(paymentId), JSON.stringify(recurringData));
 }
 
 async function submitCardPayment(cardFormData) {
-    const btn = document.getElementById('mpBtn');
     const messageArea = document.getElementById('messagePaymentArea');
 
     try {
         if (!cardFormData || typeof cardFormData !== 'object') {
-            throw new Error('O Mercado Pago nao retornou os dados do cartao. Tente preencher novamente ou recarregue a pagina.');
+            throw new Error('O Mercado Pago não retornou os dados do cartão.');
         }
 
         const payer = cardFormData.payer || {};
         const identification = payer.identification || {};
+
         const paymentMethodId = cardFormData.payment_method_id || cardFormData.paymentMethodId;
         const issuerId = cardFormData.issuer_id || cardFormData.issuerId;
         const installments = cardFormData.installments;
-        const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
-        const cardholderName = cardFormData.cardholderName || payerFullName || payer.first_name || 'Cliente Fitbory';
-        const email = payer.email || cardFormData.email || cardFormData.cardholderEmail;
         const token = cardFormData.token;
 
-        // #region debug-point D:submit-entry
-        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"D",location:"planos.html:submitCardPayment:start",msg:"[DEBUG] Entrou em submitCardPayment",data:{selectedPlan,hasToken:!!token,paymentMethodId,issuerId,installments,emailPresent:!!email,identificationType:identification.type||cardFormData.identificationType||null},ts:Date.now()})}).catch(()=>{});
-        // #endregion
+        const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
+
+        const cardholderName =
+            cardFormData.cardholderName ||
+            payerFullName ||
+            payer.first_name ||
+            'Cliente Fitbory';
+
+        const email =
+            payer.email ||
+            cardFormData.email ||
+            cardFormData.cardholderEmail;
+
         messageArea.innerHTML = `
             <div class="message success">
                 Processando pagamento...
             </div>
         `;
 
-        // #region debug-point E:before-fetch
-        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"E",location:"planos.html:submitCardPayment:beforeFetch",msg:"[DEBUG] Enviando requisicao para create-payment",data:{plan:selectedPlan,method:"card",email,cardholderName,identificationType:identification.type||cardFormData.identificationType||null,identificationNumberPresent:!!(identification.number||cardFormData.identificationNumber),paymentMethodId,issuerId,installments},ts:Date.now()})}).catch(()=>{});
-        // #endregion
         const response = await fetch('/api/create-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1033,14 +1010,13 @@ async function submitCardPayment(cardFormData) {
         });
 
         const data = await response.json();
-        // #region debug-point F:after-fetch
-        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"F",location:"planos.html:submitCardPayment:afterFetch",msg:"[DEBUG] Resposta recebida de create-payment",data:{ok:response.ok,status:response.status,success:data?.success,approved:data?.approved,paymentId:data?.paymentId||null,statusValue:data?.status||null,statusDetail:data?.statusDetail||null,message:data?.message||null,errorMessage:data?.error?.message||null},ts:Date.now()})}).catch(()=>{});
-        // #endregion
+
+        console.log('RETORNO /api/create-payment:', data);
 
         if (!response.ok || !data.success) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    ${data.message || data.error?.message || data.statusDetail || 'Nao foi possivel processar o cartao.'}
+                    ${data.message || data.error?.message || data.statusDetail || 'Não foi possível processar o cartão.'}
                 </div>
             `;
             return;
@@ -1060,21 +1036,23 @@ async function submitCardPayment(cardFormData) {
             setTimeout(() => {
                 window.location.href = `/success.html?plan=${selectedPlan}&paymentId=${data.paymentId}`;
             }, 900);
+
             return;
         }
 
         messageArea.innerHTML = `
             <div class="message error">
-                Pagamento retornou com status ${data.status || 'desconhecido'}. ${data.statusDetail || ''}
+                Pagamento retornou com status ${data.status || 'desconhecido'}.
+                ${data.statusDetail || ''}
             </div>
         `;
+
     } catch (error) {
-        // #region debug-point G:submit-catch
-        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"G",location:"planos.html:submitCardPayment:catch",msg:"[DEBUG] submitCardPayment caiu no catch",data:{message:error?.message||null,name:error?.name||null,stack:error?.stack||null},ts:Date.now()})}).catch(()=>{});
-        // #endregion
+        console.error('Erro pagamento cartão:', error);
+
         messageArea.innerHTML = `
             <div class="message error">
-                ${error.message || 'Erro ao processar pagamento com cartao.'}
+                ${error.message || 'Erro ao processar pagamento com cartão.'}
             </div>
         `;
     }
@@ -1092,13 +1070,8 @@ function closeModal() {
 
 function openPaymentModal(plan) {
     selectedPlan = plan;
-    selectedPaymentMethod = 'pix';
+    selectedPaymentMethod = 'card';
     paymentData = null;
-
-    if (paymentCheckInterval) {
-        clearInterval(paymentCheckInterval);
-        paymentCheckInterval = null;
-    }
 
     const prices = {
         starter: 'R$ 4,00',
@@ -1113,21 +1086,17 @@ function openPaymentModal(plan) {
     document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
     document.getElementById('priceDisplay').textContent = prices[plan];
     document.getElementById('messagePaymentArea').innerHTML = '';
-    document.getElementById('paymentActionText').textContent = 'Voce sera direcionado para concluir o pagamento.';
+    document.getElementById('paymentActionText').textContent =
+        'Preencha os dados do cartão para ativar sua assinatura recorrente.';
 
     document.getElementById('paymentModal').classList.add('show');
-    selectPayment('pix');
+
+    selectPayment('card');
 }
 
 function closePaymentModal() {
     document.getElementById('paymentModal').classList.remove('show');
     document.getElementById('messagePaymentArea').innerHTML = '';
-    checkoutProWindow = null;
-
-    if (paymentCheckInterval) {
-        clearInterval(paymentCheckInterval);
-        paymentCheckInterval = null;
-    }
 
     if (mercadoPagoCardBrickController) {
         mercadoPagoCardBrickController.unmount().catch(() => {});
@@ -1136,168 +1105,32 @@ function closePaymentModal() {
 }
 
 function selectPayment(method) {
-    selectedPaymentMethod = method;
-
-    document.getElementById('pixOption').classList.remove('active');
-    document.getElementById('mpOption').classList.remove('active');
-    document.getElementById('cardPaymentArea').classList.remove('show');
+    selectedPaymentMethod = 'card';
 
     const btn = document.getElementById('mpBtn');
-    btn.style.display = method === 'pix' ? 'block' : 'none';
-    btn.disabled = false;
+
+    if (document.getElementById('mpOption')) {
+        document.getElementById('mpOption').classList.add('active');
+    }
+
+    document.getElementById('cardPaymentArea').classList.add('show');
+
+    if (btn) {
+        btn.style.display = 'none';
+        btn.disabled = true;
+    }
 
     document.getElementById('messagePaymentArea').innerHTML = '';
+    document.getElementById('paymentActionText').textContent =
+        'Preencha os dados do cartão dentro do Mercado Pago para concluir.';
 
-    if (method === 'pix') {
-        document.getElementById('pixOption').classList.add('active');
-        btn.textContent = 'Gerar QR Code do Pix';
-        document.getElementById('paymentActionText').textContent = 'Voce gera o QR Code e paga direto pelo Pix.';
-    } else {
-        // #region debug-point H:select-card
-        fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"card-pay-no-response",runId:"pre-fix",hypothesisId:"H",location:"planos.html:selectPayment",msg:"[DEBUG] Usuario selecionou cartao",data:{selectedPlan,method},ts:Date.now()})}).catch(()=>{});
-        // #endregion
-        document.getElementById('mpOption').classList.add('active');
-        document.getElementById('cardPaymentArea').classList.add('show');
-        document.getElementById('paymentActionText').textContent = 'Preencha os dados do cartao dentro do Mercado Pago para concluir o primeiro pagamento.';
-        const paymentModalContent = document.querySelector('.payment-modal-content');
-        if (paymentModalContent) {
-            paymentModalContent.scrollTop = 0;
-        }
-        renderCardPaymentBrick().catch((error) => {
-            document.getElementById('messagePaymentArea').innerHTML = `
-                <div class="message error">
-                    ${error.message}
-                </div>
-            `;
-        });
-    }
-}
-
-async function createPaymentIntent(plan, method, preOpenedWindow) {
-    const btn = document.getElementById('mpBtn');
-
-    try {
-        btn.disabled = true;
-        btn.textContent = method === 'pix' ? 'Gerando Pix...' : 'Processando cartao...';
-
-        const response = await fetch('/api/create-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                plan,
-                method,
-                email: 'cliente@email.com'
-            })
-        });
-
-        const data = await response.json();
-        console.log('Payment response:', data);
-
-        paymentData = data;
-
-        if (method === 'pix') {
-            if (data.success && data.qrCode && data.paymentId) {
-                document.getElementById('messagePaymentArea').innerHTML = `
-                    <div class="message success">
-                        <p><strong>Escaneie o QR Code Pix:</strong></p>
-
-                        <img
-                            src="data:image/png;base64,${data.qrCode}"
-                            style="max-width:250px;width:100%;margin:15px auto;display:block;"
-                        >
-
-                        <p><strong>Pix Copia e Cola:</strong></p>
-
-                        <textarea
-                            readonly
-                            style="width:100%;height:120px;padding:10px;border-radius:8px;"
-                        >${data.pixCode}</textarea>
-
-                        <p id="paymentStatus"><strong>Aguardando pagamento...</strong></p>
-                    </div>
-                `;
-
-                btn.disabled = false;
-                btn.textContent = 'Gerar novo QR Code Pix';
-
-                startPaymentCheck(data.paymentId, plan);
-                return;
-            }
-
-            document.getElementById('messagePaymentArea').innerHTML = `
-                <div class="message error">
-                    ${data.message || data.error?.message || 'Erro ao gerar QR Code Pix.'}
-                </div>
-            `;
-
-            btn.disabled = false;
-            btn.textContent = 'Gerar QR Code do Pix';
-        }
-
-    } catch (error) {
-        console.error('Payment Error:', error);
-
+    renderCardPaymentBrick().catch((error) => {
         document.getElementById('messagePaymentArea').innerHTML = `
             <div class="message error">
-                Erro de conexão. Tente novamente.
+                ${error.message}
             </div>
         `;
-
-        btn.disabled = false;
-        btn.textContent = method === 'pix' ? 'Gerar QR Code do Pix' : 'Pagar com cartao';
-    }
-}
-
-async function goToMercadoPago() {
-    if (selectedPaymentMethod === 'card') {
-        const form = document.getElementById('cardPaymentForm');
-        if (form.requestSubmit) {
-            form.requestSubmit();
-        } else {
-            document.getElementById('cardPaymentHiddenSubmit').click();
-        }
-        return;
-    }
-
-    checkoutProWindow = null;
-    await createPaymentIntent(selectedPlan, selectedPaymentMethod, checkoutProWindow);
-}
-
-function startPaymentCheck(paymentId, plan) {
-    if (paymentCheckInterval) {
-        clearInterval(paymentCheckInterval);
-    }
-
-    paymentCheckInterval = setInterval(async () => {
-        try {
-            const response = await fetch('/api/check-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId })
-            });
-
-            const data = await response.json();
-            console.log('Check payment:', data);
-
-            if (data.approved) {
-                clearInterval(paymentCheckInterval);
-                paymentCheckInterval = null;
-
-                const statusEl = document.getElementById('paymentStatus');
-
-                if (statusEl) {
-                    statusEl.innerHTML = '<strong>Pagamento aprovado! Redirecionando...</strong>';
-                }
-
-                setTimeout(() => {
-                    window.location.href = `/success.html?plan=${plan}&paymentId=${paymentId}`;
-                }, 1500);
-            }
-
-        } catch (error) {
-            console.error('Erro ao verificar pagamento:', error);
-        }
-    }, 5000);
+    });
 }
 
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
@@ -1348,6 +1181,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     }
 });
 </script>
+
 
 </body>
 </html>

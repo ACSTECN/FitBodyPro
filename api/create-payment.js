@@ -3,20 +3,14 @@ const PLAN_DETAILS = {
     premium: { title: 'Fit Bory Premium', price: 4.0 }
 };
 
-const MP_ACCESS_TOKEN =
-    process.env.MERCADO_PAGO_ACCESS_TOKEN ||
-    'APP_USR-1299466235883241-102116-24fec28f28914fa1efa5da0c7d739d40-231219998';
-
+const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://fit-body-pro-one.vercel.app';
 
 function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 function splitFullName(fullName) {
@@ -39,6 +33,12 @@ function buildRecurringSubscriptionId(plan) {
 }
 
 async function mercadoPagoRequest(path, options = {}) {
+    if (!MP_ACCESS_TOKEN) {
+        const error = new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
+        error.status = 500;
+        throw error;
+    }
+
     const response = await fetch(`https://api.mercadopago.com${path}`, {
         method: options.method || 'GET',
         headers: {
@@ -63,9 +63,11 @@ async function mercadoPagoRequest(path, options = {}) {
 
 async function findCustomerByEmail(email) {
     const data = await mercadoPagoRequest(`/v1/customers/search?email=${encodeURIComponent(email)}`);
+
     if (Array.isArray(data.results) && data.results.length > 0) {
         return data.results[0];
     }
+
     return null;
 }
 
@@ -92,60 +94,12 @@ async function createCustomer({ email, fullName, identificationType, identificat
 
 async function ensureCustomer(customerInput) {
     const existing = await findCustomerByEmail(customerInput.email);
+
     if (existing?.id) {
         return existing;
     }
+
     return createCustomer(customerInput);
-}
-
-async function createPixPayment(plan, email) {
-    const selectedPlan = getSelectedPlan(plan);
-    const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    return mercadoPagoRequest('/v1/payments', {
-        method: 'POST',
-        headers: {
-            'X-Idempotency-Key': idempotencyKey
-        },
-        body: {
-            transaction_amount: selectedPlan.price,
-            description: selectedPlan.title,
-            payment_method_id: 'pix',
-            payer: {
-                email: email || 'test@test.com',
-                first_name: 'Cliente',
-                last_name: 'Fitbory'
-            },
-            metadata: { plan },
-            notification_url: `${APP_BASE_URL}/api/webhook`
-        }
-    });
-}
-
-async function createCheckoutPreference(plan) {
-    const selectedPlan = getSelectedPlan(plan);
-
-    return mercadoPagoRequest('/checkout/preferences', {
-        method: 'POST',
-        body: {
-            items: [
-                {
-                    title: selectedPlan.title,
-                    description: selectedPlan.title,
-                    quantity: 1,
-                    currency_id: 'BRL',
-                    unit_price: selectedPlan.price
-                }
-            ],
-            back_urls: {
-                success: `${APP_BASE_URL}/success.html?plan=${plan}`,
-                failure: `${APP_BASE_URL}/planos.html`,
-                pending: `${APP_BASE_URL}/planos.html`
-            },
-            auto_return: 'approved',
-            metadata: { plan }
-        }
-    });
 }
 
 async function createCardPayment(reqBody) {
@@ -161,28 +115,38 @@ async function createCardPayment(reqBody) {
         installments
     } = reqBody;
 
-    if (!token || !email || !paymentMethodId) {
-        const error = new Error('Dados do cartao incompletos para pagamento recorrente.');
+    if (!plan || !token || !email || !paymentMethodId) {
+        const error = new Error('Dados do cartão incompletos para pagamento recorrente.');
         error.status = 400;
         throw error;
     }
 
     const selectedPlan = getSelectedPlan(plan);
+
+    if (!selectedPlan) {
+        const error = new Error('Plano inválido.');
+        error.status = 400;
+        throw error;
+    }
+
     const customer = await ensureCustomer({
         email,
         fullName: cardholderName,
         identificationType,
         identificationNumber
     });
+
     const { firstName, lastName } = splitFullName(cardholderName);
     const subscriptionId = buildRecurringSubscriptionId(plan);
-    const billingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const billingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
 
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
         headers: {
-            'X-Idempotency-Key': idempotencyKey
+            'X-Idempotency-Key': `${Date.now()}-${Math.random().toString(36).slice(2)}`
         },
         body: {
             transaction_amount: selectedPlan.price,
@@ -245,7 +209,7 @@ async function createCardPayment(reqBody) {
         });
     } catch (error) {
         cardSaveError = error.data || error.message;
-        console.error('Erro ao salvar cartao no customer do Mercado Pago:', cardSaveError);
+        console.error('Erro ao salvar cartão no customer do Mercado Pago:', cardSaveError);
     }
 
     return {
@@ -265,80 +229,68 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Método não permitido' });
+        return res.status(405).json({
+            success: false,
+            message: 'Método não permitido'
+        });
     }
 
     try {
-        const { plan, method, email } = req.body || {};
+        const { plan, method } = req.body || {};
 
         if (!plan) {
-            return res.status(400).json({ message: 'Plano obrigatório' });
-        }
-
-        const selectedPlan = getSelectedPlan(plan);
-        if (!selectedPlan) {
-            return res.status(400).json({ message: 'Plano inválido' });
-        }
-
-        if (method === 'checkout-pro') {
-            const preference = await createCheckoutPreference(plan);
-            return res.status(200).json({
-                success: true,
-                init_point: preference.init_point,
-                sandbox_init_point: preference.sandbox_init_point
+            return res.status(400).json({
+                success: false,
+                message: 'Plano obrigatório'
             });
         }
 
-        if (method === 'card') {
-            const { payment, customer, savedCard, subscriptionId, cardSaveError } = await createCardPayment(
-                req.body
-            );
-
-            return res.status(200).json({
-                success: payment.status === 'approved' || payment.status === 'in_process',
-                approved: payment.status === 'approved',
-                paymentId: payment.id,
-                status: payment.status,
-                statusDetail: payment.status_detail,
-                recurringReady: Boolean(customer?.id && savedCard?.id),
-                cardSaveError,
-                recurringData: {
-                    paymentAmount: payment.transaction_amount,
-                    paymentCurrency: payment.currency_id,
-                    providerReference: payment.order?.id || payment.external_reference || payment.id,
-                    paymentDescription: payment.description,
-                    providerCustomerId: customer?.id,
-                    providerCardId: savedCard?.id || null,
-                    paymentMethodId: payment.payment_method_id || paymentMethodId,
-                    issuerId: savedCard?.issuer?.id || payment.issuer_id || payment.issuer?.id || null,
-                    cardBrand: savedCard?.payment_method?.id || payment.payment_method_id || null,
-                    cardLastFour:
-                        savedCard?.last_four_digits || payment.card?.last_four_digits || null,
-                    firstPaymentProviderPaymentId: payment.id,
-                    providerSubscriptionId: subscriptionId,
-                    paymentRawPayload: {
-                        payment,
-                        customer,
-                        savedCard,
-                        cardSaveError
-                    }
-                }
+        if (method !== 'card') {
+            return res.status(400).json({
+                success: false,
+                message: 'Este fluxo aceita apenas pagamento com cartão.'
             });
         }
 
-        const payment = await createPixPayment(plan, email);
+        const { payment, customer, savedCard, subscriptionId, cardSaveError } =
+            await createCardPayment(req.body);
 
         return res.status(200).json({
-            success: true,
+            success: payment.status === 'approved' || payment.status === 'in_process',
+            approved: payment.status === 'approved',
             paymentId: payment.id,
-            pixCode: payment.point_of_interaction?.transaction_data?.qr_code || null,
-            qrCode: payment.point_of_interaction?.transaction_data?.qr_code_base64 || null,
-            ticketUrl: payment.point_of_interaction?.transaction_data?.ticket_url || null,
-            raw: payment
+            status: payment.status,
+            statusDetail: payment.status_detail,
+            recurringReady: Boolean(customer?.id && savedCard?.id),
+            cardSaveError,
+            recurringData: {
+                paymentAmount: payment.transaction_amount,
+                paymentCurrency: payment.currency_id,
+                providerReference: payment.order?.id || payment.external_reference || payment.id,
+                paymentDescription: payment.description,
+
+                providerCustomerId: customer?.id,
+                providerCardId: savedCard?.id || null,
+                paymentMethodId: payment.payment_method_id || req.body.paymentMethodId,
+                issuerId: savedCard?.issuer?.id || payment.issuer_id || payment.issuer?.id || null,
+                cardBrand: savedCard?.payment_method?.id || payment.payment_method_id || null,
+                cardLastFour: savedCard?.last_four_digits || payment.card?.last_four_digits || null,
+                firstPaymentProviderPaymentId: payment.id,
+                providerSubscriptionId: subscriptionId,
+
+                paymentRawPayload: {
+                    payment,
+                    customer,
+                    savedCard,
+                    cardSaveError
+                }
+            }
         });
     } catch (error) {
         console.error('Payment Error:', error);
+
         return res.status(error.status || 500).json({
+            success: false,
             message: error.message || 'Erro interno do servidor',
             error: error.data || error.message
         });
