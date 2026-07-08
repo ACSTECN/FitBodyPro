@@ -4,7 +4,6 @@ const PLAN_DETAILS = {
 };
 
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-const APP_BASE_URL = process.env.APP_BASE_URL || 'https://fit-body-pro-one.vercel.app';
 
 function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -63,12 +62,7 @@ async function mercadoPagoRequest(path, options = {}) {
 
 async function findCustomerByEmail(email) {
     const data = await mercadoPagoRequest(`/v1/customers/search?email=${encodeURIComponent(email)}`);
-
-    if (Array.isArray(data.results) && data.results.length > 0) {
-        return data.results[0];
-    }
-
-    return null;
+    return Array.isArray(data.results) && data.results.length > 0 ? data.results[0] : null;
 }
 
 async function createCustomer({ email, fullName, identificationType, identificationNumber }) {
@@ -94,11 +88,7 @@ async function createCustomer({ email, fullName, identificationType, identificat
 
 async function ensureCustomer(customerInput) {
     const existing = await findCustomerByEmail(customerInput.email);
-
-    if (existing?.id) {
-        return existing;
-    }
-
+    if (existing?.id) return existing;
     return createCustomer(customerInput);
 }
 
@@ -136,13 +126,19 @@ async function createCardPayment(reqBody) {
         identificationNumber
     });
 
-    const { firstName, lastName } = splitFullName(cardholderName);
     const subscriptionId = buildRecurringSubscriptionId(plan);
 
-    const billingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10);
+    // 1. Primeiro salva o cartão no customer
+    const savedCard = await mercadoPagoRequest(`/v1/customers/${customer.id}/cards`, {
+        method: 'POST',
+        body: {
+            token,
+            issuer_id: issuerId || undefined,
+            payment_method_id: paymentMethodId
+        }
+    });
 
+    // 2. Depois cobra usando customer_id + card_id salvo
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
         headers: {
@@ -150,7 +146,6 @@ async function createCardPayment(reqBody) {
         },
         body: {
             transaction_amount: selectedPlan.price,
-            token,
             description: selectedPlan.title,
             installments: Number(installments) || 1,
             payment_method_id: paymentMethodId,
@@ -158,66 +153,23 @@ async function createCardPayment(reqBody) {
             payer: {
                 type: 'customer',
                 id: customer.id,
-                email,
-                first_name: firstName,
-                last_name: lastName,
-                identification:
-                    identificationType && identificationNumber
-                        ? {
-                              type: identificationType,
-                              number: cleanDigits(identificationNumber)
-                          }
-                        : undefined
+                email
             },
+            card_id: savedCard.id,
             metadata: {
                 plan,
                 billingCycle: 'monthly',
-                source: 'landing-card-recurring'
-            },
-            notification_url: `${APP_BASE_URL}/api/webhook`,
-            point_of_interaction: {
-                type: 'SUBSCRIPTIONS',
-                transaction_data: {
-                    first_time_use: true,
-                    subscription_id: subscriptionId,
-                    subscription_sequence: {
-                        number: 1,
-                        total: 12
-                    },
-                    invoice_period: {
-                        period: 1,
-                        type: 'monthly'
-                    },
-                    billing_date: billingDate,
-                    user_present: true
-                }
+                source: 'landing-card-recurring',
+                providerSubscriptionId: subscriptionId
             }
         }
     });
-
-    let savedCard = null;
-    let cardSaveError = null;
-
-    try {
-        savedCard = await mercadoPagoRequest(`/v1/customers/${customer.id}/cards`, {
-            method: 'POST',
-            body: {
-                token,
-                issuer_id: issuerId || undefined,
-                payment_method_id: paymentMethodId
-            }
-        });
-    } catch (error) {
-        cardSaveError = error.data || error.message;
-        console.error('Erro ao salvar cartão no customer do Mercado Pago:', cardSaveError);
-    }
 
     return {
         payment,
         customer,
         savedCard,
-        subscriptionId,
-        cardSaveError
+        subscriptionId
     };
 }
 
@@ -252,7 +204,7 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const { payment, customer, savedCard, subscriptionId, cardSaveError } =
+        const { payment, customer, savedCard, subscriptionId } =
             await createCardPayment(req.body);
 
         return res.status(200).json({
@@ -262,15 +214,14 @@ module.exports = async function handler(req, res) {
             status: payment.status,
             statusDetail: payment.status_detail,
             recurringReady: Boolean(customer?.id && savedCard?.id),
-            cardSaveError,
             recurringData: {
                 paymentAmount: payment.transaction_amount,
                 paymentCurrency: payment.currency_id,
                 providerReference: payment.order?.id || payment.external_reference || payment.id,
                 paymentDescription: payment.description,
 
-                providerCustomerId: customer?.id,
-                providerCardId: savedCard?.id || null,
+                providerCustomerId: customer.id,
+                providerCardId: savedCard.id,
                 paymentMethodId: payment.payment_method_id || req.body.paymentMethodId,
                 issuerId: savedCard?.issuer?.id || payment.issuer_id || payment.issuer?.id || null,
                 cardBrand: savedCard?.payment_method?.id || payment.payment_method_id || null,
@@ -281,8 +232,7 @@ module.exports = async function handler(req, res) {
                 paymentRawPayload: {
                     payment,
                     customer,
-                    savedCard,
-                    cardSaveError
+                    savedCard
                 }
             }
         });
