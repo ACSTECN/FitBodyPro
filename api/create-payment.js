@@ -1,5 +1,5 @@
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 0.5 },
+    starter: { title: 'Fitbory Starter', price: 1.00 },
     premium: { title: 'Fit Bory Premium', price: 0.5 }
 };
 
