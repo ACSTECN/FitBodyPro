@@ -1,6 +1,6 @@
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 0.5 },
-    premium: { title: 'Fit Bory Premium', price: 0.5 }
+    starter: { title: 'Fitbory Starter', price: 3.0 },
+    premium: { title: 'Fit Bory Premium', price: 3.0 }
 };
 
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
