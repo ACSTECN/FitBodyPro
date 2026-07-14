@@ -80,6 +80,19 @@ function cleanDigits(value) {
     return String(value || '').replace(/\D/g, '');
 }
 
+function buildPhonePayload(phone) {
+    const digits = cleanDigits(phone);
+
+    if (digits.length < 10) {
+        return undefined;
+    }
+
+    return {
+        area_code: digits.slice(0, 2),
+        number: digits.slice(2)
+    };
+}
+
 function getSelectedPlan(plan) {
     return PLAN_DETAILS[plan] || null;
 }
@@ -122,9 +135,10 @@ async function findCustomerByEmail(email) {
     return Array.isArray(data.results) && data.results.length > 0 ? data.results[0] : null;
 }
 
-async function createCustomer({ email, fullName, identificationType, identificationNumber }) {
+async function createCustomer({ email, fullName, identificationType, identificationNumber, phone }) {
     const { firstName, lastName } = splitFullName(fullName);
     const cleanedDocument = cleanDigits(identificationNumber);
+    const phonePayload = buildPhonePayload(phone);
 
     return mercadoPagoRequest('/v1/customers', {
         method: 'POST',
@@ -132,6 +146,7 @@ async function createCustomer({ email, fullName, identificationType, identificat
             email,
             first_name: firstName,
             last_name: lastName,
+            phone: phonePayload,
             identification:
                 cleanedDocument && identificationType
                     ? {
@@ -143,16 +158,17 @@ async function createCustomer({ email, fullName, identificationType, identificat
     });
 }
 
-async function updateCustomer(customerId, { email, fullName, identificationType, identificationNumber }) {
+async function updateCustomer(customerId, { fullName, identificationType, identificationNumber, phone }) {
     const { firstName, lastName } = splitFullName(fullName);
     const cleanedDocument = cleanDigits(identificationNumber);
+    const phonePayload = buildPhonePayload(phone);
 
     return mercadoPagoRequest(`/v1/customers/${customerId}`, {
         method: 'PUT',
         body: {
-            email,
             first_name: firstName,
             last_name: lastName,
+            phone: phonePayload,
             identification:
                 cleanedDocument && identificationType
                     ? {
@@ -227,6 +243,7 @@ async function createCardPayment(reqBody) {
         plan,
         token,
         email,
+        phone,
         cardholderName,
         identificationType,
         identificationNumber,
@@ -252,6 +269,7 @@ async function createCardPayment(reqBody) {
 
     const customer = await ensureCustomer({
         email,
+        phone,
         fullName: cardholderName,
         identificationType,
         identificationNumber,
@@ -321,6 +339,7 @@ async function createCardPayment(reqBody) {
     }
 
     const { firstName, lastName } = splitFullName(cardholderName);
+    const phonePayload = buildPhonePayload(phone);
     const paymentPayload = {
         transaction_amount: selectedPlan.price,
         token,
@@ -333,6 +352,7 @@ async function createCardPayment(reqBody) {
             email,
             first_name: firstName,
             last_name: lastName,
+            phone: phonePayload,
             identification:
                 identificationType && identificationNumber
                     ? {
@@ -341,13 +361,27 @@ async function createCardPayment(reqBody) {
                     }
                     : undefined
         },
+        additional_info: {
+            items: [
+                {
+                    id: plan,
+                    title: selectedPlan.title,
+                    description: `${selectedPlan.title} - assinatura mensal`,
+                    category_id: 'services',
+                    quantity: 1,
+                    unit_price: selectedPlan.price
+                }
+            ],
+            payer: {
+                first_name: firstName,
+                last_name: lastName,
+                phone: phonePayload
+            }
+        },
         metadata: {
             plan,
             billingCycle: 'monthly',
-            source: 'landing-card-recurring',
-            providerCustomerId: customer.id,
-            providerSubscriptionId: subscriptionId,
-            providerCardId: savedCard.id
+            source: 'landing-card-recurring'
         }
     };
 
@@ -364,6 +398,7 @@ async function createCardPayment(reqBody) {
             issuerId: paymentPayload.issuer_id || null,
             installments: paymentPayload.installments,
             hasIdentification: Boolean(paymentPayload.payer.identification?.number),
+            hasPhone: Boolean(paymentPayload.payer.phone?.number),
             customerId: customer?.id || null,
             providerCardId: savedCard?.id || null,
             subscriptionId
@@ -486,7 +521,7 @@ module.exports = async function handler(req, res) {
         }
 
         return res.status(200).json({
-            version: 'save-card-first-updated-customer-v4',
+            version: 'save-card-first-enriched-payer-v5',
             success: isApproved,
             approved: isApproved,
             requiresAction: !isApproved,

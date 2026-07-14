@@ -231,6 +231,32 @@
     </footer>
 
 <script>
+const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
+
+try {
+    const storedContact = JSON.parse(sessionStorage.getItem(PAYMENT_CONTACT_STORAGE_KEY) || 'null');
+
+    if (storedContact) {
+        const fullNameInput = document.getElementById('fullName');
+        const phoneInput = document.getElementById('phone');
+        const emailInput = document.getElementById('email');
+
+        if (fullNameInput && !fullNameInput.value.trim()) {
+            fullNameInput.value = storedContact.fullName || '';
+        }
+
+        if (phoneInput && !phoneInput.value.trim()) {
+            phoneInput.value = storedContact.phone || '';
+        }
+
+        if (emailInput && !emailInput.value.trim()) {
+            emailInput.value = storedContact.email || '';
+        }
+    }
+} catch (error) {
+    // Ignore malformed cached contact data and keep manual input available.
+}
+
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 

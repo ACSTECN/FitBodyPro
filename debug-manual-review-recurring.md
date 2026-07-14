@@ -49,6 +49,14 @@
 - Correcao aplicada com base nessa nova evidencia:
   - `ensureCustomer()` voltou a reutilizar o `customer` encontrado por email;
   - antes de salvar o cartao, o backend agora atualiza o `customer` existente com nome e documento mais recentes usando `PUT /v1/customers/{id}`.
+- Evidencia complementar trazida pelo usuario:
+  - com email ja usado, o fluxo ainda podia cair em erro de parametros;
+  - com email novo, a cobranca voltava para `pending_review_manual`.
+- Correcao aplicada nesta rodada:
+  - `updateCustomer()` deixou de enviar o campo `email` no `PUT`, reduzindo o risco de `invalid parameters` para customers ja existentes;
+  - o fluxo pago agora coleta `nome`, `email` e `telefone` antes do Brick e envia esses dados ao backend;
+  - o backend passa a enriquecer `customer`, `payer` e `additional_info` do primeiro pagamento com telefone e item da assinatura para aumentar o contexto do antifraude;
+  - os dados de contato informados no pagamento ficam reaproveitados na `success.html`.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;

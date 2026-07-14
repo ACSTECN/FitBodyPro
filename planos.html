@@ -442,6 +442,35 @@
         line-height: 1.6;
     }
 
+    .payment-contact-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 16px;
+        margin-top: 14px;
+    }
+
+    .payment-contact-grid .form-group {
+        margin-bottom: 0;
+    }
+
+    .payment-contact-grid .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .payment-contact-note {
+        margin-top: 14px;
+        color: #526072;
+        font-size: .9rem;
+        text-align: center;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+        .payment-contact-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .card-payment-area {
         display: none;
         margin-top: 18px;
@@ -822,6 +851,21 @@
                     </div>
                 </div>
                 <p class="payment-helper" id="paymentHelper">Preencha os dados do cartao com o formulario oficial do Mercado Pago.</p>
+                <div class="payment-contact-grid">
+                    <div class="form-group full-width">
+                        <label for="paymentFullName">Nome completo</label>
+                        <input type="text" id="paymentFullName" placeholder="Seu nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentEmail">E-mail</label>
+                        <input type="email" id="paymentEmail" placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentPhone">Telefone</label>
+                        <input type="tel" id="paymentPhone" placeholder="(11) 99999-9999">
+                    </div>
+                </div>
+                <p class="payment-contact-note">Esses dados ajudam a preparar a recorrencia e a reduzir recusas por falta de contexto no antifraude.</p>
             </div>
             <div id="cardPaymentArea" class="card-payment-area">
                 <div class="card-payment-note">
@@ -888,6 +932,7 @@ const priceValues = {
     starter: 5.0,
     premium: 3.0
 };
+const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
 
 function getPlanPriceLabel(plan) {
     const price = priceValues[plan];
@@ -907,14 +952,60 @@ function splitFullName(fullName) {
     return { firstName, lastName };
 }
 
+function readPaymentContact() {
+    try {
+        return JSON.parse(sessionStorage.getItem(PAYMENT_CONTACT_STORAGE_KEY) || 'null') || {};
+    } catch (error) {
+        return {};
+    }
+}
+
+function storePaymentContact(contact) {
+    sessionStorage.setItem(PAYMENT_CONTACT_STORAGE_KEY, JSON.stringify(contact));
+}
+
+function syncPaymentContactFields() {
+    const cachedContact = readPaymentContact();
+    const fallbackFullName = document.getElementById('fullName')?.value?.trim() || '';
+    const fallbackEmail = document.getElementById('email')?.value?.trim() || '';
+    const fallbackPhone = document.getElementById('phone')?.value?.trim() || '';
+
+    const paymentFullNameInput = document.getElementById('paymentFullName');
+    const paymentEmailInput = document.getElementById('paymentEmail');
+    const paymentPhoneInput = document.getElementById('paymentPhone');
+
+    if (paymentFullNameInput && !paymentFullNameInput.value.trim()) {
+        paymentFullNameInput.value = cachedContact.fullName || fallbackFullName;
+    }
+
+    if (paymentEmailInput && !paymentEmailInput.value.trim()) {
+        paymentEmailInput.value = cachedContact.email || fallbackEmail;
+    }
+
+    if (paymentPhoneInput && !paymentPhoneInput.value.trim()) {
+        paymentPhoneInput.value = cachedContact.phone || fallbackPhone;
+    }
+}
+
 function getPreferredPayerData() {
-    const fullName = document.getElementById('fullName')?.value?.trim() || '';
-    const email = document.getElementById('email')?.value?.trim() || '';
+    const fullName =
+        document.getElementById('paymentFullName')?.value?.trim() ||
+        document.getElementById('fullName')?.value?.trim() ||
+        '';
+    const email =
+        document.getElementById('paymentEmail')?.value?.trim() ||
+        document.getElementById('email')?.value?.trim() ||
+        '';
+    const phone =
+        document.getElementById('paymentPhone')?.value?.trim() ||
+        document.getElementById('phone')?.value?.trim() ||
+        '';
     const { firstName, lastName } = splitFullName(fullName);
 
     return {
         fullName,
         email,
+        phone,
         firstName,
         lastName
     };
@@ -1042,6 +1133,12 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
             throw new Error('Preencha um e-mail valido no formulario do Mercado Pago.');
         }
 
+        if (!preferredPayer.phone) {
+            throw new Error('Preencha um telefone valido antes de concluir o pagamento.');
+        }
+
+        storePaymentContact(preferredPayer);
+
         messageArea.innerHTML = `
             <div class="message success">
                 Processando pagamento...
@@ -1056,6 +1153,7 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
                 method: 'card',
                 token,
                 email,
+                phone: preferredPayer.phone,
                 cardholderName,
                 identificationType: identification.type || cardFormData.identificationType,
                 identificationNumber: identification.number || cardFormData.identificationNumber,
@@ -1148,6 +1246,7 @@ function openPaymentModal(plan) {
     document.getElementById('messagePaymentArea').innerHTML = '';
     document.getElementById('paymentActionText').textContent =
         'Preencha os dados do cartão para ativar sua assinatura recorrente.';
+    syncPaymentContactFields();
 
     document.getElementById('paymentModal').classList.add('show');
 
