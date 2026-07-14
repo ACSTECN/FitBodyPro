@@ -335,6 +335,11 @@
         color: #721c24;
     }
 
+    .message.warning {
+        background: #fff3cd;
+        color: #8a5a00;
+    }
+
     /* ===========================
     PAGAMENTOS
     =========================== */
@@ -1012,6 +1017,15 @@ async function submitCardPayment(cardFormData) {
         const data = await response.json();
 
         console.log('RETORNO /api/create-payment:', data);
+
+        if (response.ok && data.status === 'in_process') {
+            messageArea.innerHTML = `
+                <div class="message warning">
+                    ${data.message || 'O pagamento ficou em analise manual no Mercado Pago. Tente outro cartao ou aguarde a analise.'}
+                </div>
+            `;
+            return;
+        }
 
         if (!response.ok || !data.success) {
             messageArea.innerHTML = `

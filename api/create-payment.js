@@ -158,7 +158,6 @@ async function createCardPayment(reqBody) {
     }
 
     const { firstName, lastName } = splitFullName(cardholderName);
-    const billingDate = new Date().toISOString().split('T')[0];
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
         headers: {
@@ -168,12 +167,11 @@ async function createCardPayment(reqBody) {
             transaction_amount: selectedPlan.price,
             token,
             description: selectedPlan.title,
+            external_reference: subscriptionId,
             installments: Number(installments) || 1,
             payment_method_id: paymentMethodId,
             issuer_id: issuerId || undefined,
             payer: {
-                type: 'customer',
-                id: customer.id,
                 email,
                 first_name: firstName,
                 last_name: lastName,
@@ -189,25 +187,9 @@ async function createCardPayment(reqBody) {
                 plan,
                 billingCycle: 'monthly',
                 source: 'landing-card-recurring',
+                providerCustomerId: customer.id,
                 providerSubscriptionId: subscriptionId,
                 providerCardId: savedCard.id
-            },
-            point_of_interaction: {
-                type: 'SUBSCRIPTIONS',
-                transaction_data: {
-                    first_time_use: true,
-                    subscription_id: subscriptionId,
-                    subscription_sequence: {
-                        number: 1,
-                        total: null
-                    },
-                    invoice_period: {
-                        period: 1,
-                        type: 'monthly'
-                    },
-                    billing_date: billingDate,
-                    user_present: true
-                }
             }
         }
     });
@@ -261,6 +243,13 @@ module.exports = async function handler(req, res) {
             payment.payment_method_id ||
             payment.payment_method?.id ||
             null;
+        const isApproved = payment.status === 'approved';
+        const isManualReview = payment.status === 'in_process' && payment.status_detail === 'pending_review_manual';
+        const statusMessage = isApproved
+            ? 'Pagamento aprovado.'
+            : isManualReview
+                ? 'O Mercado Pago colocou essa tentativa em analise manual. Tente outro cartao ou aguarde a analise.'
+                : `Pagamento retornou com status ${payment.status}. ${payment.status_detail || ''}`.trim();
 
         if (!providerCardId) {
             return res.status(400).json({
@@ -272,12 +261,15 @@ module.exports = async function handler(req, res) {
         }
 
         return res.status(200).json({
-            version: 'save-card-first-no-provider-card-no-payment-v1',
-            success: payment.status === 'approved' || payment.status === 'in_process',
-            approved: payment.status === 'approved',
+            version: 'save-card-first-standard-charge-v2',
+            success: isApproved,
+            approved: isApproved,
+            requiresAction: !isApproved,
+            requiresManualReview: isManualReview,
             paymentId: payment.id,
             status: payment.status,
             statusDetail: payment.status_detail,
+            message: statusMessage,
             recurringReady: Boolean(customer?.id && providerCardId),
             recurringData: {
                 paymentAmount: payment.transaction_amount,
