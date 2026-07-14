@@ -977,8 +977,8 @@ async function renderCardPaymentBrick() {
                 onReady: () => {
                     console.log('Brick Mercado Pago pronto');
                 },
-                onSubmit: (formData) => {
-                    return submitCardPayment(formData);
+                onSubmit: (formData, additionalData) => {
+                    return submitCardPayment(formData, additionalData);
                 },
                 onError: (error) => {
                     console.error('Erro Brick Mercado Pago:', error);
@@ -1002,7 +1002,7 @@ function storeRecurringData(paymentId, recurringData) {
     sessionStorage.setItem(buildRecurringStorageKey(paymentId), JSON.stringify(recurringData));
 }
 
-async function submitCardPayment(cardFormData) {
+async function submitCardPayment(cardFormData, additionalData = {}) {
     const messageArea = document.getElementById('messagePaymentArea');
 
     try {
@@ -1018,10 +1018,12 @@ async function submitCardPayment(cardFormData) {
         const installments = cardFormData.installments;
         const token = cardFormData.token;
         const preferredPayer = getPreferredPayerData();
+        const additionalCardholderName = String(additionalData.cardholderName || '').trim();
 
         const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
 
         const cardholderName =
+            additionalCardholderName ||
             cardFormData.cardholderName ||
             payerFullName ||
             preferredPayer.fullName;

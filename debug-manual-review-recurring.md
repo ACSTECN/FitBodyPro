@@ -36,6 +36,9 @@
   - remocao do fallback generico `Cliente Fitbory` para nome do titular;
   - validacao explicita de nome completo e e-mail antes do envio do pagamento;
   - textos do modal ajustados para refletir fluxo somente com cartao.
+- Ajuste adicional aplicado apos novo sintoma em runtime:
+  - o `onSubmit` do Card Payment Brick agora recebe tambem `additionalData`;
+  - o nome do titular passa a priorizar `additionalData.cardholderName`, que e um campo documentado pelo Mercado Pago para esse callback.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;
