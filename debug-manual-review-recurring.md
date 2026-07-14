@@ -39,6 +39,13 @@
 - Ajuste adicional aplicado apos novo sintoma em runtime:
   - o `onSubmit` do Card Payment Brick agora recebe tambem `additionalData`;
   - o nome do titular passa a priorizar `additionalData.cardholderName`, que e um campo documentado pelo Mercado Pago para esse callback.
+- Evidencia nova trazida pelo reteste do usuario:
+  - a resposta do frontend mostrou `status = in_process` e `statusDetail = pending_review_manual`;
+  - o `providerCustomerId` veio valido;
+  - o `paymentRawPayload.customer` retornado pelo Mercado Pago mostrava historico anterior, incluindo multiplos cartoes salvos, reforcando a hipotese de reaproveitamento de customer antigo por email.
+- Correcao aplicada com base nessa evidencia:
+  - `ensureCustomer()` deixou de reutilizar `customer` encontrado por email;
+  - o fluxo agora cria um `customer` novo para cada tentativa de cadastro recorrente, mantendo o `customer` antigo apenas como referencia de debug.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;

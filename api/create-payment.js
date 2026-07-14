@@ -161,8 +161,6 @@ async function ensureCustomer(customerInput) {
     });
     // #endregion
 
-    if (existing?.id) return existing;
-
     const createdCustomer = await createCustomer(customerInput);
 
     // #region debug-point B:customer-create
@@ -173,7 +171,9 @@ async function ensureCustomer(customerInput) {
         traceId,
         data: {
             email: maskEmail(customerInput.email),
-            createdCustomerId: createdCustomer?.id || null
+            createdCustomerId: createdCustomer?.id || null,
+            reusedExistingCustomer: false,
+            previousCustomerId: existing?.id || null
         }
     });
     // #endregion
@@ -445,7 +445,7 @@ module.exports = async function handler(req, res) {
         }
 
         return res.status(200).json({
-            version: 'save-card-first-standard-charge-v2',
+            version: 'save-card-first-fresh-customer-v3',
             success: isApproved,
             approved: isApproved,
             requiresAction: !isApproved,
