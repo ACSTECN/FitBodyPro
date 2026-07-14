@@ -31,6 +31,15 @@
   - resposta resumida de `/v1/payments`;
   - falhas de backend com `status`, `message` e `cause` do Mercado Pago quando houver.
 - Debug Server ativo com sessao `manual-review-recurring` e arquivo `.dbg/manual-review-recurring.env`.
+- Correcao minima aplicada em `planos.html` antes do novo reteste:
+  - valores dos planos alinhados com o backend (`starter = 5,00`, `premium = 3,00`);
+  - remocao do fallback generico `Cliente Fitbory` para nome do titular;
+  - validacao explicita de nome completo e e-mail antes do envio do pagamento;
+  - textos do modal ajustados para refletir fluxo somente com cartao.
+- Verificacao local concluida:
+  - script inline de `planos.html` valido;
+  - `api/create-payment.js` valido;
+  - interface local exibe `Fitbory Starter = 5,00`, `Fit Bory Premium = 3,00` e `priceDisplay = R$ 5,00` no modal do plano Starter.
 
 ## Status
-- Instrumentacao concluida; aguardando reproducao com novo teste para leitura dos logs.
+- Correcao aplicada e pronta para novo reteste com cobranca real no ambiente com credenciais.

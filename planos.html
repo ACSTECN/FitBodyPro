@@ -734,7 +734,7 @@
                     <h3 class="plan-name">Fitbory Starter</h3>
                     <div class="plan-price">
                         <span class="currency">R$</span>
-                        <span class="value">4,00</span>
+                        <span class="value">5,00</span>
                         <span class="period">/mês</span>
                     </div>
                     <p class="plan-description">Todos os acessos até 10 alunos</p>
@@ -750,7 +750,7 @@
                     <h3 class="plan-name">Fit Bory Premium</h3>
                     <div class="plan-price">
                         <span class="currency">R$</span>
-                        <span class="value">0,50</span>
+                        <span class="value">3,00</span>
                         <span class="period">/mês</span>
                     </div>
                     <p class="plan-description">Tudo ilimitado</p>
@@ -806,7 +806,7 @@
                 <div class="payment-modal-copy">
                     <span class="payment-kicker">Pagamento Seguro</span>
                     <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
-                    <p class="payment-modal-subtitle">Pague com Pix agora ou use o cartao direto no Mercado Pago para deixar a renovacao automatica pronta.</p>
+                    <p class="payment-modal-subtitle">Use o cartao direto no Mercado Pago para concluir o primeiro pagamento e deixar a renovacao automatica pronta.</p>
                 </div>
             </div>
             <div class="price-display" id="priceDisplay"></div>
@@ -821,7 +821,7 @@
                         </span>
                     </div>
                 </div>
-                <p class="payment-helper" id="paymentHelper">Escolha a melhor forma para concluir sua assinatura.</p>
+                <p class="payment-helper" id="paymentHelper">Preencha os dados do cartao com o formulario oficial do Mercado Pago.</p>
             </div>
             <div id="cardPaymentArea" class="card-payment-area">
                 <div class="card-payment-note">
@@ -885,9 +885,40 @@ let mercadoPagoBricksBuilder = null;
 let mercadoPagoCardBrickController = null;
 
 const priceValues = {
-    starter: 4.0,
-    premium: 4.0
+    starter: 5.0,
+    premium: 3.0
 };
+
+function getPlanPriceLabel(plan) {
+    const price = priceValues[plan];
+
+    if (typeof price !== 'number') {
+        return 'R$ 0,00';
+    }
+
+    return `R$ ${price.toFixed(2).replace('.', ',')}`;
+}
+
+function splitFullName(fullName) {
+    const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+    const firstName = parts.shift() || '';
+    const lastName = parts.join(' ');
+
+    return { firstName, lastName };
+}
+
+function getPreferredPayerData() {
+    const fullName = document.getElementById('fullName')?.value?.trim() || '';
+    const email = document.getElementById('email')?.value?.trim() || '';
+    const { firstName, lastName } = splitFullName(fullName);
+
+    return {
+        fullName,
+        email,
+        firstName,
+        lastName
+    };
+}
 
 async function loadMercadoPagoPublicKey() {
     if (mercadoPagoPublicKey) return mercadoPagoPublicKey;
@@ -923,7 +954,16 @@ async function renderCardPaymentBrick() {
         'cardPaymentBrickContainer',
         {
             initialization: {
-                amount: Number((priceValues[selectedPlan] || 4).toFixed(2))
+                amount: Number((priceValues[selectedPlan] || 5).toFixed(2)),
+                payer: (() => {
+                    const preferredPayer = getPreferredPayerData();
+
+                    return {
+                        email: preferredPayer.email || undefined,
+                        firstName: preferredPayer.firstName || undefined,
+                        lastName: preferredPayer.lastName || undefined
+                    };
+                })()
             },
             customization: {
                 visual: {
@@ -977,19 +1017,28 @@ async function submitCardPayment(cardFormData) {
         const issuerId = cardFormData.issuer_id || cardFormData.issuerId;
         const installments = cardFormData.installments;
         const token = cardFormData.token;
+        const preferredPayer = getPreferredPayerData();
 
         const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
 
         const cardholderName =
             cardFormData.cardholderName ||
             payerFullName ||
-            payer.first_name ||
-            'Cliente Fitbory';
+            preferredPayer.fullName;
 
         const email =
             payer.email ||
             cardFormData.email ||
-            cardFormData.cardholderEmail;
+            cardFormData.cardholderEmail ||
+            preferredPayer.email;
+
+        if (!cardholderName) {
+            throw new Error('Preencha o nome completo do titular no formulario do Mercado Pago.');
+        }
+
+        if (!email) {
+            throw new Error('Preencha um e-mail valido no formulario do Mercado Pago.');
+        }
 
         messageArea.innerHTML = `
             <div class="message success">
@@ -1087,18 +1136,13 @@ function openPaymentModal(plan) {
     selectedPaymentMethod = 'card';
     paymentData = null;
 
-    const prices = {
-        starter: 'R$ 5,00',
-        premium: 'R$ 0,50'
-    };
-
     const titles = {
         starter: 'Fitbory Starter',
         premium: 'Fit Bory Premium'
     };
 
     document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
-    document.getElementById('priceDisplay').textContent = prices[plan];
+    document.getElementById('priceDisplay').textContent = getPlanPriceLabel(plan);
     document.getElementById('messagePaymentArea').innerHTML = '';
     document.getElementById('paymentActionText').textContent =
         'Preencha os dados do cartão para ativar sua assinatura recorrente.';
