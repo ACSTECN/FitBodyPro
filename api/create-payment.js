@@ -143,6 +143,27 @@ async function createCustomer({ email, fullName, identificationType, identificat
     });
 }
 
+async function updateCustomer(customerId, { email, fullName, identificationType, identificationNumber }) {
+    const { firstName, lastName } = splitFullName(fullName);
+    const cleanedDocument = cleanDigits(identificationNumber);
+
+    return mercadoPagoRequest(`/v1/customers/${customerId}`, {
+        method: 'PUT',
+        body: {
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            identification:
+                cleanedDocument && identificationType
+                    ? {
+                          type: identificationType,
+                          number: cleanedDocument
+                      }
+                    : undefined
+        }
+    });
+}
+
 async function ensureCustomer(customerInput) {
     const existing = await findCustomerByEmail(customerInput.email);
     const traceId = customerInput.traceId;
@@ -161,6 +182,27 @@ async function ensureCustomer(customerInput) {
     });
     // #endregion
 
+    if (existing?.id) {
+        const updatedCustomer = await updateCustomer(existing.id, customerInput);
+
+        // #region debug-point B:customer-update
+        sendDebugEvent({
+            hypothesisId: 'B',
+            location: 'api/create-payment.js:ensureCustomer',
+            msg: '[DEBUG] Customer existente atualizado no Mercado Pago',
+            traceId,
+            data: {
+                email: maskEmail(customerInput.email),
+                reusedExistingCustomer: true,
+                existingCustomerId: existing.id,
+                updatedCustomerId: updatedCustomer?.id || existing.id
+            }
+        });
+        // #endregion
+
+        return updatedCustomer;
+    }
+
     const createdCustomer = await createCustomer(customerInput);
 
     // #region debug-point B:customer-create
@@ -172,8 +214,7 @@ async function ensureCustomer(customerInput) {
         data: {
             email: maskEmail(customerInput.email),
             createdCustomerId: createdCustomer?.id || null,
-            reusedExistingCustomer: false,
-            previousCustomerId: existing?.id || null
+            reusedExistingCustomer: false
         }
     });
     // #endregion
@@ -445,7 +486,7 @@ module.exports = async function handler(req, res) {
         }
 
         return res.status(200).json({
-            version: 'save-card-first-fresh-customer-v3',
+            version: 'save-card-first-updated-customer-v4',
             success: isApproved,
             approved: isApproved,
             requiresAction: !isApproved,

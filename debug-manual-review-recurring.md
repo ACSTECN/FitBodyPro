@@ -43,9 +43,12 @@
   - a resposta do frontend mostrou `status = in_process` e `statusDetail = pending_review_manual`;
   - o `providerCustomerId` veio valido;
   - o `paymentRawPayload.customer` retornado pelo Mercado Pago mostrava historico anterior, incluindo multiplos cartoes salvos, reforcando a hipotese de reaproveitamento de customer antigo por email.
-- Correcao aplicada com base nessa evidencia:
-  - `ensureCustomer()` deixou de reutilizar `customer` encontrado por email;
-  - o fluxo agora cria um `customer` novo para cada tentativa de cadastro recorrente, mantendo o `customer` antigo apenas como referencia de debug.
+- Resultado da tentativa com `customer` sempre novo:
+  - o fluxo passou a falhar antes da cobranca com `400 invalid parameters`;
+  - o sintoma e compativel com tentativa de criar `customer` duplicado no Mercado Pago para um email que ja existe.
+- Correcao aplicada com base nessa nova evidencia:
+  - `ensureCustomer()` voltou a reutilizar o `customer` encontrado por email;
+  - antes de salvar o cartao, o backend agora atualiza o `customer` existente com nome e documento mais recentes usando `PUT /v1/customers/{id}`.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;
