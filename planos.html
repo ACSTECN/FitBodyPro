@@ -835,7 +835,7 @@
                 <div class="payment-modal-copy">
                     <span class="payment-kicker">Pagamento Seguro</span>
                     <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
-                    <p class="payment-modal-subtitle">Use o cartao direto no Mercado Pago para concluir o primeiro pagamento e deixar a renovacao automatica pronta.</p>
+                    <p class="payment-modal-subtitle">Use o cartao direto no Asaas para concluir o primeiro pagamento agora e deixar a renovacao automatica pronta para o proximo ciclo.</p>
                 </div>
             </div>
             <div class="price-display" id="priceDisplay"></div>
@@ -850,7 +850,7 @@
                         </span>
                     </div>
                 </div>
-                <p class="payment-helper" id="paymentHelper">Preencha os dados do cartao com o formulario oficial do Mercado Pago.</p>
+                <p class="payment-helper" id="paymentHelper">Preencha seus dados e os dados do cartao para cobrar o primeiro pagamento no Asaas e criar a assinatura mensal.</p>
                 <div class="payment-contact-grid">
                     <div class="form-group full-width">
                         <label for="paymentFullName">Nome completo</label>
@@ -874,27 +874,48 @@
                     </div>
                     <div class="form-group full-width">
                         <label for="paymentStreetName">Endereco</label>
-                        <input type="text" id="paymentStreetName" placeholder="Preencha o CEP para buscar o endereco" readonly>
+                        <input type="text" id="paymentStreetName" placeholder="Rua, avenida, etc.">
                     </div>
                 </div>
-                <p class="payment-contact-note">Esses dados ajudam a preparar a recorrencia e a reduzir recusas por falta de contexto no antifraude.</p>
+                <p class="payment-contact-note">Esses dados ajudam a processar o pagamento com seguranca e deixam a assinatura mensal vinculada ao cliente certo no Asaas.</p>
             </div>
-            <div id="cardPaymentArea" class="card-payment-area">
+            <div id="cardPaymentArea" class="card-payment-area show">
                 <div class="card-payment-note">
-                    Os dados do cartao ficam dentro do componente oficial do Mercado Pago. Assim o primeiro pagamento ja pode preparar a recorrencia automatica.
+                    O primeiro pagamento sera tentado agora no Asaas. Se aprovar, a assinatura mensal ja fica criada para as proximas renovacoes.
                 </div>
                 <div class="brick-shell">
-                    <div id="cardPaymentBrickContainer"></div>
+                    <div class="payment-contact-grid">
+                        <div class="form-group full-width">
+                            <label for="paymentCardNumber">Numero do cartao</label>
+                            <input type="text" id="paymentCardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" maxlength="23">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentExpiryMonth">Mes</label>
+                            <input type="text" id="paymentExpiryMonth" inputmode="numeric" placeholder="MM" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentExpiryYear">Ano</label>
+                            <input type="text" id="paymentExpiryYear" inputmode="numeric" placeholder="AAAA" maxlength="4">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentCvv">CVV</label>
+                            <input type="password" id="paymentCvv" inputmode="numeric" placeholder="123" maxlength="4">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="paymentCpfCnpj">CPF do titular</label>
+                            <input type="text" id="paymentCpfCnpj" inputmode="numeric" placeholder="000.000.000-00" maxlength="18">
+                        </div>
+                    </div>
                 </div>
                 <div class="payment-warning">
-                    Use o cartao no bloco do Mercado Pago para gerar o customer e o card-on-file corretos da recorrencia.
+                    Este checkout usa HTTPS e envia os dados direto ao backend para processar a cobranca no Asaas e criar a recorrencia do proximo ciclo.
                 </div>
             </div>
             
             <div style="text-align: center;">
-                <p id="paymentActionText">Voce sera direcionado para concluir o pagamento.</p>
-                <button class="btn-submit" onclick="goToMercadoPago()" id="mpBtn" disabled>
-    Continuar para pagamento
+                <p id="paymentActionText">Revise os dados e conclua o pagamento com cartao.</p>
+                <button class="btn-submit" onclick="submitCardPayment()" id="mpBtn">
+    Pagar com cartão
 </button>
             </div>
         </div>
@@ -929,22 +950,20 @@
         </div>
     </footer>
 
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <script src="https://www.mercadopago.com/v2/security.js" view="checkout"></script>
 <script>
 let selectedPlan = null;
 let selectedPaymentMethod = 'card';
 let paymentData = null;
-let mercadoPagoPublicKey = null;
-let mercadoPagoInstance = null;
-let mercadoPagoBricksBuilder = null;
-let mercadoPagoCardBrickController = null;
 
 const priceValues = {
     starter: 5.0,
     premium: 3.0
 };
 const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
+
+function cleanDigits(value) {
+    return String(value || '').replace(/\D/g, '');
+}
 
 function getPlanPriceLabel(plan) {
     const price = priceValues[plan];
@@ -977,7 +996,7 @@ function storePaymentContact(contact) {
 }
 
 function cleanZipCode(value) {
-    return String(value || '').replace(/\D/g, '').slice(0, 8);
+    return cleanDigits(value).slice(0, 8);
 }
 
 function formatZipCode(value) {
@@ -988,6 +1007,27 @@ function formatZipCode(value) {
     }
 
     return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function formatCardNumber(value) {
+    return cleanDigits(value).slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+}
+
+function formatCpfCnpj(value) {
+    const digits = cleanDigits(value).slice(0, 14);
+
+    if (digits.length <= 11) {
+        return digits
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+
+    return digits
+        .replace(/^(\d{2})(\d)/, '$1.$2')
+        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
 function buildPaymentAddressLabel(contact) {
@@ -1113,87 +1153,6 @@ async function lookupZipCode() {
     }
 }
 
-function getMercadoPagoDeviceId() {
-    return (
-        window.MP_DEVICE_SESSION_ID ||
-        document.getElementById('deviceId')?.value ||
-        null
-    );
-}
-
-async function loadMercadoPagoPublicKey() {
-    if (mercadoPagoPublicKey) return mercadoPagoPublicKey;
-
-    const response = await fetch('/api/mp-config');
-    const data = await response.json();
-
-    if (!response.ok || !data.publicKey) {
-        throw new Error('Configure MERCADO_PAGO_PUBLIC_KEY na Vercel.');
-    }
-
-    mercadoPagoPublicKey = data.publicKey;
-    return mercadoPagoPublicKey;
-}
-
-async function renderCardPaymentBrick() {
-    const publicKey = await loadMercadoPagoPublicKey();
-
-    if (!mercadoPagoInstance) {
-        mercadoPagoInstance = new MercadoPago(publicKey, { locale: 'pt-BR' });
-        mercadoPagoBricksBuilder = mercadoPagoInstance.bricks();
-    }
-
-    if (mercadoPagoCardBrickController) {
-        await mercadoPagoCardBrickController.unmount();
-        mercadoPagoCardBrickController = null;
-    }
-
-    document.getElementById('cardPaymentBrickContainer').innerHTML = '';
-
-    mercadoPagoCardBrickController = await mercadoPagoBricksBuilder.create(
-        'cardPayment',
-        'cardPaymentBrickContainer',
-        {
-            initialization: {
-                amount: Number((priceValues[selectedPlan] || 5).toFixed(2)),
-                payer: (() => {
-                    const preferredPayer = getPreferredPayerData();
-
-                    return {
-                        email: preferredPayer.email || undefined,
-                        firstName: preferredPayer.firstName || undefined,
-                        lastName: preferredPayer.lastName || undefined
-                    };
-                })()
-            },
-            customization: {
-                visual: {
-                    style: { theme: 'default' }
-                },
-                paymentMethods: {
-                    maxInstallments: 1
-                }
-            },
-            callbacks: {
-                onReady: () => {
-                    console.log('Brick Mercado Pago pronto');
-                },
-                onSubmit: (formData, additionalData) => {
-                    return submitCardPayment(formData, additionalData);
-                },
-                onError: (error) => {
-                    console.error('Erro Brick Mercado Pago:', error);
-                    document.getElementById('messagePaymentArea').innerHTML = `
-                        <div class="message error">
-                            Não foi possível carregar o formulário do Mercado Pago.
-                        </div>
-                    `;
-                }
-            }
-        }
-    );
-}
-
 function buildRecurringStorageKey(paymentId) {
     return `fitboryRecurring:${paymentId}`;
 }
@@ -1203,44 +1162,29 @@ function storeRecurringData(paymentId, recurringData) {
     sessionStorage.setItem(buildRecurringStorageKey(paymentId), JSON.stringify(recurringData));
 }
 
-async function submitCardPayment(cardFormData, additionalData = {}) {
+function buildCardFormData() {
+    return {
+        cardNumber: cleanDigits(document.getElementById('paymentCardNumber')?.value || ''),
+        expiryMonth: cleanDigits(document.getElementById('paymentExpiryMonth')?.value || ''),
+        expiryYear: cleanDigits(document.getElementById('paymentExpiryYear')?.value || ''),
+        cvv: cleanDigits(document.getElementById('paymentCvv')?.value || ''),
+        cpfCnpj: cleanDigits(document.getElementById('paymentCpfCnpj')?.value || '')
+    };
+}
+
+async function submitCardPayment() {
     const messageArea = document.getElementById('messagePaymentArea');
 
     try {
-        if (!cardFormData || typeof cardFormData !== 'object') {
-            throw new Error('O Mercado Pago não retornou os dados do cartão.');
-        }
-
-        const payer = cardFormData.payer || {};
-        const identification = payer.identification || {};
-
-        const paymentMethodId = cardFormData.payment_method_id || cardFormData.paymentMethodId;
-        const issuerId = cardFormData.issuer_id || cardFormData.issuerId;
-        const installments = cardFormData.installments;
-        const token = cardFormData.token;
         const preferredPayer = getPreferredPayerData();
-        const additionalCardholderName = String(additionalData.cardholderName || '').trim();
+        const cardFormData = buildCardFormData();
 
-        const payerFullName = `${payer.first_name || ''} ${payer.last_name || ''}`.trim();
-
-        const cardholderName =
-            additionalCardholderName ||
-            cardFormData.cardholderName ||
-            payerFullName ||
-            preferredPayer.fullName;
-
-        const email =
-            payer.email ||
-            cardFormData.email ||
-            cardFormData.cardholderEmail ||
-            preferredPayer.email;
-
-        if (!cardholderName) {
-            throw new Error('Preencha o nome completo do titular no formulario do Mercado Pago.');
+        if (!preferredPayer.fullName) {
+            throw new Error('Preencha o nome completo do titular.');
         }
 
-        if (!email) {
-            throw new Error('Preencha um e-mail valido no formulario do Mercado Pago.');
+        if (!preferredPayer.email) {
+            throw new Error('Preencha um e-mail valido antes de concluir o pagamento.');
         }
 
         if (!preferredPayer.phone) {
@@ -1253,6 +1197,26 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
 
         if (!preferredPayer.streetNumber) {
             throw new Error('Preencha o numero do endereco antes de concluir o pagamento.');
+        }
+
+        if (cardFormData.cardNumber.length < 13) {
+            throw new Error('Preencha um numero de cartao valido.');
+        }
+
+        if (cardFormData.expiryMonth.length !== 2) {
+            throw new Error('Preencha o mes de vencimento com 2 digitos.');
+        }
+
+        if (cardFormData.expiryYear.length !== 4) {
+            throw new Error('Preencha o ano de vencimento com 4 digitos.');
+        }
+
+        if (cardFormData.cvv.length < 3) {
+            throw new Error('Preencha um CVV valido.');
+        }
+
+        if (cardFormData.cpfCnpj.length < 11) {
+            throw new Error('Preencha um CPF valido do titular.');
         }
 
         storePaymentContact(preferredPayer);
@@ -1269,9 +1233,7 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
             body: JSON.stringify({
                 plan: selectedPlan,
                 method: 'card',
-                token,
-                deviceId: getMercadoPagoDeviceId(),
-                email,
+                email: preferredPayer.email,
                 phone: preferredPayer.phone,
                 zipCode: preferredPayer.zipCode,
                 streetName: preferredPayer.streetName,
@@ -1279,12 +1241,12 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
                 neighborhood: preferredPayer.neighborhood,
                 city: preferredPayer.city,
                 state: preferredPayer.state,
-                cardholderName,
-                identificationType: identification.type || cardFormData.identificationType,
-                identificationNumber: identification.number || cardFormData.identificationNumber,
-                paymentMethodId,
-                issuerId,
-                installments
+                cardholderName: preferredPayer.fullName,
+                cardNumber: cardFormData.cardNumber,
+                expiryMonth: cardFormData.expiryMonth,
+                expiryYear: cardFormData.expiryYear,
+                cvv: cardFormData.cvv,
+                cpfCnpj: cardFormData.cpfCnpj
             })
         });
 
@@ -1292,10 +1254,10 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
 
         console.log('RETORNO /api/create-payment:', data);
 
-        if (response.ok && data.status === 'in_process') {
+        if (response.ok && data.status === 'AWAITING_RISK_ANALYSIS') {
             messageArea.innerHTML = `
                 <div class="message warning">
-                    ${data.message || 'O pagamento ficou em analise manual no Mercado Pago. Tente outro cartao ou aguarde a analise.'}
+                    ${data.message || 'O pagamento ficou em analise de risco no Asaas. Aguarde a validacao ou tente outro cartao.'}
                 </div>
             `;
             return;
@@ -1304,7 +1266,7 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
         if (!response.ok || !data.success) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    ${data.message || data.error?.message || data.statusDetail || 'Não foi possível processar o cartão.'}
+                    ${data.message || data.error?.message || data.statusDetail || 'Nao foi possivel processar o cartao.'}
                 </div>
             `;
             return;
@@ -1331,10 +1293,8 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
         messageArea.innerHTML = `
             <div class="message error">
                 Pagamento retornou com status ${data.status || 'desconhecido'}.
-                ${data.statusDetail || ''}
             </div>
         `;
-
     } catch (error) {
         console.error('Erro pagamento cartão:', error);
 
@@ -1370,7 +1330,7 @@ function openPaymentModal(plan) {
     document.getElementById('priceDisplay').textContent = getPlanPriceLabel(plan);
     document.getElementById('messagePaymentArea').innerHTML = '';
     document.getElementById('paymentActionText').textContent =
-        'Preencha os dados do cartão para ativar sua assinatura recorrente.';
+        'Preencha os dados do cartão para cobrar agora e ativar sua assinatura mensal.';
     syncPaymentContactFields();
 
     document.getElementById('paymentModal').classList.add('show');
@@ -1381,15 +1341,10 @@ function openPaymentModal(plan) {
 function closePaymentModal() {
     document.getElementById('paymentModal').classList.remove('show');
     document.getElementById('messagePaymentArea').innerHTML = '';
-
-    if (mercadoPagoCardBrickController) {
-        mercadoPagoCardBrickController.unmount().catch(() => {});
-        mercadoPagoCardBrickController = null;
-    }
 }
 
 function selectPayment(method) {
-    selectedPaymentMethod = 'card';
+    selectedPaymentMethod = method;
 
     const btn = document.getElementById('mpBtn');
 
@@ -1400,21 +1355,13 @@ function selectPayment(method) {
     document.getElementById('cardPaymentArea').classList.add('show');
 
     if (btn) {
-        btn.style.display = 'none';
-        btn.disabled = true;
+        btn.style.display = 'inline-block';
+        btn.disabled = false;
     }
 
     document.getElementById('messagePaymentArea').innerHTML = '';
     document.getElementById('paymentActionText').textContent =
-        'Preencha os dados do cartão dentro do Mercado Pago para concluir.';
-
-    renderCardPaymentBrick().catch((error) => {
-        document.getElementById('messagePaymentArea').innerHTML = `
-            <div class="message error">
-                ${error.message}
-            </div>
-        `;
-    });
+        'Preencha os dados do cartão para concluir no Asaas.';
 }
 
 document.getElementById('paymentZipCode')?.addEventListener('input', (event) => {
@@ -1433,8 +1380,35 @@ document.getElementById('paymentStreetNumber')?.addEventListener('input', (event
     });
 });
 
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
+document.getElementById('paymentStreetName')?.addEventListener('input', (event) => {
+    const cachedContact = readPaymentContact();
+    storePaymentContact({
+        ...cachedContact,
+        streetName: event.target.value.trim()
+    });
+});
 
+document.getElementById('paymentCardNumber')?.addEventListener('input', (event) => {
+    event.target.value = formatCardNumber(event.target.value);
+});
+
+document.getElementById('paymentCpfCnpj')?.addEventListener('input', (event) => {
+    event.target.value = formatCpfCnpj(event.target.value);
+});
+
+document.getElementById('paymentExpiryMonth')?.addEventListener('input', (event) => {
+    event.target.value = cleanDigits(event.target.value).slice(0, 2);
+});
+
+document.getElementById('paymentExpiryYear')?.addEventListener('input', (event) => {
+    event.target.value = cleanDigits(event.target.value).slice(0, 4);
+});
+
+document.getElementById('paymentCvv')?.addEventListener('input', (event) => {
+    event.target.value = cleanDigits(event.target.value).slice(0, 4);
+});
+
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const fullName = document.getElementById('fullName').value;
@@ -1475,7 +1449,6 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         } else {
             messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
         }
-
     } catch (error) {
         console.error('Signup Error:', error);
         messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';

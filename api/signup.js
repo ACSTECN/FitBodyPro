@@ -4,29 +4,8 @@ function pickFirstDefined(...values) {
             return value;
         }
     }
+
     return undefined;
-}
-
-async function fetchMercadoPagoPayment(paymentId) {
-    const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-
-    if (!MP_ACCESS_TOKEN) {
-        throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
-    }
-
-    const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: {
-            Authorization: `Bearer ${MP_ACCESS_TOKEN}`
-        }
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || 'Não foi possível consultar o pagamento no Mercado Pago');
-    }
-
-    return data;
 }
 
 function getLandingToken() {
@@ -42,83 +21,63 @@ function getSupabaseAuthToken() {
     );
 }
 
-function buildRecurringFields(reqBody, mpPaymentData) {
+function buildRecurringFields(reqBody) {
     const explicitRawPayload = reqBody.paymentRawPayload || {};
 
     return {
         paymentAmount: pickFirstDefined(
             reqBody.paymentAmount,
-            explicitRawPayload?.payment?.transaction_amount,
-            mpPaymentData?.transaction_amount
+            explicitRawPayload?.payment?.value
         ),
         paymentCurrency: pickFirstDefined(
             reqBody.paymentCurrency,
-            explicitRawPayload?.payment?.currency_id,
-            mpPaymentData?.currency_id
+            'BRL'
         ),
         providerReference: pickFirstDefined(
             reqBody.providerReference,
-            explicitRawPayload?.payment?.order?.id,
-            explicitRawPayload?.payment?.external_reference,
-            mpPaymentData?.order?.id,
-            mpPaymentData?.external_reference,
-            mpPaymentData?.id
+            explicitRawPayload?.payment?.invoiceNumber,
+            explicitRawPayload?.payment?.externalReference,
+            explicitRawPayload?.payment?.id
         ),
         paymentDescription: pickFirstDefined(
             reqBody.paymentDescription,
-            explicitRawPayload?.payment?.description,
-            mpPaymentData?.description
+            explicitRawPayload?.payment?.description
         ),
         providerCustomerId: pickFirstDefined(
             reqBody.providerCustomerId,
-            explicitRawPayload?.customer?.id,
-            explicitRawPayload?.savedCard?.customer_id,
-            mpPaymentData?.customer?.id
+            explicitRawPayload?.customer?.id
         ),
         providerCardId: pickFirstDefined(
             reqBody.providerCardId,
-            explicitRawPayload?.savedCard?.id,
-            mpPaymentData?.card?.id
+            explicitRawPayload?.creditCardToken
         ),
         paymentMethodId: pickFirstDefined(
             reqBody.paymentMethodId,
-            explicitRawPayload?.savedCard?.payment_method?.id,
-            explicitRawPayload?.payment?.payment_method_id,
-            mpPaymentData?.payment_method_id
+            'credit_card'
         ),
         issuerId: pickFirstDefined(
             reqBody.issuerId,
-            explicitRawPayload?.savedCard?.issuer?.id,
-            explicitRawPayload?.payment?.issuer_id,
-            mpPaymentData?.issuer_id,
-            mpPaymentData?.issuer?.id
+            reqBody.cardBrand
         ),
         cardBrand: pickFirstDefined(
             reqBody.cardBrand,
-            explicitRawPayload?.savedCard?.payment_method?.id,
-            mpPaymentData?.payment_method?.id,
-            mpPaymentData?.card?.brand
+            explicitRawPayload?.payment?.creditCard?.creditCardBrand,
+            explicitRawPayload?.payment?.creditCardBrand
         ),
         cardLastFour: pickFirstDefined(
-            reqBody.cardLastFour,
-            explicitRawPayload?.savedCard?.last_four_digits,
-            mpPaymentData?.card?.last_four_digits
+            reqBody.cardLastFour
         ),
         firstPaymentProviderPaymentId: pickFirstDefined(
             reqBody.firstPaymentProviderPaymentId,
-            explicitRawPayload?.payment?.id,
-            mpPaymentData?.id
+            explicitRawPayload?.payment?.id
         ),
         providerSubscriptionId: pickFirstDefined(
             reqBody.providerSubscriptionId,
-            explicitRawPayload?.payment?.metadata?.providerSubscriptionId,
-            mpPaymentData?.subscription_id,
-            mpPaymentData?.recurring_id,
-            mpPaymentData?.metadata?.providerSubscriptionId
+            explicitRawPayload?.subscription?.id
         ),
         paymentRawPayload: pickFirstDefined(
             reqBody.paymentRawPayload,
-            mpPaymentData
+            explicitRawPayload
         )
     };
 }
@@ -144,6 +103,9 @@ function validateRecurringFields(recurringFields) {
     if (!recurringFields.cardLastFour) missing.push('cardLastFour');
     if (!recurringFields.firstPaymentProviderPaymentId) {
         missing.push('firstPaymentProviderPaymentId');
+    }
+    if (!recurringFields.providerSubscriptionId) {
+        missing.push('providerSubscriptionId');
     }
 
     return missing;
@@ -196,12 +158,12 @@ module.exports = async function handler(req, res) {
         if (isPaidPlan && !paymentId) {
             return res.status(400).json({
                 success: false,
-                message: 'PaymentId não chegou na API',
+                message: 'PaymentId não chegou na API.',
                 recebido: req.body
             });
         }
 
-        if (isPaidPlan && paymentProvider !== 'mercadopago') {
+        if (isPaidPlan && paymentProvider !== 'asaas') {
             return res.status(400).json({
                 success: false,
                 message: 'PaymentProvider inválido para plano pago.',
@@ -209,18 +171,8 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        let mercadoPagoPayment = null;
-
-        if (isPaidPlan && paymentId) {
-            try {
-                mercadoPagoPayment = await fetchMercadoPagoPayment(paymentId);
-            } catch (mpError) {
-                console.error('Erro ao enriquecer pagamento do Mercado Pago:', mpError.message);
-            }
-        }
-
         const recurringFields = isPaidPlan
-            ? buildRecurringFields(req.body, mercadoPagoPayment)
+            ? buildRecurringFields(req.body)
             : {};
 
         if (isPaidPlan) {
@@ -251,9 +203,6 @@ module.exports = async function handler(req, res) {
             paymentId: isPaidPlan ? paymentId : undefined,
             ...recurringFields
         };
-
-        console.log('REQ BODY RECEBIDO:', req.body);
-        console.log('BODY SUPABASE:', body);
 
         const landingToken = getLandingToken();
         const supabaseAuthToken = getSupabaseAuthToken();
@@ -295,7 +244,6 @@ module.exports = async function handler(req, res) {
             enviadoParaSupabase: body,
             supabase: data
         });
-
     } catch (error) {
         console.error('Signup Error:', error);
 

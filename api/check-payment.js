@@ -1,3 +1,14 @@
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
+const ASAAS_API_BASE_URL =
+    process.env.ASAAS_API_BASE_URL ||
+    (String(process.env.ASAAS_ENV || '').toLowerCase() === 'sandbox'
+        ? 'https://api-sandbox.asaas.com/v3'
+        : 'https://api.asaas.com/v3');
+
+function isApprovedStatus(status) {
+    return ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH'].includes(String(status || '').toUpperCase());
+}
+
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,27 +27,41 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-
-        if (!accessToken) {
-            return res.status(500).json({ message: 'MERCADO_PAGO_ACCESS_TOKEN não configurado' });
+        if (!ASAAS_API_KEY) {
+            return res.status(500).json({ message: 'ASAAS_API_KEY não configurada.' });
         }
 
-        const { paymentId } = req.body;
+        const { paymentId } = req.body || {};
 
         if (!paymentId) {
-            return res.status(400).json({ message: 'ID do pagamento obrigatório' });
+            return res.status(400).json({ message: 'ID do pagamento obrigatório.' });
         }
 
-        const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+        const response = await fetch(`${ASAAS_API_BASE_URL}/payments/${paymentId}`, {
+            headers: {
+                accept: 'application/json',
+                'User-Agent': 'FitboryPro/1.0.0',
+                access_token: ASAAS_API_KEY
+            }
         });
 
         const paymentData = await response.json();
-        console.log('Payment check response:', paymentData);
 
-        const isApproved = paymentData.status === 'approved';
-        return res.status(200).json({ approved: isApproved, status: paymentData.status, data: paymentData });
+        if (!response.ok) {
+            return res.status(response.status).json({
+                message:
+                    paymentData?.errors?.map((item) => item.description || item.code).join(' | ') ||
+                    paymentData?.message ||
+                    'Não foi possível consultar o pagamento no Asaas.',
+                data: paymentData
+            });
+        }
+
+        return res.status(200).json({
+            approved: isApprovedStatus(paymentData.status),
+            status: paymentData.status,
+            data: paymentData
+        });
     } catch (error) {
         console.error('Check Payment Error:', error);
         return res.status(500).json({ message: 'Erro interno do servidor', error: error.message });

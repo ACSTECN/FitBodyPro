@@ -1,66 +1,14 @@
-const fs = require('fs');
-
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 5.00 },
+    starter: { title: 'Fitbory Starter', price: 5.0 },
     premium: { title: 'Fit Bory Premium', price: 3.0 }
 };
 
-const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-const DEBUG_ENV_PATH = '.dbg/manual-review-recurring.env';
-const DEBUG_FALLBACK_URL = 'http://127.0.0.1:7777/event';
-const DEBUG_FALLBACK_SESSION = 'manual-review-recurring';
-
-function getDebugConfig() {
-    try {
-        const envContent = fs.readFileSync(DEBUG_ENV_PATH, 'utf8');
-        const debugServerUrl =
-            envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() || DEBUG_FALLBACK_URL;
-        const debugSessionId =
-            envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() || DEBUG_FALLBACK_SESSION;
-
-        return {
-            debugServerUrl,
-            debugSessionId
-        };
-    } catch (error) {
-        return {
-            debugServerUrl: DEBUG_FALLBACK_URL,
-            debugSessionId: DEBUG_FALLBACK_SESSION
-        };
-    }
-}
-
-function maskEmail(email) {
-    const [localPart, domainPart] = String(email || '').split('@');
-
-    if (!localPart || !domainPart) {
-        return null;
-    }
-
-    const visiblePrefix = localPart.slice(0, 2);
-    return `${visiblePrefix}***@${domainPart}`;
-}
-
-function sendDebugEvent({ runId = 'pre-fix', hypothesisId, location, msg, data = {}, traceId }) {
-    const { debugServerUrl, debugSessionId } = getDebugConfig();
-
-    fetch(debugServerUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            sessionId: debugSessionId,
-            runId,
-            hypothesisId,
-            location,
-            msg,
-            data,
-            traceId,
-            ts: Date.now()
-        })
-    }).catch(() => {});
-}
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
+const ASAAS_API_BASE_URL =
+    process.env.ASAAS_API_BASE_URL ||
+    (String(process.env.ASAAS_ENV || '').toLowerCase() === 'sandbox'
+        ? 'https://api-sandbox.asaas.com/v3'
+        : 'https://api.asaas.com/v3');
 
 function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -69,80 +17,93 @@ function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function splitFullName(fullName) {
-    const parts = String(fullName || 'Cliente Fitbory').trim().split(/\s+/).filter(Boolean);
-    const firstName = parts.shift() || 'Cliente';
-    const lastName = parts.join(' ') || 'Fitbory';
-    return { firstName, lastName };
-}
-
 function cleanDigits(value) {
     return String(value || '').replace(/\D/g, '');
 }
 
-function buildPhonePayload(phone) {
-    const digits = cleanDigits(phone);
-
-    if (digits.length < 10) {
-        return undefined;
-    }
-
-    return {
-        area_code: digits.slice(0, 2),
-        number: digits.slice(2)
-    };
+function sanitizeEmail(email) {
+    return String(email || '').trim().toLowerCase();
 }
 
-function buildAddressPayload(addressInput = {}) {
-    const zipCode = cleanDigits(addressInput.zipCode);
-    const streetName = String(addressInput.streetName || '').trim();
-    const streetNumberDigits = cleanDigits(addressInput.streetNumber);
-    const streetNumber = streetNumberDigits ? Number(streetNumberDigits) : null;
-
-    if (!zipCode || !streetName || !streetNumber) {
-        return undefined;
-    }
-
-    return {
-        zip_code: zipCode,
-        street_name: streetName,
-        street_number: streetNumber
-    };
+function sanitizeName(value) {
+    return String(value || '').trim();
 }
 
 function getSelectedPlan(plan) {
     return PLAN_DETAILS[plan] || null;
 }
 
-function buildRecurringSubscriptionId(plan) {
-    return `fitbory-${plan}-${Date.now()}`;
+function formatDate(date) {
+    return new Date(date).toISOString().slice(0, 10);
 }
 
-function buildBillingDate() {
-    return new Date().toISOString().slice(0, 10);
+function addMonths(date, months) {
+    const nextDate = new Date(date);
+    nextDate.setMonth(nextDate.getMonth() + months);
+    return nextDate;
 }
 
-async function mercadoPagoRequest(path, options = {}) {
-    if (!MP_ACCESS_TOKEN) {
-        const error = new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
+function getRemoteIp(req) {
+    const forwardedFor = req.headers['x-forwarded-for'];
+
+    if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+        return forwardedFor.split(',')[0].trim();
+    }
+
+    return (
+        req.headers['x-real-ip'] ||
+        req.socket?.remoteAddress ||
+        req.connection?.remoteAddress ||
+        null
+    );
+}
+
+function inferCardBrand(cardNumber) {
+    const digits = cleanDigits(cardNumber);
+
+    if (/^4/.test(digits)) return 'visa';
+    if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
+    if (/^3[47]/.test(digits)) return 'amex';
+    if (/^(4011|4312|4389)/.test(digits)) return 'elo';
+
+    return 'credit_card';
+}
+
+function buildAsaasErrorMessage(data, fallbackMessage) {
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+        return data.errors
+            .map((item) => item.description || item.code)
+            .filter(Boolean)
+            .join(' | ');
+    }
+
+    return data?.message || fallbackMessage;
+}
+
+async function asaasRequest(path, options = {}) {
+    if (!ASAAS_API_KEY) {
+        const error = new Error('ASAAS_API_KEY não configurada.');
         error.status = 500;
         throw error;
     }
 
-    const response = await fetch(`https://api.mercadopago.com${path}`, {
+    const response = await fetch(`${ASAAS_API_BASE_URL}${path}`, {
         method: options.method || 'GET',
         headers: {
+            accept: 'application/json',
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+            'User-Agent': 'FitboryPro/1.0.0',
+            access_token: ASAAS_API_KEY,
             ...(options.headers || {})
         },
         body: options.body ? JSON.stringify(options.body) : undefined
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    const data = responseText ? JSON.parse(responseText) : null;
 
     if (!response.ok) {
-        const error = new Error(data.message || 'Erro ao comunicar com o Mercado Pago');
+        const error = new Error(buildAsaasErrorMessage(data, 'Erro ao comunicar com o Asaas.'));
         error.status = response.status;
         error.data = data;
         throw error;
@@ -151,142 +112,187 @@ async function mercadoPagoRequest(path, options = {}) {
     return data;
 }
 
-async function findCustomerByEmail(email) {
-    const data = await mercadoPagoRequest(`/v1/customers/search?email=${encodeURIComponent(email)}`);
-    return Array.isArray(data.results) && data.results.length > 0 ? data.results[0] : null;
-}
+async function findCustomer({ email, cpfCnpj, externalReference }) {
+    const query = new URLSearchParams({ limit: '1' });
 
-async function createCustomer({ email, fullName, identificationType, identificationNumber, phone, zipCode, streetName, streetNumber }) {
-    const { firstName, lastName } = splitFullName(fullName);
-    const cleanedDocument = cleanDigits(identificationNumber);
-    const phonePayload = buildPhonePayload(phone);
-    const addressPayload = buildAddressPayload({ zipCode, streetName, streetNumber });
-
-    return mercadoPagoRequest('/v1/customers', {
-        method: 'POST',
-        body: {
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            phone: phonePayload,
-            address: addressPayload,
-            identification:
-                cleanedDocument && identificationType
-                    ? {
-                          type: identificationType,
-                          number: cleanedDocument
-                      }
-                    : undefined
-        }
-    });
-}
-
-async function updateCustomer(customerId, { fullName, identificationType, identificationNumber, phone, zipCode, streetName, streetNumber }) {
-    const { firstName, lastName } = splitFullName(fullName);
-    const cleanedDocument = cleanDigits(identificationNumber);
-    const phonePayload = buildPhonePayload(phone);
-    const addressPayload = buildAddressPayload({ zipCode, streetName, streetNumber });
-
-    return mercadoPagoRequest(`/v1/customers/${customerId}`, {
-        method: 'PUT',
-        body: {
-            first_name: firstName,
-            last_name: lastName,
-            phone: phonePayload,
-            address: addressPayload,
-            identification:
-                cleanedDocument && identificationType
-                    ? {
-                          type: identificationType,
-                          number: cleanedDocument
-                      }
-                    : undefined
-        }
-    });
-}
-
-async function ensureCustomer(customerInput) {
-    const existing = await findCustomerByEmail(customerInput.email);
-    const traceId = customerInput.traceId;
-
-    // #region debug-point B:customer-search
-    sendDebugEvent({
-        hypothesisId: 'B',
-        location: 'api/create-payment.js:ensureCustomer',
-        msg: '[DEBUG] Resultado da busca de customer por email',
-        traceId,
-        data: {
-            email: maskEmail(customerInput.email),
-            foundExistingCustomer: Boolean(existing?.id),
-            existingCustomerId: existing?.id || null
-        }
-    });
-    // #endregion
-
-    if (existing?.id) {
-        const updatedCustomer = await updateCustomer(existing.id, customerInput);
-
-        // #region debug-point B:customer-update
-        sendDebugEvent({
-            hypothesisId: 'B',
-            location: 'api/create-payment.js:ensureCustomer',
-            msg: '[DEBUG] Customer existente atualizado no Mercado Pago',
-            traceId,
-            data: {
-                email: maskEmail(customerInput.email),
-                reusedExistingCustomer: true,
-                existingCustomerId: existing.id,
-                updatedCustomerId: updatedCustomer?.id || existing.id
-            }
-        });
-        // #endregion
-
-        return updatedCustomer;
+    if (cpfCnpj) {
+        query.set('cpfCnpj', cpfCnpj);
+    } else if (email) {
+        query.set('email', email);
+    } else if (externalReference) {
+        query.set('externalReference', externalReference);
     }
 
-    const createdCustomer = await createCustomer(customerInput);
-
-    // #region debug-point B:customer-create
-    sendDebugEvent({
-        hypothesisId: 'B',
-        location: 'api/create-payment.js:ensureCustomer',
-        msg: '[DEBUG] Customer criado no Mercado Pago',
-        traceId,
-        data: {
-            email: maskEmail(customerInput.email),
-            createdCustomerId: createdCustomer?.id || null,
-            reusedExistingCustomer: false
-        }
-    });
-    // #endregion
-
-    return createdCustomer;
+    const data = await asaasRequest(`/customers?${query.toString()}`);
+    return Array.isArray(data?.data) && data.data.length > 0 ? data.data[0] : null;
 }
 
-async function createCardPayment(reqBody) {
+function buildCustomerPayload({
+    fullName,
+    email,
+    phone,
+    cpfCnpj,
+    zipCode,
+    streetName,
+    streetNumber,
+    neighborhood,
+    externalReference
+}) {
+    const mobilePhone = cleanDigits(phone);
+
+    return {
+        name: sanitizeName(fullName),
+        cpfCnpj,
+        email,
+        mobilePhone: mobilePhone || undefined,
+        phone: mobilePhone || undefined,
+        postalCode: zipCode || undefined,
+        address: sanitizeName(streetName) || undefined,
+        addressNumber: sanitizeName(streetNumber) || undefined,
+        province: sanitizeName(neighborhood) || undefined,
+        externalReference,
+        notificationDisabled: true
+    };
+}
+
+async function ensureCustomer(customerData) {
+    const existingCustomer = await findCustomer(customerData);
+    const payload = buildCustomerPayload(customerData);
+
+    if (existingCustomer?.id) {
+        return asaasRequest(`/customers/${existingCustomer.id}`, {
+            method: 'PUT',
+            body: payload
+        });
+    }
+
+    return asaasRequest('/customers', {
+        method: 'POST',
+        body: payload
+    });
+}
+
+function buildCreditCardPayload(cardData) {
+    return {
+        holderName: sanitizeName(cardData.cardholderName),
+        number: cleanDigits(cardData.cardNumber),
+        expiryMonth: cleanDigits(cardData.expiryMonth).slice(0, 2),
+        expiryYear: cleanDigits(cardData.expiryYear).slice(-4),
+        ccv: cleanDigits(cardData.cvv).slice(0, 4)
+    };
+}
+
+function buildCreditCardHolderInfo(cardData) {
+    const phoneDigits = cleanDigits(cardData.phone);
+
+    return {
+        name: sanitizeName(cardData.cardholderName),
+        email: sanitizeEmail(cardData.email),
+        cpfCnpj: cleanDigits(cardData.cpfCnpj),
+        postalCode: cleanDigits(cardData.zipCode),
+        addressNumber: sanitizeName(cardData.streetNumber),
+        addressComplement: sanitizeName(cardData.addressComplement) || undefined,
+        phone: phoneDigits || undefined,
+        mobilePhone: phoneDigits || undefined
+    };
+}
+
+function buildImmediatePaymentPayload({ customerId, selectedPlan, externalReference, reqBody, remoteIp }) {
+    return {
+        customer: customerId,
+        billingType: 'CREDIT_CARD',
+        value: selectedPlan.price,
+        dueDate: formatDate(new Date()),
+        description: selectedPlan.title,
+        externalReference,
+        creditCard: buildCreditCardPayload(reqBody),
+        creditCardHolderInfo: buildCreditCardHolderInfo(reqBody),
+        remoteIp
+    };
+}
+
+function buildSubscriptionPayload({
+    customerId,
+    selectedPlan,
+    externalReference,
+    reqBody,
+    remoteIp,
+    creditCardToken
+}) {
+    const payload = {
+        customer: customerId,
+        billingType: 'CREDIT_CARD',
+        value: selectedPlan.price,
+        nextDueDate: formatDate(addMonths(new Date(), 1)),
+        cycle: 'MONTHLY',
+        description: `${selectedPlan.title} - assinatura mensal`,
+        externalReference,
+        remoteIp
+    };
+
+    if (creditCardToken) {
+        payload.creditCardToken = creditCardToken;
+    } else {
+        payload.creditCard = buildCreditCardPayload(reqBody);
+        payload.creditCardHolderInfo = buildCreditCardHolderInfo(reqBody);
+    }
+
+    return payload;
+}
+
+function isApprovedAsaasStatus(status) {
+    return ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH'].includes(String(status || '').toUpperCase());
+}
+
+function isManualReviewStatus(status) {
+    return String(status || '').toUpperCase() === 'AWAITING_RISK_ANALYSIS';
+}
+
+function buildStatusMessage(status) {
+    const normalizedStatus = String(status || '').toUpperCase();
+
+    if (isApprovedAsaasStatus(normalizedStatus)) {
+        return 'Pagamento aprovado no Asaas.';
+    }
+
+    if (isManualReviewStatus(normalizedStatus)) {
+        return 'O Asaas colocou essa tentativa em análise de risco. Aguarde a validação ou tente outro cartão.';
+    }
+
+    return `Pagamento retornou com status ${normalizedStatus || 'desconhecido'}.`;
+}
+
+async function createCardPayment(req, reqBody) {
     const {
         plan,
-        token,
-        deviceId,
         email,
         phone,
         zipCode,
         streetName,
         streetNumber,
         neighborhood,
-        city,
-        state,
         cardholderName,
-        identificationType,
-        identificationNumber,
-        paymentMethodId,
-        issuerId,
-        installments,
-        traceId
+        cardNumber,
+        expiryMonth,
+        expiryYear,
+        cvv,
+        cpfCnpj
     } = reqBody;
 
-    if (!plan || !token || !email || !paymentMethodId) {
-        const error = new Error('Dados do cartão incompletos para pagamento recorrente.');
+    if (
+        !plan ||
+        !email ||
+        !phone ||
+        !zipCode ||
+        !streetNumber ||
+        !cardholderName ||
+        !cardNumber ||
+        !expiryMonth ||
+        !expiryYear ||
+        !cvv ||
+        !cpfCnpj
+    ) {
+        const error = new Error('Dados do cartão incompletos para pagamento no Asaas.');
         error.status = 400;
         throw error;
     }
@@ -299,220 +305,87 @@ async function createCardPayment(reqBody) {
         throw error;
     }
 
-    const customer = await ensureCustomer({
-        email,
-        phone,
-        zipCode,
-        streetName,
-        streetNumber,
-        fullName: cardholderName,
-        identificationType,
-        identificationNumber,
-        traceId
-    });
+    const sanitizedEmail = sanitizeEmail(email);
+    const sanitizedCpfCnpj = cleanDigits(cpfCnpj);
+    const customerReference = `fitbory:${sanitizedEmail}:${sanitizedCpfCnpj}`;
+    const chargeReference = `fitbory-charge:${plan}:${Date.now()}`;
+    const subscriptionReference = `fitbory-subscription:${plan}:${Date.now()}`;
+    const remoteIp = getRemoteIp(req);
 
-    const subscriptionId = buildRecurringSubscriptionId(plan);
-
-    let savedCard;
-
-    try {
-        savedCard = await mercadoPagoRequest(`/v1/customers/${customer.id}/cards`, {
-            method: 'POST',
-            body: {
-                token
-            }
-        });
-
-        // #region debug-point C:saved-card
-        sendDebugEvent({
-            hypothesisId: 'C',
-            location: 'api/create-payment.js:createCardPayment',
-            msg: '[DEBUG] Cartao salvo no customer do Mercado Pago',
-            traceId,
-            data: {
-                customerId: customer?.id || null,
-                providerCardId: savedCard?.id || null,
-                issuerId: savedCard?.issuer?.id || null,
-                paymentMethodId: savedCard?.payment_method?.id || null,
-                lastFour: savedCard?.last_four_digits || null
-            }
-        });
-        // #endregion
-    } catch (error) {
-        // #region debug-point C:saved-card-error
-        sendDebugEvent({
-            hypothesisId: 'C',
-            location: 'api/create-payment.js:createCardPayment',
-            msg: '[DEBUG] Falha ao salvar cartao no customer do Mercado Pago',
-            traceId,
-            data: {
-                customerId: customer?.id || null,
-                errorStatus: error?.status || null,
-                mpMessage: error?.data?.message || error?.data?.error || error?.message || null,
-                mpCause: error?.data?.cause || null
-            }
-        });
-        // #endregion
-
-        const mpMessage =
-            error.data?.message ||
-            error.data?.error ||
-            error.message ||
-            'Não foi possível salvar o cartão.';
-
-        const customError = new Error(`Cartão não foi salvo no Mercado Pago: ${mpMessage}`);
-        customError.status = 400;
-        customError.data = error.data || error.message;
-        throw customError;
-    }
-
-    if (!savedCard?.id) {
-        const error = new Error('Cartão não retornou providerCardId. Pagamento não será cobrado.');
+    if (!remoteIp) {
+        const error = new Error('Não foi possível identificar o IP do comprador para o Asaas.');
         error.status = 400;
-        error.data = { savedCard };
         throw error;
     }
 
-    const { firstName, lastName } = splitFullName(cardholderName);
-    const phonePayload = buildPhonePayload(phone);
-    const addressPayload = buildAddressPayload({ zipCode, streetName, streetNumber });
-    const paymentPayload = {
-        transaction_amount: selectedPlan.price,
-        token,
-        description: selectedPlan.title,
-        statement_descriptor: 'FITBODYPRO',
-        external_reference: subscriptionId,
-        three_d_secure_mode: 'optional',
-        installments: Number(installments) || 1,
-        payment_method_id: paymentMethodId,
-        issuer_id: issuerId || undefined,
-        payer: {
-            id: customer.id,
-            type: 'customer',
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            phone: phonePayload,
-            address: addressPayload,
-            identification:
-                identificationType && identificationNumber
-                    ? {
-                        type: identificationType,
-                        number: cleanDigits(identificationNumber)
-                    }
-                    : undefined
-        },
-        additional_info: {
-            items: [
-                {
-                    id: plan,
-                    title: selectedPlan.title,
-                    description: `${selectedPlan.title} - assinatura mensal`,
-                    category_id: 'services',
-                    quantity: 1,
-                    unit_price: selectedPlan.price
-                }
-            ],
-            payer: {
-                first_name: firstName,
-                last_name: lastName,
-                phone: phonePayload,
-                address: {
-                    zip_code: addressPayload?.zip_code,
-                    street_name: addressPayload?.street_name,
-                    street_number: addressPayload?.street_number
-                }
-            }
-        },
-        point_of_interaction: {
-            type: 'SUBSCRIPTIONS',
-            transaction_data: {
-                first_time_use: true,
-                subscription_id: subscriptionId,
-                subscription_sequence: {
-                    number: 1,
-                    total: null
-                },
-                invoice_period: {
-                    period: 1,
-                    type: 'monthly'
-                },
-                billing_date: buildBillingDate(),
-                user_present: true
-            }
-        },
-        metadata: {
-            plan,
-            billingCycle: 'monthly',
-            source: 'landing-card-recurring'
-        }
-    };
-
-    // #region debug-point D:payment-payload
-    sendDebugEvent({
-        hypothesisId: 'D',
-        location: 'api/create-payment.js:createCardPayment',
-        msg: '[DEBUG] Enviando primeira cobranca para o Mercado Pago',
-        traceId,
-        data: {
-            amount: paymentPayload.transaction_amount,
-            plan,
-            paymentMethodId: paymentPayload.payment_method_id,
-            issuerId: paymentPayload.issuer_id || null,
-            installments: paymentPayload.installments,
-            hasIdentification: Boolean(paymentPayload.payer.identification?.number),
-            hasPhone: Boolean(paymentPayload.payer.phone?.number),
-            hasAddress: Boolean(paymentPayload.payer.address?.zip_code),
-            pointOfInteractionType: paymentPayload.point_of_interaction?.type || null,
-            hasDeviceId: Boolean(deviceId),
-            customerId: customer?.id || null,
-            providerCardId: savedCard?.id || null,
-            subscriptionId
-        }
+    const customer = await ensureCustomer({
+        fullName: cardholderName,
+        email: sanitizedEmail,
+        phone,
+        cpfCnpj: sanitizedCpfCnpj,
+        zipCode: cleanDigits(zipCode),
+        streetName,
+        streetNumber,
+        neighborhood,
+        externalReference: customerReference
     });
-    // #endregion
 
-    const payment = await mercadoPagoRequest('/v1/payments', {
+    const payment = await asaasRequest('/payments', {
         method: 'POST',
-        headers: {
-            'X-Idempotency-Key': `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            ...(deviceId ? { 'X-meli-session-id': deviceId } : {})
-        },
-        body: paymentPayload
+        body: buildImmediatePaymentPayload({
+            customerId: customer.id,
+            selectedPlan,
+            externalReference: chargeReference,
+            reqBody: {
+                ...reqBody,
+                email: sanitizedEmail,
+                cpfCnpj: sanitizedCpfCnpj
+            },
+            remoteIp
+        })
     });
 
-    // #region debug-point E:payment-response
-    sendDebugEvent({
-        hypothesisId: 'E',
-        location: 'api/create-payment.js:createCardPayment',
-        msg: '[DEBUG] Resposta da primeira cobranca do Mercado Pago',
-        traceId,
-        data: {
-            paymentId: payment?.id || null,
-            status: payment?.status || null,
-            statusDetail: payment?.status_detail || null,
-            paymentTypeId: payment?.payment_type_id || null,
-            paymentMethodId: payment?.payment_method_id || payment?.payment_method?.id || null,
-            issuerId: payment?.issuer_id || payment?.issuer?.id || null,
-            merchantOrderId: payment?.order?.id || null,
-            hasPointOfInteraction: Boolean(payment?.point_of_interaction),
-            hasThreeDSInfo: Boolean(payment?.three_ds_info),
-            payerId: payment?.payer?.id || null
-        }
+    if (!isApprovedAsaasStatus(payment?.status)) {
+        return {
+            customer,
+            payment,
+            subscription: null,
+            creditCardToken: payment?.creditCardToken || null
+        };
+    }
+
+    const creditCardToken = payment?.creditCardToken || null;
+
+    const subscription = await asaasRequest('/subscriptions', {
+        method: 'POST',
+        body: buildSubscriptionPayload({
+            customerId: customer.id,
+            selectedPlan,
+            externalReference: subscriptionReference,
+            reqBody: {
+                ...reqBody,
+                email: sanitizedEmail,
+                cpfCnpj: sanitizedCpfCnpj
+            },
+            remoteIp,
+            creditCardToken
+        })
     });
-    // #endregion
 
     return {
-        payment,
         customer,
-        savedCard,
-        subscriptionId
+        payment,
+        subscription,
+        creditCardToken:
+            creditCardToken ||
+            subscription?.creditCardToken ||
+            subscription?.creditCard?.creditCardToken ||
+            null
     };
 }
 
 module.exports = async function handler(req, res) {
     setCorsHeaders(res);
-    const traceId = `mp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -528,26 +401,10 @@ module.exports = async function handler(req, res) {
     try {
         const { plan, method } = req.body || {};
 
-        // #region debug-point A:handler-start
-        sendDebugEvent({
-            hypothesisId: 'A',
-            location: 'api/create-payment.js:handler',
-            msg: '[DEBUG] Requisicao recebida para create-payment',
-            traceId,
-            data: {
-                plan: plan || null,
-                method: method || null,
-                email: maskEmail(req.body?.email),
-                paymentMethodId: req.body?.paymentMethodId || null,
-                issuerId: req.body?.issuerId || null
-            }
-        });
-        // #endregion
-
         if (!plan) {
             return res.status(400).json({
                 success: false,
-                message: 'Plano obrigatório'
+                message: 'Plano obrigatório.'
             });
         }
 
@@ -558,93 +415,55 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const { payment, customer, savedCard, subscriptionId } =
-            await createCardPayment({
-                ...req.body,
-                traceId
-            });
-
-        const providerCardId = savedCard.id;
-        const cardLastFour = savedCard.last_four_digits || payment.card?.last_four_digits || null;
+        const { customer, payment, subscription, creditCardToken } = await createCardPayment(req, req.body);
+        const approved = isApprovedAsaasStatus(payment?.status);
+        const manualReview = isManualReviewStatus(payment?.status);
+        const cardLastFour = cleanDigits(req.body.cardNumber).slice(-4) || null;
         const cardBrand =
-            savedCard.payment_method?.id ||
-            payment.payment_method_id ||
-            payment.payment_method?.id ||
-            null;
-        const isApproved = payment.status === 'approved';
-        const isManualReview = payment.status === 'in_process' && payment.status_detail === 'pending_review_manual';
-        const statusMessage = isApproved
-            ? 'Pagamento aprovado.'
-            : isManualReview
-                ? 'O Mercado Pago colocou essa tentativa em analise manual. Tente outro cartao ou aguarde a analise.'
-                : `Pagamento retornou com status ${payment.status}. ${payment.status_detail || ''}`.trim();
-
-        if (!providerCardId) {
-            return res.status(400).json({
-                success: false,
-                approved: false,
-                message: 'Pagamento bloqueado: providerCardId não foi gerado.',
-                recurringReady: false
-            });
-        }
+            payment?.creditCard?.creditCardBrand ||
+            payment?.creditCardBrand ||
+            inferCardBrand(req.body.cardNumber);
 
         return res.status(200).json({
-            version: 'save-card-first-subscription-message-v6',
-            success: isApproved,
-            approved: isApproved,
-            requiresAction: !isApproved,
-            requiresManualReview: isManualReview,
-            paymentId: payment.id,
-            status: payment.status,
-            statusDetail: payment.status_detail,
-            message: statusMessage,
-            threeDSInfo: payment.three_ds_info || null,
-            recurringReady: Boolean(customer?.id && providerCardId),
+            version: 'asaas-first-charge-plus-subscription-v1',
+            success: approved,
+            approved,
+            requiresAction: !approved,
+            requiresManualReview: manualReview,
+            paymentId: payment?.id || null,
+            status: payment?.status || null,
+            statusDetail: payment?.status || null,
+            message: buildStatusMessage(payment?.status),
+            recurringReady: Boolean(customer?.id && subscription?.id),
             recurringData: {
-                paymentAmount: payment.transaction_amount,
-                paymentCurrency: payment.currency_id,
-                providerReference: payment.order?.id || payment.external_reference || payment.id,
-                paymentDescription: payment.description,
-
-                providerCustomerId: customer.id,
-                providerCardId,
-                paymentMethodId: payment.payment_method_id || req.body.paymentMethodId,
-                issuerId: savedCard.issuer?.id || payment.issuer_id || payment.issuer?.id || null,
+                paymentAmount: payment?.value ?? getSelectedPlan(plan)?.price ?? null,
+                paymentCurrency: 'BRL',
+                providerReference: payment?.invoiceNumber || payment?.externalReference || payment?.id || null,
+                paymentDescription: payment?.description || getSelectedPlan(plan)?.title || null,
+                providerCustomerId: customer?.id || null,
+                providerCardId: creditCardToken || subscription?.id || null,
+                paymentMethodId: 'credit_card',
+                issuerId: cardBrand,
                 cardBrand,
                 cardLastFour,
-                firstPaymentProviderPaymentId: payment.id,
-                providerSubscriptionId: subscriptionId,
-
+                firstPaymentProviderPaymentId: payment?.id || null,
+                providerSubscriptionId: subscription?.id || null,
                 paymentRawPayload: {
-                    payment,
                     customer,
-                    savedCard
+                    payment,
+                    subscription,
+                    creditCardToken: creditCardToken || null
                 }
             }
         });
     } catch (error) {
-        // #region debug-point F:handler-error
-        sendDebugEvent({
-            hypothesisId: 'F',
-            location: 'api/create-payment.js:handler',
-            msg: '[DEBUG] create-payment falhou',
-            traceId,
-            data: {
-                errorStatus: error?.status || null,
-                errorMessage: error?.message || null,
-                mpMessage: error?.data?.message || error?.data?.error || null,
-                mpCause: error?.data?.cause || null
-            }
-        });
-        // #endregion
-
-        console.error('Payment Error:', error);
+        console.error('Asaas Payment Error:', error);
 
         return res.status(error.status || 500).json({
             success: false,
             approved: false,
             recurringReady: false,
-            message: error.message || 'Erro interno do servidor',
+            message: error.message || 'Erro interno do servidor.',
             error: error.data || error.message
         });
     }

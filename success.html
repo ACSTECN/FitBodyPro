@@ -314,7 +314,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         ) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    Pagamento aprovado, mas os dados do cartão recorrente não chegaram completos.
+                    Pagamento aprovado, mas os dados da assinatura recorrente não chegaram completos.
                     Volte para a página de planos e tente novamente com cartão.
                 </div>
             `;
@@ -332,7 +332,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         plan,
         billingCycle: 'monthly',
         paymentStatus: plan !== 'free' ? 'approved' : undefined,
-        paymentProvider: plan !== 'free' ? 'mercadopago' : undefined,
+        paymentProvider: plan !== 'free' ? 'asaas' : undefined,
         paymentId: plan !== 'free' ? paymentId : undefined,
         ...(recurringData || {})
     };
