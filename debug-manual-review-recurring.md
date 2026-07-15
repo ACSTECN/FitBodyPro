@@ -73,6 +73,8 @@
   - o modal de pagamento agora coleta `CEP` e `numero`, buscando o endereco automaticamente via ViaCEP;
   - o frontend envia `zipCode`, `streetName`, `streetNumber`, `neighborhood`, `city` e `state` para `/api/create-payment`;
   - o backend passou a incluir endereco no `customer`, no `payer` e em `additional_info.payer.address`.
+- Ajuste corretivo apos retorno `invalid parameters: address.address.street_number is wrong`:
+  - o backend passou a normalizar `street_number` como numero antes de enviar ao Mercado Pago, em vez de texto.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;

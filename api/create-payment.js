@@ -96,7 +96,8 @@ function buildPhonePayload(phone) {
 function buildAddressPayload(addressInput = {}) {
     const zipCode = cleanDigits(addressInput.zipCode);
     const streetName = String(addressInput.streetName || '').trim();
-    const streetNumber = String(addressInput.streetNumber || '').trim();
+    const streetNumberDigits = cleanDigits(addressInput.streetNumber);
+    const streetNumber = streetNumberDigits ? Number(streetNumberDigits) : null;
 
     if (!zipCode || !streetName || !streetNumber) {
         return undefined;
