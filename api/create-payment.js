@@ -93,6 +93,22 @@ function buildPhonePayload(phone) {
     };
 }
 
+function buildAddressPayload(addressInput = {}) {
+    const zipCode = cleanDigits(addressInput.zipCode);
+    const streetName = String(addressInput.streetName || '').trim();
+    const streetNumber = String(addressInput.streetNumber || '').trim();
+
+    if (!zipCode || !streetName || !streetNumber) {
+        return undefined;
+    }
+
+    return {
+        zip_code: zipCode,
+        street_name: streetName,
+        street_number: streetNumber
+    };
+}
+
 function getSelectedPlan(plan) {
     return PLAN_DETAILS[plan] || null;
 }
@@ -139,10 +155,11 @@ async function findCustomerByEmail(email) {
     return Array.isArray(data.results) && data.results.length > 0 ? data.results[0] : null;
 }
 
-async function createCustomer({ email, fullName, identificationType, identificationNumber, phone }) {
+async function createCustomer({ email, fullName, identificationType, identificationNumber, phone, zipCode, streetName, streetNumber }) {
     const { firstName, lastName } = splitFullName(fullName);
     const cleanedDocument = cleanDigits(identificationNumber);
     const phonePayload = buildPhonePayload(phone);
+    const addressPayload = buildAddressPayload({ zipCode, streetName, streetNumber });
 
     return mercadoPagoRequest('/v1/customers', {
         method: 'POST',
@@ -151,6 +168,7 @@ async function createCustomer({ email, fullName, identificationType, identificat
             first_name: firstName,
             last_name: lastName,
             phone: phonePayload,
+            address: addressPayload,
             identification:
                 cleanedDocument && identificationType
                     ? {
@@ -162,10 +180,11 @@ async function createCustomer({ email, fullName, identificationType, identificat
     });
 }
 
-async function updateCustomer(customerId, { fullName, identificationType, identificationNumber, phone }) {
+async function updateCustomer(customerId, { fullName, identificationType, identificationNumber, phone, zipCode, streetName, streetNumber }) {
     const { firstName, lastName } = splitFullName(fullName);
     const cleanedDocument = cleanDigits(identificationNumber);
     const phonePayload = buildPhonePayload(phone);
+    const addressPayload = buildAddressPayload({ zipCode, streetName, streetNumber });
 
     return mercadoPagoRequest(`/v1/customers/${customerId}`, {
         method: 'PUT',
@@ -173,6 +192,7 @@ async function updateCustomer(customerId, { fullName, identificationType, identi
             first_name: firstName,
             last_name: lastName,
             phone: phonePayload,
+            address: addressPayload,
             identification:
                 cleanedDocument && identificationType
                     ? {
@@ -249,6 +269,12 @@ async function createCardPayment(reqBody) {
         deviceId,
         email,
         phone,
+        zipCode,
+        streetName,
+        streetNumber,
+        neighborhood,
+        city,
+        state,
         cardholderName,
         identificationType,
         identificationNumber,
@@ -275,6 +301,9 @@ async function createCardPayment(reqBody) {
     const customer = await ensureCustomer({
         email,
         phone,
+        zipCode,
+        streetName,
+        streetNumber,
         fullName: cardholderName,
         identificationType,
         identificationNumber,
@@ -345,6 +374,7 @@ async function createCardPayment(reqBody) {
 
     const { firstName, lastName } = splitFullName(cardholderName);
     const phonePayload = buildPhonePayload(phone);
+    const addressPayload = buildAddressPayload({ zipCode, streetName, streetNumber });
     const paymentPayload = {
         transaction_amount: selectedPlan.price,
         token,
@@ -362,6 +392,7 @@ async function createCardPayment(reqBody) {
             first_name: firstName,
             last_name: lastName,
             phone: phonePayload,
+            address: addressPayload,
             identification:
                 identificationType && identificationNumber
                     ? {
@@ -384,7 +415,15 @@ async function createCardPayment(reqBody) {
             payer: {
                 first_name: firstName,
                 last_name: lastName,
-                phone: phonePayload
+                phone: phonePayload,
+                address: {
+                    zip_code: cleanDigits(zipCode),
+                    street_name: String(streetName || '').trim() || undefined,
+                    street_number: String(streetNumber || '').trim() || undefined,
+                    neighborhood: String(neighborhood || '').trim() || undefined,
+                    city: String(city || '').trim() || undefined,
+                    federal_unit: String(state || '').trim() || undefined
+                }
             }
         },
         point_of_interaction: {
@@ -425,6 +464,7 @@ async function createCardPayment(reqBody) {
             installments: paymentPayload.installments,
             hasIdentification: Boolean(paymentPayload.payer.identification?.number),
             hasPhone: Boolean(paymentPayload.payer.phone?.number),
+            hasAddress: Boolean(paymentPayload.payer.address?.zip_code),
             pointOfInteractionType: paymentPayload.point_of_interaction?.type || null,
             hasDeviceId: Boolean(deviceId),
             customerId: customer?.id || null,

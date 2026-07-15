@@ -69,6 +69,10 @@
   - o frontend agora envia `deviceId` (`MP_DEVICE_SESSION_ID`) para `/api/create-payment`;
   - o backend envia `X-meli-session-id` para o Mercado Pago ao criar o pagamento;
   - o primeiro charge passou a usar `three_d_secure_mode = optional` e a resposta agora devolve `threeDSInfo` quando existir.
+- Correcao adicional com foco em contexto de risco:
+  - o modal de pagamento agora coleta `CEP` e `numero`, buscando o endereco automaticamente via ViaCEP;
+  - o frontend envia `zipCode`, `streetName`, `streetNumber`, `neighborhood`, `city` e `state` para `/api/create-payment`;
+  - o backend passou a incluir endereco no `customer`, no `payer` e em `additional_info.payer.address`.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;

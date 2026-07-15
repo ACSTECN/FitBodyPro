@@ -864,6 +864,18 @@
                         <label for="paymentPhone">Telefone</label>
                         <input type="tel" id="paymentPhone" placeholder="(11) 99999-9999">
                     </div>
+                    <div class="form-group">
+                        <label for="paymentZipCode">CEP</label>
+                        <input type="text" id="paymentZipCode" placeholder="00000-000" maxlength="9">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentStreetNumber">Numero</label>
+                        <input type="text" id="paymentStreetNumber" placeholder="123">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="paymentStreetName">Endereco</label>
+                        <input type="text" id="paymentStreetName" placeholder="Preencha o CEP para buscar o endereco" readonly>
+                    </div>
                 </div>
                 <p class="payment-contact-note">Esses dados ajudam a preparar a recorrencia e a reduzir recusas por falta de contexto no antifraude.</p>
             </div>
@@ -964,6 +976,30 @@ function storePaymentContact(contact) {
     sessionStorage.setItem(PAYMENT_CONTACT_STORAGE_KEY, JSON.stringify(contact));
 }
 
+function cleanZipCode(value) {
+    return String(value || '').replace(/\D/g, '').slice(0, 8);
+}
+
+function formatZipCode(value) {
+    const digits = cleanZipCode(value);
+
+    if (digits.length <= 5) {
+        return digits;
+    }
+
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function buildPaymentAddressLabel(contact) {
+    const parts = [
+        contact.streetName,
+        contact.neighborhood,
+        contact.city && contact.state ? `${contact.city} - ${contact.state}` : contact.city || contact.state
+    ].filter(Boolean);
+
+    return parts.join(', ');
+}
+
 function syncPaymentContactFields() {
     const cachedContact = readPaymentContact();
     const fallbackFullName = document.getElementById('fullName')?.value?.trim() || '';
@@ -973,6 +1009,9 @@ function syncPaymentContactFields() {
     const paymentFullNameInput = document.getElementById('paymentFullName');
     const paymentEmailInput = document.getElementById('paymentEmail');
     const paymentPhoneInput = document.getElementById('paymentPhone');
+    const paymentZipCodeInput = document.getElementById('paymentZipCode');
+    const paymentStreetNumberInput = document.getElementById('paymentStreetNumber');
+    const paymentStreetNameInput = document.getElementById('paymentStreetName');
 
     if (paymentFullNameInput && !paymentFullNameInput.value.trim()) {
         paymentFullNameInput.value = cachedContact.fullName || fallbackFullName;
@@ -984,6 +1023,18 @@ function syncPaymentContactFields() {
 
     if (paymentPhoneInput && !paymentPhoneInput.value.trim()) {
         paymentPhoneInput.value = cachedContact.phone || fallbackPhone;
+    }
+
+    if (paymentZipCodeInput && !paymentZipCodeInput.value.trim()) {
+        paymentZipCodeInput.value = formatZipCode(cachedContact.zipCode || '');
+    }
+
+    if (paymentStreetNumberInput && !paymentStreetNumberInput.value.trim()) {
+        paymentStreetNumberInput.value = cachedContact.streetNumber || '';
+    }
+
+    if (paymentStreetNameInput && !paymentStreetNameInput.value.trim()) {
+        paymentStreetNameInput.value = buildPaymentAddressLabel(cachedContact);
     }
 }
 
@@ -1000,15 +1051,66 @@ function getPreferredPayerData() {
         document.getElementById('paymentPhone')?.value?.trim() ||
         document.getElementById('phone')?.value?.trim() ||
         '';
+    const zipCode = cleanZipCode(document.getElementById('paymentZipCode')?.value || '');
+    const streetNumber = document.getElementById('paymentStreetNumber')?.value?.trim() || '';
+    const streetName = document.getElementById('paymentStreetName')?.value?.trim() || '';
     const { firstName, lastName } = splitFullName(fullName);
+    const cachedContact = readPaymentContact();
 
     return {
         fullName,
         email,
         phone,
+        zipCode,
+        streetNumber,
+        streetName: cachedContact.streetName || streetName,
+        neighborhood: cachedContact.neighborhood || '',
+        city: cachedContact.city || '',
+        state: cachedContact.state || '',
         firstName,
         lastName
     };
+}
+
+async function lookupZipCode() {
+    const zipCodeInput = document.getElementById('paymentZipCode');
+    const streetNameInput = document.getElementById('paymentStreetName');
+
+    if (!zipCodeInput || !streetNameInput) {
+        return;
+    }
+
+    const zipCode = cleanZipCode(zipCodeInput.value);
+    zipCodeInput.value = formatZipCode(zipCode);
+
+    if (zipCode.length !== 8) {
+        return;
+    }
+
+    try {
+        streetNameInput.value = 'Buscando endereco...';
+        const response = await fetch(`https://viacep.com.br/ws/${zipCode}/json/`);
+        const data = await response.json();
+
+        if (!response.ok || data.erro) {
+            throw new Error('CEP nao encontrado.');
+        }
+
+        const cachedContact = readPaymentContact();
+        const updatedContact = {
+            ...cachedContact,
+            zipCode,
+            streetName: data.logradouro || '',
+            neighborhood: data.bairro || '',
+            city: data.localidade || '',
+            state: data.uf || ''
+        };
+
+        storePaymentContact(updatedContact);
+        streetNameInput.value = buildPaymentAddressLabel(updatedContact) || (data.logradouro || '');
+    } catch (error) {
+        streetNameInput.value = 'Nao foi possivel buscar o endereco pelo CEP.';
+    }
 }
 
 function getMercadoPagoDeviceId() {
@@ -1145,6 +1247,14 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
             throw new Error('Preencha um telefone valido antes de concluir o pagamento.');
         }
 
+        if (!preferredPayer.zipCode || preferredPayer.zipCode.length !== 8) {
+            throw new Error('Preencha um CEP valido antes de concluir o pagamento.');
+        }
+
+        if (!preferredPayer.streetNumber) {
+            throw new Error('Preencha o numero do endereco antes de concluir o pagamento.');
+        }
+
         storePaymentContact(preferredPayer);
 
         messageArea.innerHTML = `
@@ -1163,6 +1273,12 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
                 deviceId: getMercadoPagoDeviceId(),
                 email,
                 phone: preferredPayer.phone,
+                zipCode: preferredPayer.zipCode,
+                streetName: preferredPayer.streetName,
+                streetNumber: preferredPayer.streetNumber,
+                neighborhood: preferredPayer.neighborhood,
+                city: preferredPayer.city,
+                state: preferredPayer.state,
                 cardholderName,
                 identificationType: identification.type || cardFormData.identificationType,
                 identificationNumber: identification.number || cardFormData.identificationNumber,
@@ -1301,7 +1417,24 @@ function selectPayment(method) {
     });
 }
 
+document.getElementById('paymentZipCode')?.addEventListener('input', (event) => {
+    event.target.value = formatZipCode(event.target.value);
+});
+
+document.getElementById('paymentZipCode')?.addEventListener('blur', () => {
+    lookupZipCode().catch(() => {});
+});
+
+document.getElementById('paymentStreetNumber')?.addEventListener('input', (event) => {
+    const cachedContact = readPaymentContact();
+    storePaymentContact({
+        ...cachedContact,
+        streetNumber: event.target.value.trim()
+    });
+});
+
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
+
     e.preventDefault();
 
     const fullName = document.getElementById('fullName').value;
