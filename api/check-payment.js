@@ -16,16 +16,20 @@ module.exports = async function handler(req, res) {
     }
 
     try {
+        const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+
+        if (!accessToken) {
+            return res.status(500).json({ message: 'MERCADO_PAGO_ACCESS_TOKEN não configurado' });
+        }
+
         const { paymentId } = req.body;
 
         if (!paymentId) {
             return res.status(400).json({ message: 'ID do pagamento obrigatório' });
         }
 
-        const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN || 'APP_USR-1299466235883241-102116-24fec28f28914fa1efa5da0c7d739d40-231219998';
-
         const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-            headers: { 'Authorization': `Bearer ${MP_ACCESS_TOKEN}` }
+            headers: { 'Authorization': `Bearer ${accessToken}` }
         });
 
         const paymentData = await response.json();
