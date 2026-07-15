@@ -918,7 +918,7 @@
     </footer>
 
     <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="https://www.mercadopago.com/v2/security.js" view="checkout"></script>
 <script>
 let selectedPlan = null;
 let selectedPaymentMethod = 'card';
@@ -1009,6 +1009,14 @@ function getPreferredPayerData() {
         firstName,
         lastName
     };
+}
+
+function getMercadoPagoDeviceId() {
+    return (
+        window.MP_DEVICE_SESSION_ID ||
+        document.getElementById('deviceId')?.value ||
+        null
+    );
 }
 
 async function loadMercadoPagoPublicKey() {
@@ -1152,6 +1160,7 @@ async function submitCardPayment(cardFormData, additionalData = {}) {
                 plan: selectedPlan,
                 method: 'card',
                 token,
+                deviceId: getMercadoPagoDeviceId(),
                 email,
                 phone: preferredPayer.phone,
                 cardholderName,

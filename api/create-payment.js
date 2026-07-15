@@ -246,6 +246,7 @@ async function createCardPayment(reqBody) {
     const {
         plan,
         token,
+        deviceId,
         email,
         phone,
         cardholderName,
@@ -350,6 +351,7 @@ async function createCardPayment(reqBody) {
         description: selectedPlan.title,
         statement_descriptor: 'FITBODYPRO',
         external_reference: subscriptionId,
+        three_d_secure_mode: 'optional',
         installments: Number(installments) || 1,
         payment_method_id: paymentMethodId,
         issuer_id: issuerId || undefined,
@@ -424,6 +426,7 @@ async function createCardPayment(reqBody) {
             hasIdentification: Boolean(paymentPayload.payer.identification?.number),
             hasPhone: Boolean(paymentPayload.payer.phone?.number),
             pointOfInteractionType: paymentPayload.point_of_interaction?.type || null,
+            hasDeviceId: Boolean(deviceId),
             customerId: customer?.id || null,
             providerCardId: savedCard?.id || null,
             subscriptionId
@@ -434,7 +437,8 @@ async function createCardPayment(reqBody) {
     const payment = await mercadoPagoRequest('/v1/payments', {
         method: 'POST',
         headers: {
-            'X-Idempotency-Key': `${Date.now()}-${Math.random().toString(36).slice(2)}`
+            'X-Idempotency-Key': `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            ...(deviceId ? { 'X-meli-session-id': deviceId } : {})
         },
         body: paymentPayload
     });
@@ -454,6 +458,7 @@ async function createCardPayment(reqBody) {
             issuerId: payment?.issuer_id || payment?.issuer?.id || null,
             merchantOrderId: payment?.order?.id || null,
             hasPointOfInteraction: Boolean(payment?.point_of_interaction),
+            hasThreeDSInfo: Boolean(payment?.three_ds_info),
             payerId: payment?.payer?.id || null
         }
     });
@@ -555,6 +560,7 @@ module.exports = async function handler(req, res) {
             status: payment.status,
             statusDetail: payment.status_detail,
             message: statusMessage,
+            threeDSInfo: payment.three_ds_info || null,
             recurringReady: Boolean(customer?.id && providerCardId),
             recurringData: {
                 paymentAmount: payment.transaction_amount,

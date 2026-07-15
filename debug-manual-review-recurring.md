@@ -64,6 +64,11 @@
 - Ajuste adicional aplicado apos nova leitura da documentacao de mensageria do MP:
   - `payer` do primeiro pagamento agora inclui `id = customer.id` e `type = customer`, mantendo tambem `email`;
   - `subscription_sequence.total` passou a ser enviado como `null` para refletir assinatura mensal sem quantidade predefinida.
+- Nova frente aplicada com foco em antifraude e autenticacao:
+  - `planos.html` passou a carregar `https://www.mercadopago.com/v2/security.js` na tela de checkout;
+  - o frontend agora envia `deviceId` (`MP_DEVICE_SESSION_ID`) para `/api/create-payment`;
+  - o backend envia `X-meli-session-id` para o Mercado Pago ao criar o pagamento;
+  - o primeiro charge passou a usar `three_d_secure_mode = optional` e a resposta agora devolve `threeDSInfo` quando existir.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;
