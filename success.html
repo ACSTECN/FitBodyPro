@@ -306,11 +306,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         if (
             !recurringData ||
             !recurringData.providerCustomerId ||
-            !recurringData.providerCardId ||
-            !recurringData.paymentMethodId ||
-            !recurringData.cardBrand ||
-            !recurringData.cardLastFour ||
-            !recurringData.firstPaymentProviderPaymentId
+            !recurringData.providerSubscriptionId
         ) {
             messageArea.innerHTML = `
                 <div class="message error">
@@ -331,7 +327,12 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         password,
         plan,
         billingCycle: 'monthly',
-        paymentStatus: plan !== 'free' ? 'approved' : undefined,
+        paymentStatus:
+            plan !== 'free'
+                ? recurringData?.paymentStatus ||
+                  recurringData?.paymentRawPayload?.payment?.status ||
+                  'RECEIVED'
+                : undefined,
         paymentProvider: plan !== 'free' ? 'asaas' : undefined,
         paymentId: plan !== 'free' ? paymentId : undefined,
         ...(recurringData || {})

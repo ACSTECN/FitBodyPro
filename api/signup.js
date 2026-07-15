@@ -22,7 +22,13 @@ function getSupabaseAuthToken() {
 }
 
 function buildRecurringFields(reqBody) {
-    const explicitRawPayload = reqBody.paymentRawPayload || {};
+    const explicitRawPayload =
+        reqBody.paymentRawPayload ||
+        reqBody.paymentRaw ||
+        reqBody.payment ||
+        reqBody.raw ||
+        reqBody.paymentData ||
+        {};
 
     return {
         paymentAmount: pickFirstDefined(
@@ -51,6 +57,12 @@ function buildRecurringFields(reqBody) {
             reqBody.providerCardId,
             explicitRawPayload?.creditCardToken
         ),
+        providerPaymentMethodToken: pickFirstDefined(
+            reqBody.providerPaymentMethodToken,
+            reqBody.paymentMethodToken,
+            reqBody.creditCardToken,
+            explicitRawPayload?.creditCardToken
+        ),
         paymentMethodId: pickFirstDefined(
             reqBody.paymentMethodId,
             'credit_card'
@@ -73,10 +85,15 @@ function buildRecurringFields(reqBody) {
         ),
         providerSubscriptionId: pickFirstDefined(
             reqBody.providerSubscriptionId,
+            reqBody.subscriptionId,
             explicitRawPayload?.subscription?.id
         ),
         paymentRawPayload: pickFirstDefined(
             reqBody.paymentRawPayload,
+            reqBody.paymentRaw,
+            reqBody.payment,
+            reqBody.raw,
+            reqBody.paymentData,
             explicitRawPayload
         )
     };
@@ -97,13 +114,6 @@ function validateRecurringFields(recurringFields) {
     const missing = [];
 
     if (!recurringFields.providerCustomerId) missing.push('providerCustomerId');
-    if (!recurringFields.providerCardId) missing.push('providerCardId');
-    if (!recurringFields.paymentMethodId) missing.push('paymentMethodId');
-    if (!recurringFields.cardBrand) missing.push('cardBrand');
-    if (!recurringFields.cardLastFour) missing.push('cardLastFour');
-    if (!recurringFields.firstPaymentProviderPaymentId) {
-        missing.push('firstPaymentProviderPaymentId');
-    }
     if (!recurringFields.providerSubscriptionId) {
         missing.push('providerSubscriptionId');
     }
