@@ -75,6 +75,8 @@
   - o backend passou a incluir endereco no `customer`, no `payer` e em `additional_info.payer.address`.
 - Ajuste corretivo apos retorno `invalid parameters: address.address.street_number is wrong`:
   - o backend passou a normalizar `street_number` como numero antes de enviar ao Mercado Pago, em vez de texto.
+- Ajuste corretivo apos retorno `The name of the following parameters is wrong: [additional_info.payer.address.city, additional_info.payer.address.federal_unit, additional_info.payer.address.neighborhood]`:
+  - `additional_info.payer.address` voltou a enviar apenas `zip_code`, `street_name` e `street_number`, removendo os campos extras que o Mercado Pago nao reconhece nesse objeto.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;

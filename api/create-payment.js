@@ -418,12 +418,9 @@ async function createCardPayment(reqBody) {
                 last_name: lastName,
                 phone: phonePayload,
                 address: {
-                    zip_code: cleanDigits(zipCode),
-                    street_name: String(streetName || '').trim() || undefined,
-                    street_number: String(streetNumber || '').trim() || undefined,
-                    neighborhood: String(neighborhood || '').trim() || undefined,
-                    city: String(city || '').trim() || undefined,
-                    federal_unit: String(state || '').trim() || undefined
+                    zip_code: addressPayload?.zip_code,
+                    street_name: addressPayload?.street_name,
+                    street_number: addressPayload?.street_number
                 }
             }
         },
