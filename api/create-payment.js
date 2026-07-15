@@ -101,6 +101,10 @@ function buildRecurringSubscriptionId(plan) {
     return `fitbory-${plan}-${Date.now()}`;
 }
 
+function buildBillingDate() {
+    return new Date().toISOString().slice(0, 10);
+}
+
 async function mercadoPagoRequest(path, options = {}) {
     if (!MP_ACCESS_TOKEN) {
         const error = new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado.');
@@ -344,6 +348,7 @@ async function createCardPayment(reqBody) {
         transaction_amount: selectedPlan.price,
         token,
         description: selectedPlan.title,
+        statement_descriptor: 'FITBODYPRO',
         external_reference: subscriptionId,
         installments: Number(installments) || 1,
         payment_method_id: paymentMethodId,
@@ -378,6 +383,22 @@ async function createCardPayment(reqBody) {
                 phone: phonePayload
             }
         },
+        point_of_interaction: {
+            type: 'SUBSCRIPTIONS',
+            transaction_data: {
+                first_time_use: true,
+                subscription_id: subscriptionId,
+                subscription_sequence: {
+                    number: 1
+                },
+                invoice_period: {
+                    period: 1,
+                    type: 'monthly'
+                },
+                billing_date: buildBillingDate(),
+                user_present: true
+            }
+        },
         metadata: {
             plan,
             billingCycle: 'monthly',
@@ -399,6 +420,7 @@ async function createCardPayment(reqBody) {
             installments: paymentPayload.installments,
             hasIdentification: Boolean(paymentPayload.payer.identification?.number),
             hasPhone: Boolean(paymentPayload.payer.phone?.number),
+            pointOfInteractionType: paymentPayload.point_of_interaction?.type || null,
             customerId: customer?.id || null,
             providerCardId: savedCard?.id || null,
             subscriptionId
@@ -521,7 +543,7 @@ module.exports = async function handler(req, res) {
         }
 
         return res.status(200).json({
-            version: 'save-card-first-enriched-payer-v5',
+            version: 'save-card-first-subscription-message-v6',
             success: isApproved,
             approved: isApproved,
             requiresAction: !isApproved,

@@ -57,6 +57,10 @@
   - o fluxo pago agora coleta `nome`, `email` e `telefone` antes do Brick e envia esses dados ao backend;
   - o backend passa a enriquecer `customer`, `payer` e `additional_info` do primeiro pagamento com telefone e item da assinatura para aumentar o contexto do antifraude;
   - os dados de contato informados no pagamento ficam reaproveitados na `success.html`.
+- Nova correcao aplicada com foco na aprovacao do primeiro charge recorrente:
+  - o `v1/payments` volta a enviar `point_of_interaction.type = SUBSCRIPTIONS`;
+  - o payload inclui `transaction_data.first_time_use = true`, `subscription_id`, `subscription_sequence.number = 1`, `invoice_period` mensal, `billing_date` e `user_present = true`;
+  - adicionado `statement_descriptor` consistente para a cobranca inicial.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;
