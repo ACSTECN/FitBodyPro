@@ -61,6 +61,9 @@
   - o `v1/payments` volta a enviar `point_of_interaction.type = SUBSCRIPTIONS`;
   - o payload inclui `transaction_data.first_time_use = true`, `subscription_id`, `subscription_sequence.number = 1`, `invoice_period` mensal, `billing_date` e `user_present = true`;
   - adicionado `statement_descriptor` consistente para a cobranca inicial.
+- Ajuste adicional aplicado apos nova leitura da documentacao de mensageria do MP:
+  - `payer` do primeiro pagamento agora inclui `id = customer.id` e `type = customer`, mantendo tambem `email`;
+  - `subscription_sequence.total` passou a ser enviado como `null` para refletir assinatura mensal sem quantidade predefinida.
 - Verificacao local concluida:
   - script inline de `planos.html` valido;
   - `api/create-payment.js` valido;

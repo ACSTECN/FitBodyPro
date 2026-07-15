@@ -354,6 +354,8 @@ async function createCardPayment(reqBody) {
         payment_method_id: paymentMethodId,
         issuer_id: issuerId || undefined,
         payer: {
+            id: customer.id,
+            type: 'customer',
             email,
             first_name: firstName,
             last_name: lastName,
@@ -389,7 +391,8 @@ async function createCardPayment(reqBody) {
                 first_time_use: true,
                 subscription_id: subscriptionId,
                 subscription_sequence: {
-                    number: 1
+                    number: 1,
+                    total: null
                 },
                 invoice_period: {
                     period: 1,
