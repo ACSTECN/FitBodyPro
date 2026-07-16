@@ -1,6 +1,6 @@
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 1.5 },
-    premium: { title: 'Fit Bory Premium', price: 1.5 }
+    starter: { title: 'Fitbory Starter', price: 5.0 },
+    premium: { title: 'Fit Bory Premium', price: 5.0 }
 };
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
