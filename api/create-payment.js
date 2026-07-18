@@ -197,18 +197,76 @@ function buildCreditCardHolderInfo(cardData) {
     };
 }
 
-function buildImmediatePaymentPayload({ customerId, selectedPlan, externalReference, reqBody, remoteIp }) {
+function getCreditCardTokenFromResponse(data) {
+    return (
+        data?.creditCardToken ||
+        data?.token ||
+        data?.creditCard?.creditCardToken ||
+        null
+    );
+}
+
+async function tokenizeCreditCard({
+    customerId,
+    reqBody,
+    remoteIp,
+    creditCardHolderInfo
+}) {
+    const tokenization = await asaasRequest('/creditCard/tokenizeCreditCard', {
+        method: 'POST',
+        body: {
+            customer: customerId,
+            creditCard: buildCreditCardPayload(reqBody),
+            creditCardHolderInfo,
+            remoteIp
+        }
+    });
+
+    const creditCardToken = getCreditCardTokenFromResponse(tokenization);
+
+    if (!creditCardToken) {
+        const error = new Error(
+            'O Asaas não retornou o token do cartão. Verifique se a tokenização de cartão está habilitada na conta.'
+        );
+        error.status = 400;
+        error.data = tokenization;
+        throw error;
+    }
+
     return {
+        tokenization,
+        creditCardToken
+    };
+}
+
+function buildImmediatePaymentPayload({
+    customerId,
+    selectedPlan,
+    externalReference,
+    reqBody,
+    remoteIp,
+    creditCardToken,
+    creditCardHolderInfo
+}) {
+    const payload = {
         customer: customerId,
         billingType: 'CREDIT_CARD',
         value: selectedPlan.price,
         dueDate: formatDate(new Date()),
         description: selectedPlan.title,
         externalReference,
-        creditCard: buildCreditCardPayload(reqBody),
-        creditCardHolderInfo: buildCreditCardHolderInfo(reqBody),
         remoteIp
     };
+
+    if (creditCardToken) {
+        payload.creditCardToken = creditCardToken;
+    } else {
+        payload.creditCard = buildCreditCardPayload(reqBody);
+        payload.creditCardHolderInfo =
+            creditCardHolderInfo || buildCreditCardHolderInfo(reqBody);
+    }
+
+    return payload;
 }
 
 function buildSubscriptionPayload({
@@ -335,6 +393,18 @@ async function createCardPayment(req, reqBody) {
         externalReference: customerReference
     });
 
+    const { tokenization, creditCardToken: tokenizedCreditCardToken } =
+        await tokenizeCreditCard({
+            customerId: customer.id,
+            reqBody: {
+                ...reqBody,
+                email: sanitizedEmail,
+                cpfCnpj: sanitizedCpfCnpj
+            },
+            remoteIp,
+            creditCardHolderInfo
+        });
+
     const payment = await asaasRequest('/payments', {
         method: 'POST',
         body: buildImmediatePaymentPayload({
@@ -346,7 +416,9 @@ async function createCardPayment(req, reqBody) {
                 email: sanitizedEmail,
                 cpfCnpj: sanitizedCpfCnpj
             },
-            remoteIp
+            remoteIp,
+            creditCardToken: tokenizedCreditCardToken,
+            creditCardHolderInfo
         })
     });
 
@@ -354,12 +426,18 @@ async function createCardPayment(req, reqBody) {
         return {
             customer,
             payment,
+            tokenization,
             subscription: null,
-            creditCardToken: payment?.creditCardToken || null
+            remoteIp,
+            creditCardHolderInfo,
+            creditCardToken:
+                getCreditCardTokenFromResponse(payment) ||
+                tokenizedCreditCardToken
         };
     }
 
-    const creditCardToken = payment?.creditCardToken || null;
+    const creditCardToken =
+        getCreditCardTokenFromResponse(payment) || tokenizedCreditCardToken;
 
     const subscription = await asaasRequest('/subscriptions', {
         method: 'POST',
@@ -380,13 +458,13 @@ async function createCardPayment(req, reqBody) {
     return {
         customer,
         payment,
+        tokenization,
         subscription,
         remoteIp,
         creditCardHolderInfo,
         creditCardToken:
             creditCardToken ||
-            subscription?.creditCardToken ||
-            subscription?.creditCard?.creditCardToken ||
+            getCreditCardTokenFromResponse(subscription) ||
             null
     };
 }
@@ -469,6 +547,7 @@ module.exports = async function handler(req, res) {
                 paymentRawPayload: {
                     customer,
                     payment,
+                    tokenization,
                     subscription,
                     creditCardToken: creditCardToken || null,
                     remoteIp: remoteIp || null,
