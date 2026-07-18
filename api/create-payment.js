@@ -311,6 +311,11 @@ async function createCardPayment(req, reqBody) {
     const chargeReference = `fitbory-charge:${plan}:${Date.now()}`;
     const subscriptionReference = `fitbory-subscription:${plan}:${Date.now()}`;
     const remoteIp = getRemoteIp(req);
+    const creditCardHolderInfo = buildCreditCardHolderInfo({
+        ...reqBody,
+        email: sanitizedEmail,
+        cpfCnpj: sanitizedCpfCnpj
+    });
 
     if (!remoteIp) {
         const error = new Error('Não foi possível identificar o IP do comprador para o Asaas.');
@@ -376,6 +381,8 @@ async function createCardPayment(req, reqBody) {
         customer,
         payment,
         subscription,
+        remoteIp,
+        creditCardHolderInfo,
         creditCardToken:
             creditCardToken ||
             subscription?.creditCardToken ||
@@ -415,7 +422,14 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const { customer, payment, subscription, creditCardToken } = await createCardPayment(req, req.body);
+        const {
+            customer,
+            payment,
+            subscription,
+            creditCardToken,
+            remoteIp,
+            creditCardHolderInfo
+        } = await createCardPayment(req, req.body);
         const approved = isApprovedAsaasStatus(payment?.status);
         const manualReview = isManualReviewStatus(payment?.status);
         const cardLastFour = cleanDigits(req.body.cardNumber).slice(-4) || null;
@@ -449,12 +463,16 @@ module.exports = async function handler(req, res) {
                 cardBrand,
                 cardLastFour,
                 firstPaymentProviderPaymentId: payment?.id || null,
+                remoteIp: remoteIp || null,
+                creditCardHolderInfo: creditCardHolderInfo || null,
                 providerSubscriptionId: subscription?.id || null,
                 paymentRawPayload: {
                     customer,
                     payment,
                     subscription,
-                    creditCardToken: creditCardToken || null
+                    creditCardToken: creditCardToken || null,
+                    remoteIp: remoteIp || null,
+                    creditCardHolderInfo: creditCardHolderInfo || null
                 }
             }
         });

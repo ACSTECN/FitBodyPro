@@ -21,14 +21,54 @@ function getSupabaseAuthToken() {
     );
 }
 
-function buildRecurringFields(reqBody) {
-    const explicitRawPayload =
+function getRawPayload(reqBody) {
+    const candidate =
         reqBody.paymentRawPayload ||
         reqBody.paymentRaw ||
         reqBody.payment ||
         reqBody.raw ||
-        reqBody.paymentData ||
-        {};
+        reqBody.paymentData;
+
+    if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+        return candidate;
+    }
+
+    return {};
+}
+
+function buildRecurringFields(reqBody) {
+    const explicitRawPayload = getRawPayload(reqBody);
+    const providerPaymentMethodToken = pickFirstDefined(
+        reqBody.providerPaymentMethodToken,
+        reqBody.paymentMethodToken,
+        reqBody.creditCardToken,
+        explicitRawPayload?.creditCardToken
+    );
+    const remoteIp = pickFirstDefined(
+        reqBody.remoteIp,
+        explicitRawPayload?.remoteIp,
+        explicitRawPayload?.payment?.remoteIp
+    );
+    const creditCardHolderInfo = pickFirstDefined(
+        reqBody.creditCardHolderInfo,
+        explicitRawPayload?.creditCardHolderInfo,
+        explicitRawPayload?.payment?.creditCardHolderInfo
+    );
+    const paymentRawPayload = {
+        ...explicitRawPayload,
+        creditCardToken: pickFirstDefined(
+            explicitRawPayload?.creditCardToken,
+            providerPaymentMethodToken
+        ),
+        remoteIp: pickFirstDefined(
+            explicitRawPayload?.remoteIp,
+            remoteIp
+        ),
+        creditCardHolderInfo: pickFirstDefined(
+            explicitRawPayload?.creditCardHolderInfo,
+            creditCardHolderInfo
+        )
+    };
 
     return {
         paymentAmount: pickFirstDefined(
@@ -57,12 +97,7 @@ function buildRecurringFields(reqBody) {
             reqBody.providerCardId,
             explicitRawPayload?.creditCardToken
         ),
-        providerPaymentMethodToken: pickFirstDefined(
-            reqBody.providerPaymentMethodToken,
-            reqBody.paymentMethodToken,
-            reqBody.creditCardToken,
-            explicitRawPayload?.creditCardToken
-        ),
+        providerPaymentMethodToken,
         paymentMethodId: pickFirstDefined(
             reqBody.paymentMethodId,
             'credit_card'
@@ -83,19 +118,14 @@ function buildRecurringFields(reqBody) {
             reqBody.firstPaymentProviderPaymentId,
             explicitRawPayload?.payment?.id
         ),
+        remoteIp,
+        creditCardHolderInfo,
         providerSubscriptionId: pickFirstDefined(
             reqBody.providerSubscriptionId,
             reqBody.subscriptionId,
             explicitRawPayload?.subscription?.id
         ),
-        paymentRawPayload: pickFirstDefined(
-            reqBody.paymentRawPayload,
-            reqBody.paymentRaw,
-            reqBody.payment,
-            reqBody.raw,
-            reqBody.paymentData,
-            explicitRawPayload
-        )
+        paymentRawPayload
     };
 }
 
@@ -114,6 +144,10 @@ function validateRecurringFields(recurringFields) {
     const missing = [];
 
     if (!recurringFields.providerCustomerId) missing.push('providerCustomerId');
+    if (!recurringFields.providerPaymentMethodToken) {
+        missing.push('providerPaymentMethodToken');
+    }
+    if (!recurringFields.remoteIp) missing.push('remoteIp');
     if (!recurringFields.providerSubscriptionId) {
         missing.push('providerSubscriptionId');
     }
