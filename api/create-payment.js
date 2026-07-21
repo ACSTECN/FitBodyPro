@@ -172,6 +172,13 @@ async function ensureCustomer(customerData) {
     });
 }
 
+async function createCustomer(customerData) {
+    return asaasRequest('/customers', {
+        method: 'POST',
+        body: buildCustomerPayload(customerData)
+    });
+}
+
 function buildCreditCardPayload(cardData) {
     return {
         holderName: sanitizeName(cardData.cardholderName),
@@ -237,6 +244,24 @@ async function tokenizeCreditCard({
         tokenization,
         creditCardToken
     };
+}
+
+function isCardAlreadyTokenizedError(error) {
+    const message = String(error?.message || '').toLowerCase();
+
+    if (message.includes('ja tokenizado') || message.includes('already tokenized')) {
+        return true;
+    }
+
+    if (Array.isArray(error?.data?.errors)) {
+        return error.data.errors.some((item) =>
+            String(item?.description || item?.code || '')
+                .toLowerCase()
+                .includes('tokenizado')
+        );
+    }
+
+    return false;
 }
 
 function buildImmediatePaymentPayload({
@@ -381,7 +406,7 @@ async function createCardPayment(req, reqBody) {
         throw error;
     }
 
-    const customer = await ensureCustomer({
+    const customerData = {
         fullName: cardholderName,
         email: sanitizedEmail,
         phone,
@@ -391,19 +416,45 @@ async function createCardPayment(req, reqBody) {
         streetNumber,
         neighborhood,
         externalReference: customerReference
-    });
+    };
+    let customer = await ensureCustomer(customerData);
+    let tokenization;
+    let tokenizedCreditCardToken;
 
-    const { tokenization, creditCardToken: tokenizedCreditCardToken } =
-        await tokenizeCreditCard({
-            customerId: customer.id,
-            reqBody: {
-                ...reqBody,
-                email: sanitizedEmail,
-                cpfCnpj: sanitizedCpfCnpj
-            },
-            remoteIp,
-            creditCardHolderInfo
+    try {
+        ({ tokenization, creditCardToken: tokenizedCreditCardToken } =
+            await tokenizeCreditCard({
+                customerId: customer.id,
+                reqBody: {
+                    ...reqBody,
+                    email: sanitizedEmail,
+                    cpfCnpj: sanitizedCpfCnpj
+                },
+                remoteIp,
+                creditCardHolderInfo
+            }));
+    } catch (error) {
+        if (!isCardAlreadyTokenizedError(error)) {
+            throw error;
+        }
+
+        customer = await createCustomer({
+            ...customerData,
+            externalReference: `${customerReference}:retry:${Date.now()}`
         });
+
+        ({ tokenization, creditCardToken: tokenizedCreditCardToken } =
+            await tokenizeCreditCard({
+                customerId: customer.id,
+                reqBody: {
+                    ...reqBody,
+                    email: sanitizedEmail,
+                    cpfCnpj: sanitizedCpfCnpj
+                },
+                remoteIp,
+                creditCardHolderInfo
+            }));
+    }
 
     const payment = await asaasRequest('/payments', {
         method: 'POST',
