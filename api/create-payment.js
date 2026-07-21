@@ -503,6 +503,7 @@ module.exports = async function handler(req, res) {
         const {
             customer,
             payment,
+            tokenization,
             subscription,
             creditCardToken,
             remoteIp,
