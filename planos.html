@@ -960,6 +960,32 @@ const priceValues = {
     premium: 5.0
 };
 const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
+const PENDING_SIGNUP_STORAGE_PREFIX = 'fitboryPendingSignup:';
+const LATEST_PENDING_SIGNUP_STORAGE_KEY = 'fitboryPendingSignupLatest';
+
+function safeStorageGet(storage, key) {
+    try {
+        return JSON.parse(storage.getItem(key) || 'null');
+    } catch (error) {
+        return null;
+    }
+}
+
+function safeStorageSet(storage, key, value) {
+    try {
+        storage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        // Ignore storage quota or availability issues without blocking checkout.
+    }
+}
+
+function safeStorageRemove(storage, key) {
+    try {
+        storage.removeItem(key);
+    } catch (error) {
+        // Ignore storage cleanup failures to avoid affecting the flow.
+    }
+}
 
 function cleanDigits(value) {
     return String(value || '').replace(/\D/g, '');
@@ -984,15 +1010,16 @@ function splitFullName(fullName) {
 }
 
 function readPaymentContact() {
-    try {
-        return JSON.parse(sessionStorage.getItem(PAYMENT_CONTACT_STORAGE_KEY) || 'null') || {};
-    } catch (error) {
-        return {};
-    }
+    return (
+        safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+        safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+        {}
+    );
 }
 
 function storePaymentContact(contact) {
-    sessionStorage.setItem(PAYMENT_CONTACT_STORAGE_KEY, JSON.stringify(contact));
+    safeStorageSet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
+    safeStorageSet(localStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
 }
 
 function cleanZipCode(value) {
@@ -1157,9 +1184,142 @@ function buildRecurringStorageKey(paymentId) {
     return `fitboryRecurring:${paymentId}`;
 }
 
+function buildPendingSignupStorageKey(paymentId) {
+    return `${PENDING_SIGNUP_STORAGE_PREFIX}${paymentId}`;
+}
+
+function readRecurringData(paymentId) {
+    if (!paymentId) return null;
+
+    return (
+        safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
+        safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
+        null
+    );
+}
+
+function readPendingSignup(paymentId) {
+    if (!paymentId) return null;
+
+    return safeStorageGet(localStorage, buildPendingSignupStorageKey(paymentId));
+}
+
+function readLatestPendingSignup() {
+    const latestPaymentId =
+        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+
+    if (!latestPaymentId) {
+        return null;
+    }
+
+    return readPendingSignup(latestPaymentId);
+}
+
+function persistPendingSignupRecord(record) {
+    if (!record?.paymentId) return;
+
+    safeStorageSet(localStorage, buildPendingSignupStorageKey(record.paymentId), record);
+    safeStorageSet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY, record.paymentId);
+}
+
 function storeRecurringData(paymentId, recurringData) {
     if (!paymentId || !recurringData) return;
-    sessionStorage.setItem(buildRecurringStorageKey(paymentId), JSON.stringify(recurringData));
+
+    safeStorageSet(sessionStorage, buildRecurringStorageKey(paymentId), recurringData);
+    safeStorageSet(localStorage, buildRecurringStorageKey(paymentId), recurringData);
+}
+
+function storePendingSignup(paymentId, plan, recurringData, contact) {
+    if (!paymentId || !plan || !recurringData) return;
+
+    const existingRecord = readPendingSignup(paymentId);
+    const now = new Date().toISOString();
+
+    persistPendingSignupRecord({
+        paymentId,
+        plan,
+        recurringData,
+        contact: contact || existingRecord?.contact || null,
+        status: 'payment_approved_pending_signup',
+        createdAt: existingRecord?.createdAt || now,
+        updatedAt: now
+    });
+}
+
+function clearPendingSignup(paymentId) {
+    if (!paymentId) return;
+
+    safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
+    safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
+    safeStorageRemove(localStorage, buildPendingSignupStorageKey(paymentId));
+
+    const latestPaymentId =
+        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+
+    if (latestPaymentId === paymentId) {
+        safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
+    }
+}
+
+function renderPendingSignupNotice() {
+    const pendingSignup = readLatestPendingSignup();
+
+    if (
+        !pendingSignup ||
+        pendingSignup.status === 'signup_completed' ||
+        !pendingSignup.paymentId ||
+        !pendingSignup.plan
+    ) {
+        return;
+    }
+
+    if (document.getElementById('pendingSignupNotice')) {
+        return;
+    }
+
+    const notice = document.createElement('div');
+    notice.id = 'pendingSignupNotice';
+    notice.style.cssText = [
+        'position:fixed',
+        'right:20px',
+        'bottom:20px',
+        'z-index:10050',
+        'max-width:360px',
+        'padding:16px',
+        'border-radius:18px',
+        'background:#ffffff',
+        'color:#142033',
+        'box-shadow:0 18px 40px rgba(0,0,0,.28)',
+        'border:1px solid rgba(156,255,0,.28)'
+    ].join(';');
+
+    notice.innerHTML = `
+        <div style="font-weight:800;margin-bottom:6px;">Pagamento aprovado encontrado</div>
+        <div style="font-size:.95rem;line-height:1.5;color:#526072;margin-bottom:12px;">
+            Encontramos um cadastro pendente neste navegador. Se o redirecionamento falhou, voce pode retomar sem pagar novamente.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a
+                href="/success.html?plan=${encodeURIComponent(pendingSignup.plan)}&paymentId=${encodeURIComponent(pendingSignup.paymentId)}"
+                style="display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,#1ee4b7,#9cff00);color:#05070d;font-weight:700;text-decoration:none;"
+            >
+                Retomar cadastro
+            </a>
+            <button
+                type="button"
+                id="dismissPendingSignupNotice"
+                style="padding:10px 14px;border-radius:12px;border:1px solid #dce5f0;background:#fff;color:#526072;font-weight:700;cursor:pointer;"
+            >
+                Agora nao
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(notice);
+
+    document
+        .getElementById('dismissPendingSignupNotice')
+        ?.addEventListener('click', () => notice.remove());
 }
 
 function buildCardFormData() {
@@ -1274,6 +1434,12 @@ async function submitCardPayment() {
 
         if (data.paymentId && data.recurringData) {
             storeRecurringData(data.paymentId, data.recurringData);
+            storePendingSignup(
+                data.paymentId,
+                selectedPlan,
+                data.recurringData,
+                preferredPayer
+            );
         }
 
         if (data.approved) {
@@ -1454,6 +1620,8 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
     }
 });
+
+renderPendingSignupNotice();
 </script>
 
 

@@ -232,43 +232,211 @@
 
 <script>
 const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
+const PENDING_SIGNUP_STORAGE_PREFIX = 'fitboryPendingSignup:';
+const LATEST_PENDING_SIGNUP_STORAGE_KEY = 'fitboryPendingSignupLatest';
 
-try {
-    const storedContact = JSON.parse(sessionStorage.getItem(PAYMENT_CONTACT_STORAGE_KEY) || 'null');
-
-    if (storedContact) {
-        const fullNameInput = document.getElementById('fullName');
-        const phoneInput = document.getElementById('phone');
-        const emailInput = document.getElementById('email');
-
-        if (fullNameInput && !fullNameInput.value.trim()) {
-            fullNameInput.value = storedContact.fullName || '';
-        }
-
-        if (phoneInput && !phoneInput.value.trim()) {
-            phoneInput.value = storedContact.phone || '';
-        }
-
-        if (emailInput && !emailInput.value.trim()) {
-            emailInput.value = storedContact.email || '';
-        }
+function safeStorageGet(storage, key) {
+    try {
+        return JSON.parse(storage.getItem(key) || 'null');
+    } catch (error) {
+        return null;
     }
-} catch (error) {
-    // Ignore malformed cached contact data and keep manual input available.
 }
 
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+function safeStorageSet(storage, key, value) {
+    try {
+        storage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        // Ignore storage write failures to avoid blocking signup recovery.
+    }
+}
 
+function safeStorageRemove(storage, key) {
+    try {
+        storage.removeItem(key);
+    } catch (error) {
+        // Ignore cleanup failures without interrupting the user flow.
+    }
+}
+
+function buildRecurringStorageKey(paymentId) {
+    return `fitboryRecurring:${paymentId}`;
+}
+
+function buildPendingSignupStorageKey(paymentId) {
+    return `${PENDING_SIGNUP_STORAGE_PREFIX}${paymentId}`;
+}
+
+function readPaymentContact() {
+    return (
+        safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+        safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+        {}
+    );
+}
+
+function readRecurringData(paymentId) {
+    if (!paymentId) return null;
+
+    return (
+        safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
+        safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
+        null
+    );
+}
+
+function readPendingSignup(paymentId) {
+    if (!paymentId) return null;
+
+    return safeStorageGet(localStorage, buildPendingSignupStorageKey(paymentId));
+}
+
+function readLatestPendingSignup() {
+    const latestPaymentId =
+        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+
+    if (!latestPaymentId) {
+        return null;
+    }
+
+    return readPendingSignup(latestPaymentId);
+}
+
+function resolvePendingContext() {
     const urlParams = new URLSearchParams(window.location.search);
-    const plan = urlParams.get('plan') || 'starter';
-
-    let paymentId =
+    const latestPendingSignup = readLatestPendingSignup();
+    const paymentIdFromUrl =
         urlParams.get('paymentId') ||
         urlParams.get('paymentid') ||
         urlParams.get('payment_id') ||
         urlParams.get('collection_id') ||
         urlParams.get('id');
+    const paymentId = paymentIdFromUrl || latestPendingSignup?.paymentId || null;
+    const plan = urlParams.get('plan') || latestPendingSignup?.plan || 'starter';
+    const pendingSignup = paymentId
+        ? readPendingSignup(paymentId) || latestPendingSignup
+        : latestPendingSignup;
+
+    if (!paymentIdFromUrl && paymentId) {
+        const nextUrl = `/success.html?plan=${encodeURIComponent(plan)}&paymentId=${encodeURIComponent(paymentId)}`;
+        window.history.replaceState({}, '', nextUrl);
+    }
+
+    return {
+        paymentId,
+        plan,
+        pendingSignup
+    };
+}
+
+function getRecoveredRecurringData(paymentId, pendingSignup) {
+    return readRecurringData(paymentId) || pendingSignup?.recurringData || null;
+}
+
+function hasCompleteRecurringData(recurringData) {
+    return Boolean(
+        recurringData &&
+            recurringData.providerCustomerId &&
+            recurringData.providerSubscriptionId &&
+            recurringData.providerPaymentMethodToken &&
+            recurringData.remoteIp
+    );
+}
+
+function hydratePendingContactFields(pendingSignup) {
+    const storedContact = readPaymentContact();
+    const contact = pendingSignup?.contact || {};
+    const fullNameInput = document.getElementById('fullName');
+    const phoneInput = document.getElementById('phone');
+    const emailInput = document.getElementById('email');
+
+    if (fullNameInput && !fullNameInput.value.trim()) {
+        fullNameInput.value = contact.fullName || storedContact.fullName || '';
+    }
+
+    if (phoneInput && !phoneInput.value.trim()) {
+        phoneInput.value = contact.phone || storedContact.phone || '';
+    }
+
+    if (emailInput && !emailInput.value.trim()) {
+        emailInput.value = contact.email || storedContact.email || '';
+    }
+}
+
+function markPendingSignupCompleted(paymentId) {
+    if (!paymentId) return;
+
+    const existingRecord = readPendingSignup(paymentId);
+
+    if (existingRecord) {
+        safeStorageSet(localStorage, buildPendingSignupStorageKey(paymentId), {
+            ...existingRecord,
+            status: 'signup_completed',
+            completedAt: new Date().toISOString()
+        });
+    }
+
+    safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
+    safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
+
+    const latestPaymentId =
+        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+
+    if (latestPaymentId === paymentId) {
+        safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
+    }
+}
+
+async function renderRecoveryHint(context) {
+    const messageArea = document.getElementById('messageArea');
+
+    if (!messageArea || context.plan === 'free' || !context.paymentId) {
+        return;
+    }
+
+    const recurringData = getRecoveredRecurringData(
+        context.paymentId,
+        context.pendingSignup
+    );
+
+    if (hasCompleteRecurringData(recurringData)) {
+        messageArea.innerHTML = `
+            <div class="message warning">
+                Encontramos seu pagamento salvo neste navegador. Finalize a senha abaixo para concluir sua conta sem pagar novamente.
+            </div>
+        `;
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/check-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: context.paymentId })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.approved) {
+            messageArea.innerHTML = `
+                <div class="message warning">
+                    O pagamento ${context.paymentId} foi localizado como aprovado, mas os dados locais para concluir o cadastro nao estao completos neste navegador.
+                    Se possivel, volte pela mesma aba em que pagou. Se o problema persistir, nos envie este ID.
+                </div>
+            `;
+        }
+    } catch (error) {
+        // Ignore recovery lookup failures and keep manual retry available.
+    }
+}
+
+const pendingContext = resolvePendingContext();
+hydratePendingContactFields(pendingContext.pendingSignup);
+renderRecoveryHint(pendingContext);
+
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const plan = pendingContext.plan;
+    const paymentId = pendingContext.paymentId;
 
     const name = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
@@ -290,28 +458,17 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     }
 
     let recurringData = null;
-
-    try {
-        recurringData = paymentId
-            ? JSON.parse(sessionStorage.getItem(`fitboryRecurring:${paymentId}`) || 'null')
-            : null;
-    } catch (error) {
-        recurringData = null;
-    }
+    recurringData = getRecoveredRecurringData(paymentId, pendingContext.pendingSignup);
 
     console.log('PAYMENT ID:', paymentId);
     console.log('RECURRING DATA:', recurringData);
 
     if (plan !== 'free') {
-        if (
-            !recurringData ||
-            !recurringData.providerCustomerId ||
-            !recurringData.providerSubscriptionId
-        ) {
+        if (!hasCompleteRecurringData(recurringData)) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    Pagamento aprovado, mas os dados da assinatura recorrente não chegaram completos.
-                    Volte para a página de planos e tente novamente com cartão.
+                    Pagamento localizado, mas os dados necessarios para concluir a assinatura automatica nao estao completos neste navegador.
+                    Volte para a pagina de planos para retomar o cadastro salvo ou entre em contato com o ID ${paymentId || 'do pagamento'}.
                 </div>
             `;
 
@@ -355,7 +512,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
             messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Cartão pronto para renovação automática.</div>';
 
             if (paymentId) {
-                sessionStorage.removeItem(`fitboryRecurring:${paymentId}`);
+                markPendingSignupCompleted(paymentId);
             }
 
             setTimeout(() => {
