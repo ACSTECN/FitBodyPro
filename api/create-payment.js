@@ -1,3 +1,5 @@
+const { createRecoveryToken } = require('./recovery-token');
+
 const PLAN_DETAILS = {
     starter: { title: 'Fitbory Starter', price: 5.0 },
     premium: { title: 'Fit Bory Premium', price: 5.0 }
@@ -345,6 +347,66 @@ function buildStatusMessage(status) {
     return `Pagamento retornou com status ${normalizedStatus || 'desconhecido'}.`;
 }
 
+function buildRecoveryPayload({
+    plan,
+    payment,
+    customer,
+    subscription,
+    creditCardToken,
+    remoteIp,
+    creditCardHolderInfo,
+    cardBrand,
+    cardLastFour
+}) {
+    const normalizedStatus = payment?.status || null;
+
+    return {
+        version: 'signup-recovery-v1',
+        createdAt: new Date().toISOString(),
+        plan,
+        paymentId: payment?.id || null,
+        recurringData: {
+            paymentStatus: normalizedStatus,
+            paymentAmount: payment?.value ?? getSelectedPlan(plan)?.price ?? null,
+            paymentCurrency: 'BRL',
+            providerReference:
+                payment?.invoiceNumber || payment?.externalReference || payment?.id || null,
+            paymentDescription:
+                payment?.description || getSelectedPlan(plan)?.title || null,
+            providerCustomerId: customer?.id || null,
+            providerCardId: creditCardToken || subscription?.id || null,
+            providerPaymentMethodToken: creditCardToken || null,
+            paymentMethodId: 'credit_card',
+            issuerId: cardBrand,
+            cardBrand,
+            cardLastFour,
+            firstPaymentProviderPaymentId: payment?.id || null,
+            remoteIp: remoteIp || null,
+            creditCardHolderInfo: creditCardHolderInfo || null,
+            providerSubscriptionId: subscription?.id || null,
+            paymentRawPayload: {
+                payment: {
+                    id: payment?.id || null,
+                    status: normalizedStatus,
+                    value: payment?.value ?? null,
+                    description: payment?.description || null,
+                    externalReference:
+                        payment?.externalReference || payment?.invoiceNumber || null
+                },
+                customer: {
+                    id: customer?.id || null
+                },
+                subscription: {
+                    id: subscription?.id || null
+                },
+                creditCardToken: creditCardToken || null,
+                remoteIp: remoteIp || null,
+                creditCardHolderInfo: creditCardHolderInfo || null
+            }
+        }
+    };
+}
+
 async function createCardPayment(req, reqBody) {
     const {
         plan,
@@ -567,6 +629,22 @@ module.exports = async function handler(req, res) {
             payment?.creditCard?.creditCardBrand ||
             payment?.creditCardBrand ||
             inferCardBrand(req.body.cardNumber);
+        const recoveryPayload = approved
+            ? buildRecoveryPayload({
+                  plan,
+                  payment,
+                  customer,
+                  subscription,
+                  creditCardToken,
+                  remoteIp,
+                  creditCardHolderInfo,
+                  cardBrand,
+                  cardLastFour
+              })
+            : null;
+        const recoveryToken = approved
+            ? createRecoveryToken(recoveryPayload)
+            : null;
 
         return res.status(200).json({
             version: 'asaas-first-charge-plus-subscription-v1',
@@ -575,6 +653,7 @@ module.exports = async function handler(req, res) {
             requiresAction: !approved,
             requiresManualReview: manualReview,
             paymentId: payment?.id || null,
+            recoveryToken,
             status: payment?.status || null,
             statusDetail: payment?.status || null,
             message: buildStatusMessage(payment?.status),

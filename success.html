@@ -305,6 +305,10 @@ function readLatestPendingSignup() {
 function resolvePendingContext() {
     const urlParams = new URLSearchParams(window.location.search);
     const latestPendingSignup = readLatestPendingSignup();
+    const recoveryTokenFromUrl =
+        urlParams.get('recoveryToken') ||
+        urlParams.get('recovery_token') ||
+        null;
     const paymentIdFromUrl =
         urlParams.get('paymentId') ||
         urlParams.get('paymentid') ||
@@ -316,16 +320,26 @@ function resolvePendingContext() {
     const pendingSignup = paymentId
         ? readPendingSignup(paymentId) || latestPendingSignup
         : latestPendingSignup;
+    const recoveryToken =
+        recoveryTokenFromUrl || pendingSignup?.recoveryToken || null;
 
     if (!paymentIdFromUrl && paymentId) {
-        const nextUrl = `/success.html?plan=${encodeURIComponent(plan)}&paymentId=${encodeURIComponent(paymentId)}`;
-        window.history.replaceState({}, '', nextUrl);
+        const nextUrl = new URL('/success.html', window.location.origin);
+        nextUrl.searchParams.set('plan', plan);
+        nextUrl.searchParams.set('paymentId', paymentId);
+
+        if (recoveryToken) {
+            nextUrl.searchParams.set('recoveryToken', recoveryToken);
+        }
+
+        window.history.replaceState({}, '', nextUrl.toString());
     }
 
     return {
         paymentId,
         plan,
-        pendingSignup
+        pendingSignup,
+        recoveryToken
     };
 }
 
@@ -437,6 +451,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     e.preventDefault();
     const plan = pendingContext.plan;
     const paymentId = pendingContext.paymentId;
+    const recoveryToken = pendingContext.recoveryToken;
 
     const name = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
@@ -492,6 +507,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
                 : undefined,
         paymentProvider: plan !== 'free' ? 'asaas' : undefined,
         paymentId: plan !== 'free' ? paymentId : undefined,
+        recoveryToken: plan !== 'free' ? recoveryToken : undefined,
         ...(recurringData || {})
     };
 

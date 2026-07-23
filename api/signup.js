@@ -1,3 +1,5 @@
+const { decodeRecoveryToken } = require('./recovery-token');
+
 function pickFirstDefined(...values) {
     for (const value of values) {
         if (value !== undefined && value !== null && value !== '') {
@@ -36,94 +38,149 @@ function getRawPayload(reqBody) {
     return {};
 }
 
-function buildRecurringFields(reqBody) {
+function getRecoveryContext(reqBody) {
+    const recoveryToken = reqBody.recoveryToken || reqBody.signupRecoveryToken || null;
+
+    if (!recoveryToken) {
+        return null;
+    }
+
+    try {
+        return decodeRecoveryToken(recoveryToken);
+    } catch (error) {
+        return null;
+    }
+}
+
+function buildRecurringFields(reqBody, recoveryContext) {
+    const recoveredRecurringData = recoveryContext?.recurringData || {};
     const explicitRawPayload = getRawPayload(reqBody);
+    const recoveryRawPayload =
+        recoveredRecurringData.paymentRawPayload &&
+        typeof recoveredRecurringData.paymentRawPayload === 'object'
+            ? recoveredRecurringData.paymentRawPayload
+            : {};
     const providerPaymentMethodToken = pickFirstDefined(
+        recoveredRecurringData.providerPaymentMethodToken,
         reqBody.providerPaymentMethodToken,
         reqBody.paymentMethodToken,
         reqBody.creditCardToken,
-        explicitRawPayload?.creditCardToken
+        explicitRawPayload?.creditCardToken,
+        recoveryRawPayload?.creditCardToken
     );
     const remoteIp = pickFirstDefined(
+        recoveredRecurringData.remoteIp,
         reqBody.remoteIp,
         explicitRawPayload?.remoteIp,
-        explicitRawPayload?.payment?.remoteIp
+        explicitRawPayload?.payment?.remoteIp,
+        recoveryRawPayload?.remoteIp,
+        recoveryRawPayload?.payment?.remoteIp
     );
     const creditCardHolderInfo = pickFirstDefined(
+        recoveredRecurringData.creditCardHolderInfo,
         reqBody.creditCardHolderInfo,
         explicitRawPayload?.creditCardHolderInfo,
-        explicitRawPayload?.payment?.creditCardHolderInfo
+        explicitRawPayload?.payment?.creditCardHolderInfo,
+        recoveryRawPayload?.creditCardHolderInfo,
+        recoveryRawPayload?.payment?.creditCardHolderInfo
     );
     const paymentRawPayload = {
+        ...recoveryRawPayload,
         ...explicitRawPayload,
         creditCardToken: pickFirstDefined(
             explicitRawPayload?.creditCardToken,
+            recoveryRawPayload?.creditCardToken,
             providerPaymentMethodToken
         ),
         remoteIp: pickFirstDefined(
             explicitRawPayload?.remoteIp,
+            recoveryRawPayload?.remoteIp,
             remoteIp
         ),
         creditCardHolderInfo: pickFirstDefined(
             explicitRawPayload?.creditCardHolderInfo,
+            recoveryRawPayload?.creditCardHolderInfo,
             creditCardHolderInfo
         )
     };
 
     return {
         paymentAmount: pickFirstDefined(
+            recoveredRecurringData.paymentAmount,
             reqBody.paymentAmount,
-            explicitRawPayload?.payment?.value
+            explicitRawPayload?.payment?.value,
+            recoveryRawPayload?.payment?.value
         ),
         paymentCurrency: pickFirstDefined(
+            recoveredRecurringData.paymentCurrency,
             reqBody.paymentCurrency,
             'BRL'
         ),
         providerReference: pickFirstDefined(
+            recoveredRecurringData.providerReference,
             reqBody.providerReference,
             explicitRawPayload?.payment?.invoiceNumber,
             explicitRawPayload?.payment?.externalReference,
-            explicitRawPayload?.payment?.id
+            explicitRawPayload?.payment?.id,
+            recoveryRawPayload?.payment?.externalReference,
+            recoveryRawPayload?.payment?.id
         ),
         paymentDescription: pickFirstDefined(
+            recoveredRecurringData.paymentDescription,
             reqBody.paymentDescription,
-            explicitRawPayload?.payment?.description
+            explicitRawPayload?.payment?.description,
+            recoveryRawPayload?.payment?.description
         ),
         providerCustomerId: pickFirstDefined(
+            recoveredRecurringData.providerCustomerId,
             reqBody.providerCustomerId,
-            explicitRawPayload?.customer?.id
+            explicitRawPayload?.customer?.id,
+            recoveryRawPayload?.customer?.id
         ),
         providerCardId: pickFirstDefined(
+            recoveredRecurringData.providerCardId,
             reqBody.providerCardId,
-            explicitRawPayload?.creditCardToken
+            explicitRawPayload?.creditCardToken,
+            recoveryRawPayload?.creditCardToken
         ),
         providerPaymentMethodToken,
         paymentMethodId: pickFirstDefined(
+            recoveredRecurringData.paymentMethodId,
             reqBody.paymentMethodId,
             'credit_card'
         ),
         issuerId: pickFirstDefined(
+            recoveredRecurringData.issuerId,
             reqBody.issuerId,
-            reqBody.cardBrand
+            reqBody.cardBrand,
+            recoveredRecurringData.cardBrand
         ),
         cardBrand: pickFirstDefined(
+            recoveredRecurringData.cardBrand,
             reqBody.cardBrand,
             explicitRawPayload?.payment?.creditCard?.creditCardBrand,
-            explicitRawPayload?.payment?.creditCardBrand
+            explicitRawPayload?.payment?.creditCardBrand,
+            recoveryRawPayload?.payment?.creditCard?.creditCardBrand,
+            recoveryRawPayload?.payment?.creditCardBrand
         ),
         cardLastFour: pickFirstDefined(
+            recoveredRecurringData.cardLastFour,
             reqBody.cardLastFour
         ),
         firstPaymentProviderPaymentId: pickFirstDefined(
+            recoveredRecurringData.firstPaymentProviderPaymentId,
             reqBody.firstPaymentProviderPaymentId,
-            explicitRawPayload?.payment?.id
+            explicitRawPayload?.payment?.id,
+            recoveryRawPayload?.payment?.id
         ),
         remoteIp,
         creditCardHolderInfo,
         providerSubscriptionId: pickFirstDefined(
+            recoveredRecurringData.providerSubscriptionId,
             reqBody.providerSubscriptionId,
             reqBody.subscriptionId,
-            explicitRawPayload?.subscription?.id
+            explicitRawPayload?.subscription?.id,
+            recoveryRawPayload?.subscription?.id
         ),
         paymentRawPayload
     };
@@ -178,11 +235,17 @@ module.exports = async function handler(req, res) {
             paymentProvider,
             paymentId
         } = req.body || {};
+        const recoveryContext = getRecoveryContext(req.body || {});
 
         const finalName = fullName || name;
-        const finalPlan = plan || 'free';
+        const finalPlan = plan || recoveryContext?.plan || 'free';
         const finalBrandName = brandName || finalName;
         const isPaidPlan = finalPlan !== 'free';
+        const finalPaymentId = pickFirstDefined(paymentId, recoveryContext?.paymentId);
+        const finalPaymentProvider = isPaidPlan ? 'asaas' : paymentProvider;
+        const finalPaymentStatus = isPaidPlan
+            ? pickFirstDefined(paymentStatus, recoveryContext?.recurringData?.paymentStatus, 'RECEIVED')
+            : paymentStatus;
 
         const missingBaseFields = validateRequiredFields({
             finalName,
@@ -199,7 +262,7 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        if (isPaidPlan && !paymentId) {
+        if (isPaidPlan && !finalPaymentId) {
             return res.status(400).json({
                 success: false,
                 message: 'PaymentId não chegou na API.',
@@ -207,16 +270,16 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        if (isPaidPlan && paymentProvider !== 'asaas') {
+        if (isPaidPlan && finalPaymentProvider !== 'asaas') {
             return res.status(400).json({
                 success: false,
                 message: 'PaymentProvider inválido para plano pago.',
-                recebido: paymentProvider
+                recebido: finalPaymentProvider
             });
         }
 
         const recurringFields = isPaidPlan
-            ? buildRecurringFields(req.body)
+            ? buildRecurringFields(req.body, recoveryContext)
             : {};
 
         if (isPaidPlan) {
@@ -242,9 +305,9 @@ module.exports = async function handler(req, res) {
             logoUrl: logoUrl || '',
             plan: finalPlan,
             billingCycle: isPaidPlan ? (billingCycle || 'monthly') : undefined,
-            paymentStatus: isPaidPlan ? paymentStatus : undefined,
-            paymentProvider: isPaidPlan ? paymentProvider : undefined,
-            paymentId: isPaidPlan ? paymentId : undefined,
+            paymentStatus: isPaidPlan ? finalPaymentStatus : undefined,
+            paymentProvider: isPaidPlan ? finalPaymentProvider : undefined,
+            paymentId: isPaidPlan ? finalPaymentId : undefined,
             ...recurringFields
         };
 

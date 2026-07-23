@@ -1229,7 +1229,7 @@ function storeRecurringData(paymentId, recurringData) {
     safeStorageSet(localStorage, buildRecurringStorageKey(paymentId), recurringData);
 }
 
-function storePendingSignup(paymentId, plan, recurringData, contact) {
+function storePendingSignup(paymentId, plan, recurringData, contact, recoveryToken) {
     if (!paymentId || !plan || !recurringData) return;
 
     const existingRecord = readPendingSignup(paymentId);
@@ -1239,6 +1239,7 @@ function storePendingSignup(paymentId, plan, recurringData, contact) {
         paymentId,
         plan,
         recurringData,
+        recoveryToken: recoveryToken || existingRecord?.recoveryToken || null,
         contact: contact || existingRecord?.contact || null,
         status: 'payment_approved_pending_signup',
         createdAt: existingRecord?.createdAt || now,
@@ -1293,6 +1294,10 @@ function renderPendingSignupNotice() {
         'border:1px solid rgba(156,255,0,.28)'
     ].join(';');
 
+    const recoveryTokenQuery = pendingSignup.recoveryToken
+        ? `&recoveryToken=${encodeURIComponent(pendingSignup.recoveryToken)}`
+        : '';
+
     notice.innerHTML = `
         <div style="font-weight:800;margin-bottom:6px;">Pagamento aprovado encontrado</div>
         <div style="font-size:.95rem;line-height:1.5;color:#526072;margin-bottom:12px;">
@@ -1300,7 +1305,7 @@ function renderPendingSignupNotice() {
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <a
-                href="/success.html?plan=${encodeURIComponent(pendingSignup.plan)}&paymentId=${encodeURIComponent(pendingSignup.paymentId)}"
+                href="/success.html?plan=${encodeURIComponent(pendingSignup.plan)}&paymentId=${encodeURIComponent(pendingSignup.paymentId)}${recoveryTokenQuery}"
                 style="display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,#1ee4b7,#9cff00);color:#05070d;font-weight:700;text-decoration:none;"
             >
                 Retomar cadastro
@@ -1438,7 +1443,8 @@ async function submitCardPayment() {
                 data.paymentId,
                 selectedPlan,
                 data.recurringData,
-                preferredPayer
+                preferredPayer,
+                data.recoveryToken
             );
         }
 
@@ -1450,7 +1456,15 @@ async function submitCardPayment() {
             `;
 
             setTimeout(() => {
-                window.location.href = `/success.html?plan=${selectedPlan}&paymentId=${data.paymentId}`;
+                const redirectUrl = new URL('/success.html', window.location.origin);
+                redirectUrl.searchParams.set('plan', selectedPlan);
+                redirectUrl.searchParams.set('paymentId', data.paymentId);
+
+                if (data.recoveryToken) {
+                    redirectUrl.searchParams.set('recoveryToken', data.recoveryToken);
+                }
+
+                window.location.href = redirectUrl.toString();
             }, 900);
 
             return;
