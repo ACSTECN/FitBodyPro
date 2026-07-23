@@ -744,50 +744,53 @@
             
             <div class="plans-grid">
                 <div class="plan-card">
-                    <h3 class="plan-name">Fit Bory Free</h3>
+                    <h3 class="plan-name">FitBody Free</h3>
                     <div class="plan-price">
                         <span class="currency">R$</span>
                         <span class="value">0</span>
                         <span class="period">/mês</span>
                     </div>
-                    <p class="plan-description">Todos os acessos, porém somente 1 aluno</p>
+                    <p class="plan-description">Ideal para conhecer a plataforma e começar com 1 aluno.</p>
                     <ul class="plan-features">
                         <li>✅ Acesso completo ao app</li>
                         <li>✅ 1 aluno cadastrado</li>
+                        <li>✅ Gestão simples para começar</li>
                     </ul>
                     <button class="plan-btn free" onclick="openModal()">Adquirir</button>
                 </div>
 
                 <div class="plan-card featured">
                     <div class="plan-badge">MAIS POPULAR</div>
-                    <h3 class="plan-name">Fitbory Starter</h3>
+                    <h3 class="plan-name">FitBody Starter</h3>
                     <div class="plan-price">
                         <span class="currency">R$</span>
-                        <span class="value">5,00</span>
+                        <span class="value">14,90</span>
                         <span class="period">/mês</span>
                     </div>
-                    <p class="plan-description">Todos os acessos até 10 alunos</p>
+                    <p class="plan-description">Perfeito para personal que quer crescer com até 5 alunos ativos.</p>
                     <ul class="plan-features">
                         <li>✅ Acesso completo ao app</li>
-                        <li>✅ Até 10 alunos cadastrados</li>
-                        <li>✅ Relatórios avançados</li>
+                        <li>✅ Até 5 alunos cadastrados</li>
+                        <li>✅ Treinos e acompanhamento organizados</li>
+                        <li>✅ Experiência profissional para seus alunos</li>
                     </ul>
                     <button class="plan-btn starter" onclick="openPaymentModal('starter')">Adquirir</button>
                 </div>
 
                 <div class="plan-card">
-                    <h3 class="plan-name">Fit Bory Premium</h3>
+                    <h3 class="plan-name">FitBody Pro</h3>
                     <div class="plan-price">
                         <span class="currency">R$</span>
-                        <span class="value">5,00</span>
+                        <span class="value">39,90</span>
                         <span class="period">/mês</span>
                     </div>
-                    <p class="plan-description">Tudo ilimitado</p>
+                    <p class="plan-description">Plano completo para escalar seu atendimento com liberdade total.</p>
                     <ul class="plan-features">
                         <li>✅ Acesso completo ao app</li>
                         <li>✅ Alunos ilimitados</li>
                         <li>✅ Relatórios avançados</li>
                         <li>✅ Personalização completa</li>
+                        <li>✅ Estrutura pronta para crescer</li>
                     </ul>
                     <button class="plan-btn premium" onclick="openPaymentModal('premium')">Adquirir</button>
                 </div>
@@ -835,7 +838,7 @@
                 <div class="payment-modal-copy">
                     <span class="payment-kicker">Pagamento Seguro</span>
                     <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
-                    <p class="payment-modal-subtitle">Use o cartao direto no Asaas para concluir o primeiro pagamento agora e deixar a renovacao automatica pronta para o proximo ciclo.</p>
+                    <p class="payment-modal-subtitle">Finalize sua assinatura com rapidez e segurança para liberar seu acesso imediatamente.</p>
                 </div>
             </div>
             <div class="price-display" id="priceDisplay"></div>
@@ -846,11 +849,11 @@
                         <span class="payment-option-icon">CARD</span>
                         <span class="payment-option-copy">
                             <span class="payment-option-title">Cartão</span>
-                            <span class="payment-option-subtitle">Pagamento recorrente automático</span>
+                            <span class="payment-option-subtitle">Assinatura mensal no cartão</span>
                         </span>
                     </div>
                 </div>
-                <p class="payment-helper" id="paymentHelper">Preencha seus dados e os dados do cartao para cobrar o primeiro pagamento no Asaas e criar a assinatura mensal.</p>
+                <p class="payment-helper" id="paymentHelper">Preencha seus dados para confirmar seu plano e liberar o acesso assim que o pagamento for aprovado.</p>
                 <div class="payment-contact-grid">
                     <div class="form-group full-width">
                         <label for="paymentFullName">Nome completo</label>
@@ -877,11 +880,11 @@
                         <input type="text" id="paymentStreetName" placeholder="Rua, avenida, etc.">
                     </div>
                 </div>
-                <p class="payment-contact-note">Esses dados ajudam a processar o pagamento com seguranca e deixam a assinatura mensal vinculada ao cliente certo no Asaas.</p>
+                <p class="payment-contact-note">Usamos essas informações apenas para validar sua compra com segurança e concluir sua assinatura.</p>
             </div>
             <div id="cardPaymentArea" class="card-payment-area show">
                 <div class="card-payment-note">
-                    O primeiro pagamento sera tentado agora no Asaas. Se aprovar, a assinatura mensal ja fica criada para as proximas renovacoes.
+                    Ao confirmar, seu plano sera ativado e voce podera concluir o cadastro logo em seguida.
                 </div>
                 <div class="brick-shell">
                     <div class="payment-contact-grid">
@@ -908,7 +911,7 @@
                     </div>
                 </div>
                 <div class="payment-warning">
-                    Este checkout usa HTTPS e envia os dados direto ao backend para processar a cobranca no Asaas e criar a recorrencia do proximo ciclo.
+                    Ambiente seguro e criptografado para finalizar sua compra.
                 </div>
             </div>
             
@@ -956,8 +959,8 @@ let selectedPaymentMethod = 'card';
 let paymentData = null;
 
 const priceValues = {
-    starter: 5.0,
-    premium: 5.0
+    starter: 14.9,
+    premium: 39.9
 };
 const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
 const PENDING_SIGNUP_STORAGE_PREFIX = 'fitboryPendingSignup:';
@@ -1299,9 +1302,9 @@ function renderPendingSignupNotice() {
         : '';
 
     notice.innerHTML = `
-        <div style="font-weight:800;margin-bottom:6px;">Pagamento aprovado encontrado</div>
+        <div style="font-weight:800;margin-bottom:6px;">Cadastro pendente encontrado</div>
         <div style="font-size:.95rem;line-height:1.5;color:#526072;margin-bottom:12px;">
-            Encontramos um cadastro pendente neste navegador. Se o redirecionamento falhou, voce pode retomar sem pagar novamente.
+            Encontramos uma compra aprovada neste navegador. Continue do ponto em que parou sem precisar pagar novamente.
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <a
@@ -1422,7 +1425,7 @@ async function submitCardPayment() {
         if (response.ok && data.status === 'AWAITING_RISK_ANALYSIS') {
             messageArea.innerHTML = `
                 <div class="message warning">
-                    ${data.message || 'O pagamento ficou em analise de risco no Asaas. Aguarde a validacao ou tente outro cartao.'}
+                    ${data.message || 'Seu pagamento esta em analise. Aguarde alguns instantes ou tente outro cartao.'}
                 </div>
             `;
             return;
@@ -1431,7 +1434,7 @@ async function submitCardPayment() {
         if (!response.ok || !data.success) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    ${data.message || data.error?.message || data.statusDetail || 'Nao foi possivel processar o cartao.'}
+                    ${data.message || 'Nao foi possivel concluir sua compra agora. Tente novamente.'}
                 </div>
             `;
             return;
@@ -1502,15 +1505,15 @@ function openPaymentModal(plan) {
     paymentData = null;
 
     const titles = {
-        starter: 'Fitbory Starter',
-        premium: 'Fit Bory Premium'
+        starter: 'FitBody Starter',
+        premium: 'FitBody Pro'
     };
 
     document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
     document.getElementById('priceDisplay').textContent = getPlanPriceLabel(plan);
     document.getElementById('messagePaymentArea').innerHTML = '';
     document.getElementById('paymentActionText').textContent =
-        'Preencha os dados do cartão para cobrar agora e ativar sua assinatura mensal.';
+        'Preencha os dados do cartao para concluir sua assinatura com seguranca.';
     syncPaymentContactFields();
 
     document.getElementById('paymentModal').classList.add('show');
@@ -1541,7 +1544,7 @@ function selectPayment(method) {
 
     document.getElementById('messagePaymentArea').innerHTML = '';
     document.getElementById('paymentActionText').textContent =
-        'Preencha os dados do cartão para concluir no Asaas.';
+        'Preencha os dados do cartao para concluir sua assinatura.';
 }
 
 document.getElementById('paymentZipCode')?.addEventListener('input', (event) => {

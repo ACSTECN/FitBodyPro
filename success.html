@@ -172,8 +172,8 @@
     <div class="success-container">
         <div class="success-content">
             <div class="success-icon">🎉</div>
-            <h1 class="success-title">Pagamento Aprovado!</h1>
-            <p class="success-desc">Agora crie sua conta para começar a usar o Fitborypro!</p>
+            <h1 class="success-title">Pagamento Confirmado!</h1>
+            <p class="success-desc">Finalize seu cadastro para liberar seu acesso ao FitBodyPro.</p>
             <div id="messageArea"></div>
             <form id="signupForm">
                 <div class="form-group">
@@ -416,7 +416,7 @@ async function renderRecoveryHint(context) {
     if (hasCompleteRecurringData(recurringData)) {
         messageArea.innerHTML = `
             <div class="message warning">
-                Encontramos seu pagamento salvo neste navegador. Finalize a senha abaixo para concluir sua conta sem pagar novamente.
+                Encontramos sua compra neste navegador. Finalize sua senha abaixo para concluir o acesso sem pagar novamente.
             </div>
         `;
         return;
@@ -433,8 +433,8 @@ async function renderRecoveryHint(context) {
         if (response.ok && data.approved) {
             messageArea.innerHTML = `
                 <div class="message warning">
-                    O pagamento ${context.paymentId} foi localizado como aprovado, mas os dados locais para concluir o cadastro nao estao completos neste navegador.
-                    Se possivel, volte pela mesma aba em que pagou. Se o problema persistir, nos envie este ID.
+                    Seu pagamento foi localizado, mas nao conseguimos concluir o cadastro automaticamente neste navegador.
+                    Volte para a pagina de planos e toque em Retomar cadastro para continuar.
                 </div>
             `;
         }
@@ -482,8 +482,8 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         if (!hasCompleteRecurringData(recurringData)) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    Pagamento localizado, mas os dados necessarios para concluir a assinatura automatica nao estao completos neste navegador.
-                    Volte para a pagina de planos para retomar o cadastro salvo ou entre em contato com o ID ${paymentId || 'do pagamento'}.
+                    Encontramos sua compra, mas nao foi possivel concluir o cadastro automaticamente.
+                    Volte para a pagina de planos e use a opcao Retomar cadastro para continuar.
                 </div>
             `;
 
@@ -525,7 +525,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         console.log('RETORNO /api/signup:', data);
 
         if (response.ok && data.success) {
-            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Cartão pronto para renovação automática.</div>';
+            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando para seu acesso.</div>';
 
             if (paymentId) {
                 markPendingSignupCompleted(paymentId);

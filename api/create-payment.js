@@ -1,8 +1,8 @@
 const { createRecoveryToken } = require('./recovery-token');
 
 const PLAN_DETAILS = {
-    starter: { title: 'Fitbory Starter', price: 5.0 },
-    premium: { title: 'Fit Bory Premium', price: 5.0 }
+    starter: { title: 'FitBody Starter', price: 14.9 },
+    premium: { title: 'FitBody Pro', price: 39.9 }
 };
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
@@ -337,14 +337,40 @@ function buildStatusMessage(status) {
     const normalizedStatus = String(status || '').toUpperCase();
 
     if (isApprovedAsaasStatus(normalizedStatus)) {
-        return 'Pagamento aprovado no Asaas.';
+        return 'Pagamento aprovado com sucesso.';
     }
 
     if (isManualReviewStatus(normalizedStatus)) {
-        return 'O Asaas colocou essa tentativa em análise de risco. Aguarde a validação ou tente outro cartão.';
+        return 'Seu pagamento está em análise. Se preferir, tente novamente com outro cartão.';
     }
 
-    return `Pagamento retornou com status ${normalizedStatus || 'desconhecido'}.`;
+    return 'Não foi possível concluir o pagamento neste momento. Tente novamente.';
+}
+
+function buildCustomerFacingErrorMessage(error) {
+    const rawMessage = String(error?.message || '');
+
+    if (rawMessage.includes('Dados do cartão incompletos')) {
+        return 'Confira os dados do cartão e tente novamente.';
+    }
+
+    if (rawMessage.includes('Plano inválido')) {
+        return 'Não foi possível identificar o plano selecionado.';
+    }
+
+    if (rawMessage.includes('Não foi possível identificar o IP do comprador')) {
+        return 'Não foi possível validar sua compra agora. Tente novamente.';
+    }
+
+    if (rawMessage.includes('não retornou o token do cartão')) {
+        return 'Não foi possível preparar sua compra agora. Tente novamente em instantes.';
+    }
+
+    if (rawMessage.includes('ja tokenizado') || rawMessage.includes('already tokenized')) {
+        return 'Seu cartão já foi identificado. Tente novamente para concluir a compra.';
+    }
+
+    return 'Não foi possível concluir sua compra agora. Tente novamente em instantes.';
 }
 
 function buildRecoveryPayload({
@@ -693,7 +719,7 @@ module.exports = async function handler(req, res) {
             success: false,
             approved: false,
             recurringReady: false,
-            message: error.message || 'Erro interno do servidor.',
+            message: buildCustomerFacingErrorMessage(error),
             error: error.data || error.message
         });
     }
