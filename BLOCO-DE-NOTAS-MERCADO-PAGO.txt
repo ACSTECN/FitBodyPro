@@ -1,5 +1,5 @@
 MERCADO PAGO - BLOCO DE NOTAS
-Projeto: Fitborypro / FitBodyPro
+Projeto: FitBodyPro
 
 1. ARQUIVOS RELACIONADOS
 - c:\Users\lelee\OneDrive\Área de Trabalho\sitealex\mercado-pago-integration.js
@@ -36,7 +36,7 @@ Observacao:
 
 7. PLANOS EM USO
 - starter
-  titulo: Fitbory Starter
+  titulo: FitBody Starter
   valor: 14.90
 
 - premium
@@ -61,8 +61,8 @@ Observacao:
 {
   "items": [
     {
-      "title": "Fitbory Starter",
-      "description": "Fitbory Starter",
+      "title": "FitBody Starter",
+      "description": "FitBody Starter",
       "quantity": 1,
       "currency_id": "BRL",
       "unit_price": 14.90
@@ -82,12 +82,12 @@ Observacao:
 12. PAYLOAD DE EXEMPLO - PIX
 {
   "transaction_amount": 14.90,
-  "description": "Fitbory Starter",
+  "description": "FitBody Starter",
   "payment_method_id": "pix",
   "payer": {
     "email": "cliente@email.com",
     "first_name": "Cliente",
-    "last_name": "Fitbory"
+    "last_name": "FitBody"
   },
   "metadata": {
     "plan": "starter"

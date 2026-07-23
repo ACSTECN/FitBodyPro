@@ -1,106 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planos - Fitborypro</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planos - FitBodyPro</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    padding: 20px;
-    }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        padding: 20px;
+      }
 
-    .modal.show {
+      .modal.show {
         display: flex;
-    }
+      }
 
-    /* ===========================
+      /* ===========================
     VISUAL GERAL
     =========================== */
 
-    body {
+      body {
         background: #05070d;
         color: #fff;
-    }
+      }
 
-    .header {
+      .header {
         background: #05070d;
-    }
-    .hero-placeholder{
-        width:100%;
-        padding:0;
-        margin:0;
-        background:#05070d;
-    }
+      }
+      .hero-placeholder {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: #05070d;
+      }
 
-    .hero-placeholder .container{
-        max-width:100%;
-        width:100%;
-        padding:0;
-    }
+      .hero-placeholder .container {
+        max-width: 100%;
+        width: 100%;
+        padding: 0;
+      }
 
-    .hero-box{
-        width:100%;
-        height:auto;
-        border:none;
-        border-radius:0;
-        background:none;
-        box-shadow:none;
-        overflow:hidden;
-    }
+      .hero-box {
+        width: 100%;
+        height: auto;
+        border: none;
+        border-radius: 0;
+        background: none;
+        box-shadow: none;
+        overflow: hidden;
+      }
 
-    /* ===========================
+      /* ===========================
     PLANOS
     =========================== */
 
-    .plans-section {
+      .plans-section {
         background: #05070d;
         padding: 100px 0;
-    }
+      }
 
-    .section-title {
+      .section-title {
         text-align: center;
         color: #fff;
         font-size: 56px;
         font-weight: 800;
         margin-bottom: 60px;
         line-height: 1.1;
-    }
+      }
 
-    .section-title span {
+      .section-title span {
         color: #9cff00;
-    }
+      }
 
-    .plans-grid {
+      .plans-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 35px;
         align-items: stretch;
-    }
+      }
 
-    .plan-card {
-        background: linear-gradient(180deg,#0d111c 0%,#080b12 100%);
-        border: 1px solid rgba(156,255,0,.15);
+      .plan-card {
+        background: linear-gradient(180deg, #0d111c 0%, #080b12 100%);
+        border: 1px solid rgba(156, 255, 0, 0.15);
         border-radius: 24px;
         padding: 35px;
         color: #fff;
-        transition: .3s;
+        transition: 0.3s;
         position: relative;
         overflow: hidden;
-    }
+      }
 
-    .plan-card::before {
+      .plan-card::before {
         content: "";
         position: absolute;
         top: 0;
@@ -108,107 +111,102 @@
         right: 0;
         height: 1px;
         background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(156,255,0,.7),
-            transparent
+          90deg,
+          transparent,
+          rgba(156, 255, 0, 0.7),
+          transparent
         );
-    }
+      }
 
-    .plan-card:hover {
+      .plan-card:hover {
         transform: translateY(-8px);
         border-color: #9cff00;
-        box-shadow: 0 0 40px rgba(156,255,0,.15);
-    }
+        box-shadow: 0 0 40px rgba(156, 255, 0, 0.15);
+      }
 
-
-    .plan-card.featured {
+      .plan-card.featured {
         border: 2px solid #9cff00;
-        box-shadow: 0 0 50px rgba(156,255,0,.25);
+        box-shadow: 0 0 50px rgba(156, 255, 0, 0.25);
         transform: scale(1.03);
         padding: 70px 35px 35px 35px !important;
-    }
+      }
 
-    .plan-badge {
-    position: absolute;
-    top: 0;
-    left: 0;
+      .plan-badge {
+        position: absolute;
+        top: 0;
+        left: 0;
 
-    width: 100%;
-    height: 42px;
+        width: 100%;
+        height: 42px;
 
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
 
-    padding: 0 !important;
+        padding: 0 !important;
 
-    background: #9cff00;
-    color: #000;
+        background: #9cff00;
+        color: #000;
 
-    font-size: 14px;
-    font-weight: 800;
-    line-height: 1;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
 
-    border-radius: 20px 20px 0 0;
-    z-index: 10;
-    }
-    .plan-name {
+        border-radius: 20px 20px 0 0;
+        z-index: 10;
+      }
+      .plan-name {
         color: #fff;
         font-size: 30px;
         font-weight: 700;
         margin-top: 15px;
         margin-bottom: 15px;
-    }
+      }
 
-    .plan-price {
+      .plan-price {
         margin: 25px 0;
-    }
+      }
 
-    .plan-price .currency {
+      .plan-price .currency {
         color: #9cff00;
         font-size: 26px;
         font-weight: 700;
-    }
+      }
 
-    .plan-price .value {
+      .plan-price .value {
         color: #9cff00;
         font-size: 60px;
         font-weight: 800;
         line-height: 1;
-    }
+      }
 
-    .plan-price .period {
+      .plan-price .period {
         color: #cfcfcf;
         font-size: 18px;
-    }
+      }
 
-    .plan-description {
+      .plan-description {
         color: #d4d4d4;
         margin-bottom: 25px;
         line-height: 1.6;
-    }
+      }
 
-    .plan-features {
+      .plan-features {
         list-style: none;
         padding: 0;
         margin: 0;
-    }
+      }
 
-    .plan-features li {
+      .plan-features li {
         color: #f0f0f0;
         margin-bottom: 14px;
         font-size: 15px;
-    }
+      }
 
-    .plan-btn {
+      .plan-btn {
         width: 100%;
         margin-top: 30px;
-        background: linear-gradient(
-            90deg,
-            #21e5ba 0%,
-            #9cff00 100%
-        );
+        background: linear-gradient(90deg, #21e5ba 0%, #9cff00 100%);
         color: #000;
         border: none;
         border-radius: 14px;
@@ -216,71 +214,71 @@
         font-size: 16px;
         font-weight: 800;
         cursor: pointer;
-        transition: .3s;
-    }
+        transition: 0.3s;
+      }
 
-    .plan-btn:hover {
+      .plan-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 0 25px rgba(156,255,0,.35);
-    }
+        box-shadow: 0 0 25px rgba(156, 255, 0, 0.35);
+      }
 
-    .plan-btn.free {
+      .plan-btn.free {
         background: transparent;
         border: 1px solid #9cff00;
         color: #9cff00;
-    }
+      }
 
-    .plan-btn.free:hover {
+      .plan-btn.free:hover {
         background: #9cff00;
         color: #000;
-    }
+      }
 
-    /* ===========================
+      /* ===========================
     MODAIS
     =========================== */
 
-    .modal-content {
+      .modal-content {
         background: white;
         border-radius: 20px;
         padding: 40px;
         max-width: 500px;
         width: 100%;
-    }
+      }
 
-    .modal-content h2 {
+      .modal-content h2 {
         text-align: center;
         margin-bottom: 25px;
         color: #1a1a2e;
-    }
+      }
 
-    .form-group {
+      .form-group {
         margin-bottom: 20px;
-    }
+      }
 
-    .form-group label {
+      .form-group label {
         display: block;
         margin-bottom: 8px;
         color: #555;
         font-weight: 500;
-    }
+      }
 
-    .form-group input {
+      .form-group input {
         width: 100%;
         padding: 14px 18px;
         border: 2px solid #e0e0e0;
         border-radius: 10px;
         font-size: 1rem;
-        font-family: 'Poppins', sans-serif;
-    }
+        font-family: "Poppins", sans-serif;
+      }
 
-    .form-group input:focus {
+      .form-group input:focus {
         outline: none;
         border-color: #00cc6a;
-    }
+      }
 
-    .btn-submit {
+      .btn-submit {
         width: 100%;
-        background: linear-gradient(135deg,#00ff88 0%,#00cc6a 100%);
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
         color: #1a1a2e;
         border: none;
         padding: 14px 30px;
@@ -288,84 +286,86 @@
         font-weight: 700;
         font-size: 1.1rem;
         cursor: pointer;
-        transition: transform .3s, box-shadow .3s;
-        font-family: 'Poppins', sans-serif;
-    }
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+        font-family: "Poppins", sans-serif;
+      }
 
-    .btn-submit:hover {
+      .btn-submit:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(0,204,106,.4);
-    }
+        box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
+      }
 
-    .btn-submit:disabled {
-        opacity: .6;
+      .btn-submit:disabled {
+        opacity: 0.6;
         cursor: not-allowed;
-    }
+      }
 
-    .btn-close {
+      .btn-close {
         background: #e0e0e0;
         color: #555;
         border: none;
         padding: 10px 20px;
         border-radius: 8px;
         cursor: pointer;
-        font-family: 'Poppins', sans-serif;
+        font-family: "Poppins", sans-serif;
         margin-bottom: 15px;
         flex-shrink: 0;
-    }
+      }
 
-    /* ===========================
+      /* ===========================
     MENSAGENS
     =========================== */
 
-    .message {
+      .message {
         text-align: center;
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 20px;
-    }
+      }
 
-    .message.success {
+      .message.success {
         background: #d4edda;
         color: #155724;
-    }
+      }
 
-    .message.error {
+      .message.error {
         background: #f8d7da;
         color: #721c24;
-    }
+      }
 
-    .message.warning {
+      .message.warning {
         background: #fff3cd;
         color: #8a5a00;
-    }
+      }
 
-    /* ===========================
+      /* ===========================
     PAGAMENTOS
     =========================== */
 
-    .payment-options {
+      .payment-options {
         display: flex;
         gap: 10px;
         margin-bottom: 20px;
-    }
+      }
 
-    .payment-option {
+      .payment-option {
         flex: 1;
         padding: 15px;
         border: 2px solid #e0e0e0;
         border-radius: 10px;
         cursor: pointer;
         text-align: center;
-        transition: all .3s;
-    }
+        transition: all 0.3s;
+      }
 
-    .payment-option.active {
+      .payment-option.active {
         border-color: #00cc6a;
-        background: rgba(0,204,106,.05);
-    }
+        background: rgba(0, 204, 106, 0.05);
+      }
 
-    .payment-modal-content {
+      .payment-modal-content {
         max-width: 640px;
         max-height: min(90vh, 860px);
         overflow-y: auto;
@@ -375,46 +375,50 @@
         border-radius: 28px;
         padding: 30px;
         background:
-            radial-gradient(circle at top right, rgba(156,255,0,.14), transparent 35%),
-            linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
-        box-shadow: 0 30px 80px rgba(0,0,0,.28);
-    }
+          radial-gradient(
+            circle at top right,
+            rgba(156, 255, 0, 0.14),
+            transparent 35%
+          ),
+          linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+      }
 
-    .payment-modal-head {
+      .payment-modal-head {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
         margin: 0 0 16px;
         padding: 0;
-    }
+      }
 
-    .payment-modal-copy {
+      .payment-modal-copy {
         flex: 1;
-    }
+      }
 
-    .payment-kicker {
+      .payment-kicker {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(0,204,106,.08);
+        background: rgba(0, 204, 106, 0.08);
         color: #049b52;
-        font-size: .82rem;
+        font-size: 0.82rem;
         font-weight: 700;
-        letter-spacing: .02em;
+        letter-spacing: 0.02em;
         text-transform: uppercase;
-    }
+      }
 
-    .payment-modal-subtitle {
+      .payment-modal-subtitle {
         color: #526072;
         text-align: left;
         margin: 8px 0 0;
         line-height: 1.65;
-    }
+      }
 
-    .payment-close-floating {
+      .payment-close-floating {
         position: sticky;
         top: 12px;
         z-index: 30;
@@ -424,92 +428,92 @@
         align-items: center;
         justify-content: center;
         min-width: 92px;
-        box-shadow: 0 10px 24px rgba(15,23,42,.12);
-    }
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+      }
 
-    .payment-panel {
+      .payment-panel {
         margin-top: 24px;
         padding: 18px;
         border-radius: 22px;
         border: 1px solid #e5ebf4;
-        background: rgba(255,255,255,.85);
-    }
+        background: rgba(255, 255, 255, 0.85);
+      }
 
-    .payment-helper {
+      .payment-helper {
         text-align: center;
         color: #526072;
         margin: 0 0 18px;
         line-height: 1.6;
-    }
+      }
 
-    .payment-contact-grid {
+      .payment-contact-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px 16px;
         margin-top: 14px;
-    }
+      }
 
-    .payment-contact-grid .form-group {
+      .payment-contact-grid .form-group {
         margin-bottom: 0;
-    }
+      }
 
-    .payment-contact-grid .form-group.full-width {
+      .payment-contact-grid .form-group.full-width {
         grid-column: 1 / -1;
-    }
+      }
 
-    .payment-contact-note {
+      .payment-contact-note {
         margin-top: 14px;
         color: #526072;
-        font-size: .9rem;
+        font-size: 0.9rem;
         text-align: center;
         line-height: 1.5;
-    }
+      }
 
-    @media (max-width: 640px) {
+      @media (max-width: 640px) {
         .payment-contact-grid {
-            grid-template-columns: 1fr;
+          grid-template-columns: 1fr;
         }
-    }
+      }
 
-    .card-payment-area {
+      .card-payment-area {
         display: none;
         margin-top: 18px;
-    }
+      }
 
-    .card-payment-area.show {
+      .card-payment-area.show {
         display: block;
-    }
+      }
 
-    .card-payment-note {
+      .card-payment-note {
         color: #334155;
-        font-size: .95rem;
+        font-size: 0.95rem;
         margin-bottom: 14px;
         line-height: 1.6;
         text-align: center;
-    }
+      }
 
-    .brick-shell {
+      .brick-shell {
         min-height: 520px;
         padding: 12px;
         border-radius: 18px;
         background: #fff;
         border: 1px solid #dbe4ef;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
         overflow: visible;
-    }
+      }
 
-    .payment-warning {
+      .payment-warning {
         color: #8a5a00;
         background: #fff3cd;
         border: 1px solid #ffe69c;
         border-radius: 10px;
         padding: 12px 14px;
         margin-top: 14px;
-        font-size: .92rem;
+        font-size: 0.92rem;
         line-height: 1.5;
-    }
+      }
 
-    .payment-option {
+      .payment-option {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -520,22 +524,26 @@
         border-radius: 18px;
         cursor: pointer;
         text-align: left;
-        transition: all .25s ease;
+        transition: all 0.25s ease;
         background: #fff;
-    }
+      }
 
-    .payment-option:hover {
+      .payment-option:hover {
         transform: translateY(-2px);
-        box-shadow: 0 14px 28px rgba(15,23,42,.08);
-    }
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+      }
 
-    .payment-option.active {
+      .payment-option.active {
         border-color: #00cc6a;
-        background: linear-gradient(135deg, rgba(0,204,106,.08), rgba(156,255,0,.10));
-        box-shadow: 0 16px 36px rgba(0,204,106,.14);
-    }
+        background: linear-gradient(
+          135deg,
+          rgba(0, 204, 106, 0.08),
+          rgba(156, 255, 0, 0.1)
+        );
+        box-shadow: 0 16px 36px rgba(0, 204, 106, 0.14);
+      }
 
-    .payment-option-icon {
+      .payment-option-icon {
         width: 48px;
         height: 48px;
         border-radius: 14px;
@@ -546,762 +554,968 @@
         background: #f3f7fb;
         color: #0f172a;
         flex-shrink: 0;
-    }
+      }
 
-    .payment-option-copy {
+      .payment-option-copy {
         display: flex;
         flex-direction: column;
         gap: 3px;
-    }
+      }
 
-    .payment-option-title {
+      .payment-option-title {
         font-size: 1rem;
         font-weight: 700;
         color: #142033;
-    }
+      }
 
-    .payment-option-subtitle {
-        font-size: .86rem;
+      .payment-option-subtitle {
+        font-size: 0.86rem;
         color: #64748b;
         line-height: 1.4;
-    }
-    .hero-banner{
-        width:100%;
-        display:block;
-        object-fit:cover;
-    }
-    .price-display {
+      }
+      .hero-banner {
+        width: 100%;
+        display: block;
+        object-fit: cover;
+      }
+      .price-display {
         text-align: center;
         font-size: 2rem;
         font-weight: 700;
         color: #00cc6a;
         margin-bottom: 20px;
-    }
-.login-btn{
-    display:flex;
-    align-items:center;
-    gap:10px;
+      }
+      .login-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
 
-    background:linear-gradient(90deg,#1ee4b7,#9cff00);
-    color:#05070d;
+        background: linear-gradient(90deg, #1ee4b7, #9cff00);
+        color: #05070d;
 
-    padding:12px 24px;
-    border-radius:12px;
+        padding: 12px 24px;
+        border-radius: 12px;
 
-    text-decoration:none;
-    font-weight:700;
+        text-decoration: none;
+        font-weight: 700;
 
-    transition:.3s;
-}
+        transition: 0.3s;
+      }
 
-.login-btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 0 20px rgba(156,255,0,.35);
-}
+      .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(156, 255, 0, 0.35);
+      }
 
-    @media (max-width: 768px) {
+      @media (max-width: 768px) {
         .plans-section {
-            padding: 72px 0;
+          padding: 72px 0;
         }
 
         .section-title {
-            font-size: 40px;
-            margin-bottom: 36px;
+          font-size: 40px;
+          margin-bottom: 36px;
         }
 
         .plans-grid {
-            gap: 22px;
+          gap: 22px;
         }
 
         .plan-card,
         .plan-card.featured {
-            transform: none;
-            padding: 28px 24px;
+          transform: none;
+          padding: 28px 24px;
         }
 
         .plan-card.featured:hover,
         .plan-card:hover {
-            transform: translateY(-4px);
+          transform: translateY(-4px);
         }
 
         .plan-name {
-            font-size: 26px;
+          font-size: 26px;
         }
 
         .plan-price .value {
-            font-size: 48px;
+          font-size: 48px;
         }
 
         .modal {
-            padding: 16px;
-            align-items: flex-start;
-            overflow-y: auto;
+          padding: 16px;
+          align-items: flex-start;
+          overflow-y: auto;
         }
 
         .modal-content {
-            margin: 24px auto;
-            padding: 28px 22px;
+          margin: 24px auto;
+          padding: 28px 22px;
         }
 
         .payment-options {
-            flex-direction: column;
+          flex-direction: column;
         }
 
         .payment-modal-content {
-            padding: 24px 18px;
-            max-height: calc(100vh - 32px);
-            scroll-padding-top: 24px;
+          padding: 24px 18px;
+          max-height: calc(100vh - 32px);
+          scroll-padding-top: 24px;
         }
 
         .payment-modal-head {
-            align-items: stretch;
-            margin: 0 0 14px;
+          align-items: stretch;
+          margin: 0 0 14px;
         }
 
         .payment-close-floating {
-            top: 8px;
+          top: 8px;
         }
-    }
+      }
 
-    @media (max-width: 480px) {
+      @media (max-width: 480px) {
         .section-title {
-            font-size: 32px;
+          font-size: 32px;
         }
 
         .plan-card,
         .plan-card.featured {
-            padding: 24px 20px;
+          padding: 24px 20px;
         }
 
         .plan-badge {
-            font-size: 12px;
+          font-size: 12px;
         }
 
         .plan-price .value {
-            font-size: 42px;
+          font-size: 42px;
         }
 
         .modal-content h2 {
-            font-size: 1.5rem;
+          font-size: 1.5rem;
         }
 
         .price-display {
-            font-size: 1.6rem;
+          font-size: 1.6rem;
         }
 
         .payment-option,
         .btn-submit,
         .form-group input,
         .btn-close {
-            font-size: 0.95rem;
+          font-size: 0.95rem;
         }
 
         .payment-modal-head {
-            flex-direction: column;
+          flex-direction: column;
         }
 
         .payment-close-floating {
-            width: 100%;
-            margin-bottom: 0;
+          width: 100%;
+          margin-bottom: 0;
         }
 
         .brick-shell {
-            min-height: 580px;
-            padding: 8px;
+          min-height: 580px;
+          padding: 8px;
         }
-    }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header class="header">
-        <div class="container">
-            <div class="logo">
-                <a href="index.html"><img src="logo.png" alt="Fitborypro" class="logo-img"></a>
-            </div>
-            <nav class="nav">
-                <a href="sobre.html" class="nav-link">Sobre</a>
-                <a href="planos.html" class="nav-link">Planos</a>
-                <div class="nav-actions">
-                    <a href="https://alunos-lovat.vercel.app/login" class="login-btn secondary">Area Aluno</a>
-                    <a href="https://gerenciaralunos.vercel.app/login" class="login-btn primary">Area Personal</a>
-                </div>
-            </nav>
+      <div class="container">
+        <div class="logo">
+          <a href="index.html"
+            ><img src="logo.png" alt="FitBodyPro" class="logo-img"
+          /></a>
         </div>
+        <nav class="nav">
+          <a href="sobre.html" class="nav-link">Sobre</a>
+          <a href="planos.html" class="nav-link">Planos</a>
+          <div class="nav-actions">
+            <a
+              href="https://alunos-lovat.vercel.app/login"
+              class="login-btn secondary"
+              >Area Aluno</a
+            >
+            <a
+              href="https://gerenciaralunos.vercel.app/login"
+              class="login-btn primary"
+              >Area Personal</a
+            >
+          </div>
+        </nav>
+      </div>
     </header>
-<section class="hero-placeholder">
-    <div class="container">
+    <section class="hero-placeholder">
+      <div class="container">
         <div class="hero-box">
-            <img src="BANNER PLANOS.jpg"
-                 alt="Banner Fitbory Pro"
-                 class="hero-banner">
+          <img
+            src="BANNER PLANOS.jpg"
+            alt="Banner FitBody Pro"
+            class="hero-banner"
+          />
         </div>
-    </div>
-
-</section>
+      </div>
+    </section>
     <section id="planos" class="plans-section">
-        <div class="container">
-            <h2 class="section-title">Escolha o seu plano</h2>
-            
-            <div class="plans-grid">
-                <div class="plan-card">
-                    <h3 class="plan-name">Fitbory Free</h3>
-                    <div class="plan-price">
-                        <span class="currency">R$</span>
-                        <span class="value">0</span>
-                        <span class="period">/mês</span>
-                    </div>
-                    <p class="plan-description">Ideal para conhecer a plataforma e começar com 1 aluno.</p>
-                    <ul class="plan-features">
-                        <li>✅ Acesso completo ao app</li>
-                        <li>✅ 1 aluno cadastrado</li>
-                        <li>✅ Gestão simples para começar</li>
-                    </ul>
-                    <button class="plan-btn free" onclick="openModal()">Adquirir</button>
-                </div>
+      <div class="container">
+        <h2 class="section-title">Escolha o seu plano</h2>
 
-                <div class="plan-card featured">
-                    <div class="plan-badge">MAIS POPULAR</div>
-                    <h3 class="plan-name">Fitbory Starter</h3>
-                    <div class="plan-price">
-                        <span class="currency">R$</span>
-                        <span class="value">14,90</span>
-                        <span class="period">/mês</span>
-                    </div>
-                    <p class="plan-description">Perfeito para personal que quer crescer com até 5 alunos ativos.</p>
-                    <ul class="plan-features">
-                        <li>✅ Acesso completo ao app</li>
-                        <li>✅ Até 5 alunos cadastrados</li>
-                        <li>✅ Treinos e acompanhamento organizados</li>
-                        <li>✅ Experiência profissional para seus alunos</li>
-                    </ul>
-                    <button class="plan-btn starter" onclick="openPaymentModal('starter')">Adquirir</button>
-                </div>
-
-                <div class="plan-card">
-                    <h3 class="plan-name">Fitbory Pro</h3>
-                    <div class="plan-price">
-                        <span class="currency">R$</span>
-                        <span class="value">39,90</span>
-                        <span class="period">/mês</span>
-                    </div>
-                    <p class="plan-description">Plano completo para escalar seu atendimento com liberdade total.</p>
-                    <ul class="plan-features">
-                        <li>✅ Acesso completo ao app</li>
-                        <li>✅ Alunos ilimitados</li>
-                        <li>✅ Relatórios avançados</li>
-                        <li>✅ Personalização completa</li>
-                        <li>✅ Estrutura pronta para crescer</li>
-                    </ul>
-                    <button class="plan-btn premium" onclick="openPaymentModal('premium')">Adquirir</button>
-                </div>
+        <div class="plans-grid">
+          <div class="plan-card">
+            <h3 class="plan-name">FitBody Free</h3>
+            <div class="plan-price">
+              <span class="currency">R$</span>
+              <span class="value">0</span>
+              <span class="period">/mês</span>
             </div>
+            <p class="plan-description">
+              Ideal para conhecer a plataforma e começar com 1 aluno.
+            </p>
+            <ul class="plan-features">
+              <li>✅ Acesso completo ao app</li>
+              <li>✅ 1 aluno cadastrado</li>
+              <li>✅ Gestão simples para começar</li>
+            </ul>
+            <button class="plan-btn free" onclick="openModal()">
+              Adquirir
+            </button>
+          </div>
+
+          <div class="plan-card featured">
+            <div class="plan-badge">MAIS POPULAR</div>
+            <h3 class="plan-name">FitBody Starter</h3>
+            <div class="plan-price">
+              <span class="currency">R$</span>
+              <span class="value">14,90</span>
+              <span class="period">/mês</span>
+            </div>
+            <p class="plan-description">
+              Perfeito para personal que quer crescer com até 5 alunos ativos.
+            </p>
+            <ul class="plan-features">
+              <li>✅ Acesso completo ao app</li>
+              <li>✅ Até 5 alunos cadastrados</li>
+              <li>✅ Treinos e acompanhamento organizados</li>
+              <li>✅ Experiência profissional para seus alunos</li>
+            </ul>
+            <button
+              class="plan-btn starter"
+              onclick="openPaymentModal('starter')"
+            >
+              Adquirir
+            </button>
+          </div>
+
+          <div class="plan-card">
+            <h3 class="plan-name">FitBody Pro</h3>
+            <div class="plan-price">
+              <span class="currency">R$</span>
+              <span class="value">39,90</span>
+              <span class="period">/mês</span>
+            </div>
+            <p class="plan-description">
+              Plano completo para escalar seu atendimento com liberdade total.
+            </p>
+            <ul class="plan-features">
+              <li>✅ Acesso completo ao app</li>
+              <li>✅ Alunos ilimitados</li>
+              <li>✅ Relatórios avançados</li>
+              <li>✅ Personalização completa</li>
+              <li>✅ Estrutura pronta para crescer</li>
+            </ul>
+            <button
+              class="plan-btn premium"
+              onclick="openPaymentModal('premium')"
+            >
+              Adquirir
+            </button>
+          </div>
         </div>
+      </div>
     </section>
 
     <!-- Modal for Free Plan Signup -->
     <div id="signupModal" class="modal">
-        <div class="modal-content">
-            <button class="btn-close" onclick="closeModal()">Fechar</button>
-            <h2>Criar Conta Free</h2>
-            <div id="messageArea"></div>
-            <form id="signupForm">
-                <div class="form-group">
-                    <label for="fullName">Nome completo</label>
-                    <input type="text" id="fullName" name="fullName" required placeholder="Seu nome completo">
-                </div>
-                <div class="form-group">
-                    <label for="phone">Telefone</label>
-                    <input type="tel" id="phone" name="phone" required placeholder="(11) 99999-9999">
-                </div>
-                <div class="form-group">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required placeholder="Sua senha">
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Confirmar senha</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirme sua senha">
-                </div>
-                <button type="submit" class="btn-submit">Criar Conta</button>
-            </form>
-        </div>
+      <div class="modal-content">
+        <button class="btn-close" onclick="closeModal()">Fechar</button>
+        <h2>Criar Conta Free</h2>
+        <div id="messageArea"></div>
+        <form id="signupForm">
+          <div class="form-group">
+            <label for="fullName">Nome completo</label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              required
+              placeholder="Seu nome completo"
+            />
+          </div>
+          <div class="form-group">
+            <label for="phone">Telefone</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="seu@email.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              placeholder="Sua senha"
+            />
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirmar senha</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              required
+              placeholder="Confirme sua senha"
+            />
+          </div>
+          <button type="submit" class="btn-submit">Criar Conta</button>
+        </form>
+      </div>
     </div>
 
     <!-- Modal for Payment -->
     <div id="paymentModal" class="modal">
-        <div class="modal-content payment-modal-content">
-            <button class="btn-close payment-close-floating" onclick="closePaymentModal()">Fechar</button>
-            <div class="payment-modal-head">
-                <div class="payment-modal-copy">
-                    <span class="payment-kicker">Pagamento Seguro</span>
-                    <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
-                    <p class="payment-modal-subtitle">Finalize sua assinatura com rapidez e segurança para liberar seu acesso imediatamente.</p>
-                </div>
-            </div>
-            <div class="price-display" id="priceDisplay"></div>
-            <div id="messagePaymentArea"></div>
-            <div class="payment-panel">
-                <div class="payment-options">
-                    <div class="payment-option active" onclick="selectPayment('card')" id="mpOption">
-                        <span class="payment-option-icon">CARD</span>
-                        <span class="payment-option-copy">
-                            <span class="payment-option-title">Cartão</span>
-                            <span class="payment-option-subtitle">Assinatura mensal no cartão</span>
-                        </span>
-                    </div>
-                </div>
-                <p class="payment-helper" id="paymentHelper">Preencha seus dados para confirmar seu plano e liberar o acesso assim que o pagamento for aprovado.</p>
-                <div class="payment-contact-grid">
-                    <div class="form-group full-width">
-                        <label for="paymentFullName">Nome completo</label>
-                        <input type="text" id="paymentFullName" placeholder="Seu nome completo">
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentEmail">E-mail</label>
-                        <input type="email" id="paymentEmail" placeholder="seu@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentPhone">Telefone</label>
-                        <input type="tel" id="paymentPhone" placeholder="(11) 99999-9999">
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentZipCode">CEP</label>
-                        <input type="text" id="paymentZipCode" placeholder="00000-000" maxlength="9">
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentStreetNumber">Numero</label>
-                        <input type="text" id="paymentStreetNumber" placeholder="123">
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="paymentStreetName">Endereco</label>
-                        <input type="text" id="paymentStreetName" placeholder="Rua, avenida, etc.">
-                    </div>
-                </div>
-                <p class="payment-contact-note">Usamos essas informações apenas para validar sua compra com segurança e concluir sua assinatura.</p>
-            </div>
-            <div id="cardPaymentArea" class="card-payment-area show">
-                <div class="card-payment-note">
-                    Ao confirmar, seu plano sera ativado e voce podera concluir o cadastro logo em seguida.
-                </div>
-                <div class="brick-shell">
-                    <div class="payment-contact-grid">
-                        <div class="form-group full-width">
-                            <label for="paymentCardNumber">Numero do cartao</label>
-                            <input type="text" id="paymentCardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" maxlength="23">
-                        </div>
-                        <div class="form-group">
-                            <label for="paymentExpiryMonth">Mes</label>
-                            <input type="text" id="paymentExpiryMonth" inputmode="numeric" placeholder="MM" maxlength="2">
-                        </div>
-                        <div class="form-group">
-                            <label for="paymentExpiryYear">Ano</label>
-                            <input type="text" id="paymentExpiryYear" inputmode="numeric" placeholder="AAAA" maxlength="4">
-                        </div>
-                        <div class="form-group">
-                            <label for="paymentCvv">CVV</label>
-                            <input type="password" id="paymentCvv" inputmode="numeric" placeholder="123" maxlength="4">
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="paymentCpfCnpj">CPF do titular</label>
-                            <input type="text" id="paymentCpfCnpj" inputmode="numeric" placeholder="000.000.000-00" maxlength="18">
-                        </div>
-                    </div>
-                </div>
-                <div class="payment-warning">
-                    Ambiente seguro e criptografado para finalizar sua compra.
-                </div>
-            </div>
-            
-            <div style="text-align: center;">
-                <p id="paymentActionText">Revise os dados e conclua o pagamento com cartao.</p>
-                <button class="btn-submit" onclick="submitCardPayment()" id="mpBtn">
-    Pagar com cartão
-</button>
-            </div>
+      <div class="modal-content payment-modal-content">
+        <button
+          class="btn-close payment-close-floating"
+          onclick="closePaymentModal()"
+        >
+          Fechar
+        </button>
+        <div class="payment-modal-head">
+          <div class="payment-modal-copy">
+            <span class="payment-kicker">Pagamento Seguro</span>
+            <h2 id="paymentModalTitle">Escolha a forma de pagamento</h2>
+            <p class="payment-modal-subtitle">
+              Finalize sua assinatura com rapidez e segurança para liberar seu
+              acesso imediatamente.
+            </p>
+          </div>
         </div>
+        <div class="price-display" id="priceDisplay"></div>
+        <div id="messagePaymentArea"></div>
+        <div class="payment-panel">
+          <div class="payment-options">
+            <div
+              class="payment-option active"
+              onclick="selectPayment('card')"
+              id="mpOption"
+            >
+              <span class="payment-option-icon">CARD</span>
+              <span class="payment-option-copy">
+                <span class="payment-option-title">Cartão</span>
+                <span class="payment-option-subtitle"
+                  >Assinatura mensal no cartão</span
+                >
+              </span>
+            </div>
+          </div>
+          <p class="payment-helper" id="paymentHelper">
+            Preencha seus dados para confirmar seu plano e liberar o acesso
+            assim que o pagamento for aprovado.
+          </p>
+          <div class="payment-contact-grid">
+            <div class="form-group full-width">
+              <label for="paymentFullName">Nome completo</label>
+              <input
+                type="text"
+                id="paymentFullName"
+                placeholder="Seu nome completo"
+              />
+            </div>
+            <div class="form-group">
+              <label for="paymentEmail">E-mail</label>
+              <input
+                type="email"
+                id="paymentEmail"
+                placeholder="seu@email.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="paymentPhone">Telefone</label>
+              <input
+                type="tel"
+                id="paymentPhone"
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            <div class="form-group">
+              <label for="paymentZipCode">CEP</label>
+              <input
+                type="text"
+                id="paymentZipCode"
+                placeholder="00000-000"
+                maxlength="9"
+              />
+            </div>
+            <div class="form-group">
+              <label for="paymentStreetNumber">Numero</label>
+              <input type="text" id="paymentStreetNumber" placeholder="123" />
+            </div>
+            <div class="form-group full-width">
+              <label for="paymentStreetName">Endereco</label>
+              <input
+                type="text"
+                id="paymentStreetName"
+                placeholder="Rua, avenida, etc."
+              />
+            </div>
+          </div>
+          <p class="payment-contact-note">
+            Usamos essas informações apenas para validar sua compra com
+            segurança e concluir sua assinatura.
+          </p>
+        </div>
+        <div id="cardPaymentArea" class="card-payment-area show">
+          <div class="card-payment-note">
+            Ao confirmar, seu plano sera ativado e voce podera concluir o
+            cadastro logo em seguida.
+          </div>
+          <div class="brick-shell">
+            <div class="payment-contact-grid">
+              <div class="form-group full-width">
+                <label for="paymentCardNumber">Numero do cartao</label>
+                <input
+                  type="text"
+                  id="paymentCardNumber"
+                  inputmode="numeric"
+                  placeholder="0000 0000 0000 0000"
+                  maxlength="23"
+                />
+              </div>
+              <div class="form-group">
+                <label for="paymentExpiryMonth">Mes</label>
+                <input
+                  type="text"
+                  id="paymentExpiryMonth"
+                  inputmode="numeric"
+                  placeholder="MM"
+                  maxlength="2"
+                />
+              </div>
+              <div class="form-group">
+                <label for="paymentExpiryYear">Ano</label>
+                <input
+                  type="text"
+                  id="paymentExpiryYear"
+                  inputmode="numeric"
+                  placeholder="AAAA"
+                  maxlength="4"
+                />
+              </div>
+              <div class="form-group">
+                <label for="paymentCvv">CVV</label>
+                <input
+                  type="password"
+                  id="paymentCvv"
+                  inputmode="numeric"
+                  placeholder="123"
+                  maxlength="4"
+                />
+              </div>
+              <div class="form-group full-width">
+                <label for="paymentCpfCnpj">CPF do titular</label>
+                <input
+                  type="text"
+                  id="paymentCpfCnpj"
+                  inputmode="numeric"
+                  placeholder="000.000.000-00"
+                  maxlength="18"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="payment-warning">
+            Ambiente seguro e criptografado para finalizar sua compra.
+          </div>
+        </div>
+
+        <div style="text-align: center">
+          <p id="paymentActionText">
+            Revise os dados e conclua o pagamento com cartao.
+          </p>
+          <button class="btn-submit" onclick="submitCardPayment()" id="mpBtn">
+            Pagar com cartão
+          </button>
+        </div>
+      </div>
     </div>
 
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <a href="index.html"><img src="logo.png" alt="Fitborypro" class="footer-logo-img"></a>
-                </div>
-                <p class="footer-text">Fitborypro para web e app, com entrada gratuita para comecar.</p>
-                <div class="store-links">
-                    <a href="https://apps.apple.com/br/app/fitbody-pro/id6760191189" class="store-badge" target="_blank" rel="noopener noreferrer">
-                        <span class="store-badge-icon"></span>
-                        <span class="store-badge-text">
-                            <span class="store-badge-label">iPhone para alunos</span>
-                            <span class="store-badge-name">App Store</span>
-                        </span>
-                    </a>
-                    <span class="store-badge disabled">
-                        <span class="store-badge-icon">▶</span>
-                        <span class="store-badge-text">
-                            <span class="store-badge-label">Android</span>
-                            <span class="store-badge-name">Em breve</span>
-                        </span>
-                    </span>
-                </div>
-                <p class="store-note">No momento, o app iOS esta disponivel apenas para alunos. Versao Android em breve.</p>
-            </div>
-            <p class="copyright">&copy; 2026 Fitborypro. Todos os direitos reservados.</p>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-logo">
+            <a href="index.html"
+              ><img src="logo.png" alt="FitBodyPro" class="footer-logo-img"
+            /></a>
+          </div>
+          <p class="footer-text">
+            FitBodyPro para web e app, com entrada gratuita para comecar.
+          </p>
+          <div class="store-links">
+            <a
+              href="https://apps.apple.com/br/app/fitbody-pro/id6760191189"
+              class="store-badge"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="store-badge-icon"></span>
+              <span class="store-badge-text">
+                <span class="store-badge-label">iPhone para alunos</span>
+                <span class="store-badge-name">App Store</span>
+              </span>
+            </a>
+            <span class="store-badge disabled">
+              <span class="store-badge-icon">▶</span>
+              <span class="store-badge-text">
+                <span class="store-badge-label">Android</span>
+                <span class="store-badge-name">Em breve</span>
+              </span>
+            </span>
+          </div>
+          <p class="store-note">
+            No momento, o app iOS esta disponivel apenas para alunos. Versao
+            Android em breve.
+          </p>
         </div>
+        <p class="copyright">
+          &copy; 2026 FitBodyPro. Todos os direitos reservados.
+        </p>
+      </div>
     </footer>
 
-<script>
-let selectedPlan = null;
-let selectedPaymentMethod = 'card';
-let paymentData = null;
+    <script>
+      let selectedPlan = null;
+      let selectedPaymentMethod = "card";
+      let paymentData = null;
 
-const priceValues = {
-    starter: 14.9,
-    premium: 39.9
-};
-const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
-const PENDING_SIGNUP_STORAGE_PREFIX = 'fitboryPendingSignup:';
-const LATEST_PENDING_SIGNUP_STORAGE_KEY = 'fitboryPendingSignupLatest';
+      const priceValues = {
+        starter: 14.9,
+        premium: 39.9,
+      };
+      const PAYMENT_CONTACT_STORAGE_KEY = "fitboryPaymentContact";
+      const PENDING_SIGNUP_STORAGE_PREFIX = "fitboryPendingSignup:";
+      const LATEST_PENDING_SIGNUP_STORAGE_KEY = "fitboryPendingSignupLatest";
 
-function safeStorageGet(storage, key) {
-    try {
-        return JSON.parse(storage.getItem(key) || 'null');
-    } catch (error) {
-        return null;
-    }
-}
+      function safeStorageGet(storage, key) {
+        try {
+          return JSON.parse(storage.getItem(key) || "null");
+        } catch (error) {
+          return null;
+        }
+      }
 
-function safeStorageSet(storage, key, value) {
-    try {
-        storage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-        // Ignore storage quota or availability issues without blocking checkout.
-    }
-}
+      function safeStorageSet(storage, key, value) {
+        try {
+          storage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          // Ignore storage quota or availability issues without blocking checkout.
+        }
+      }
 
-function safeStorageRemove(storage, key) {
-    try {
-        storage.removeItem(key);
-    } catch (error) {
-        // Ignore storage cleanup failures to avoid affecting the flow.
-    }
-}
+      function safeStorageRemove(storage, key) {
+        try {
+          storage.removeItem(key);
+        } catch (error) {
+          // Ignore storage cleanup failures to avoid affecting the flow.
+        }
+      }
 
-function cleanDigits(value) {
-    return String(value || '').replace(/\D/g, '');
-}
+      function cleanDigits(value) {
+        return String(value || "").replace(/\D/g, "");
+      }
 
-function getPlanPriceLabel(plan) {
-    const price = priceValues[plan];
+      function getPlanPriceLabel(plan) {
+        const price = priceValues[plan];
 
-    if (typeof price !== 'number') {
-        return 'R$ 0,00';
-    }
-
-    return `R$ ${price.toFixed(2).replace('.', ',')}`;
-}
-
-function splitFullName(fullName) {
-    const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
-    const firstName = parts.shift() || '';
-    const lastName = parts.join(' ');
-
-    return { firstName, lastName };
-}
-
-function readPaymentContact() {
-    return (
-        safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-        safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-        {}
-    );
-}
-
-function storePaymentContact(contact) {
-    safeStorageSet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
-    safeStorageSet(localStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
-}
-
-function cleanZipCode(value) {
-    return cleanDigits(value).slice(0, 8);
-}
-
-function formatZipCode(value) {
-    const digits = cleanZipCode(value);
-
-    if (digits.length <= 5) {
-        return digits;
-    }
-
-    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
-
-function formatCardNumber(value) {
-    return cleanDigits(value).slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-}
-
-function formatCpfCnpj(value) {
-    const digits = cleanDigits(value).slice(0, 14);
-
-    if (digits.length <= 11) {
-        return digits
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-
-    return digits
-        .replace(/^(\d{2})(\d)/, '$1.$2')
-        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-        .replace(/\.(\d{3})(\d)/, '.$1/$2')
-        .replace(/(\d{4})(\d)/, '$1-$2');
-}
-
-function buildPaymentAddressLabel(contact) {
-    const parts = [
-        contact.streetName,
-        contact.neighborhood,
-        contact.city && contact.state ? `${contact.city} - ${contact.state}` : contact.city || contact.state
-    ].filter(Boolean);
-
-    return parts.join(', ');
-}
-
-function syncPaymentContactFields() {
-    const cachedContact = readPaymentContact();
-    const fallbackFullName = document.getElementById('fullName')?.value?.trim() || '';
-    const fallbackEmail = document.getElementById('email')?.value?.trim() || '';
-    const fallbackPhone = document.getElementById('phone')?.value?.trim() || '';
-
-    const paymentFullNameInput = document.getElementById('paymentFullName');
-    const paymentEmailInput = document.getElementById('paymentEmail');
-    const paymentPhoneInput = document.getElementById('paymentPhone');
-    const paymentZipCodeInput = document.getElementById('paymentZipCode');
-    const paymentStreetNumberInput = document.getElementById('paymentStreetNumber');
-    const paymentStreetNameInput = document.getElementById('paymentStreetName');
-
-    if (paymentFullNameInput && !paymentFullNameInput.value.trim()) {
-        paymentFullNameInput.value = cachedContact.fullName || fallbackFullName;
-    }
-
-    if (paymentEmailInput && !paymentEmailInput.value.trim()) {
-        paymentEmailInput.value = cachedContact.email || fallbackEmail;
-    }
-
-    if (paymentPhoneInput && !paymentPhoneInput.value.trim()) {
-        paymentPhoneInput.value = cachedContact.phone || fallbackPhone;
-    }
-
-    if (paymentZipCodeInput && !paymentZipCodeInput.value.trim()) {
-        paymentZipCodeInput.value = formatZipCode(cachedContact.zipCode || '');
-    }
-
-    if (paymentStreetNumberInput && !paymentStreetNumberInput.value.trim()) {
-        paymentStreetNumberInput.value = cachedContact.streetNumber || '';
-    }
-
-    if (paymentStreetNameInput && !paymentStreetNameInput.value.trim()) {
-        paymentStreetNameInput.value = buildPaymentAddressLabel(cachedContact);
-    }
-}
-
-function getPreferredPayerData() {
-    const fullName =
-        document.getElementById('paymentFullName')?.value?.trim() ||
-        document.getElementById('fullName')?.value?.trim() ||
-        '';
-    const email =
-        document.getElementById('paymentEmail')?.value?.trim() ||
-        document.getElementById('email')?.value?.trim() ||
-        '';
-    const phone =
-        document.getElementById('paymentPhone')?.value?.trim() ||
-        document.getElementById('phone')?.value?.trim() ||
-        '';
-    const zipCode = cleanZipCode(document.getElementById('paymentZipCode')?.value || '');
-    const streetNumber = document.getElementById('paymentStreetNumber')?.value?.trim() || '';
-    const streetName = document.getElementById('paymentStreetName')?.value?.trim() || '';
-    const { firstName, lastName } = splitFullName(fullName);
-    const cachedContact = readPaymentContact();
-
-    return {
-        fullName,
-        email,
-        phone,
-        zipCode,
-        streetNumber,
-        streetName: cachedContact.streetName || streetName,
-        neighborhood: cachedContact.neighborhood || '',
-        city: cachedContact.city || '',
-        state: cachedContact.state || '',
-        firstName,
-        lastName
-    };
-}
-
-async function lookupZipCode() {
-    const zipCodeInput = document.getElementById('paymentZipCode');
-    const streetNameInput = document.getElementById('paymentStreetName');
-
-    if (!zipCodeInput || !streetNameInput) {
-        return;
-    }
-
-    const zipCode = cleanZipCode(zipCodeInput.value);
-    zipCodeInput.value = formatZipCode(zipCode);
-
-    if (zipCode.length !== 8) {
-        return;
-    }
-
-    try {
-        streetNameInput.value = 'Buscando endereco...';
-        const response = await fetch(`https://viacep.com.br/ws/${zipCode}/json/`);
-        const data = await response.json();
-
-        if (!response.ok || data.erro) {
-            throw new Error('CEP nao encontrado.');
+        if (typeof price !== "number") {
+          return "R$ 0,00";
         }
 
+        return `R$ ${price.toFixed(2).replace(".", ",")}`;
+      }
+
+      function splitFullName(fullName) {
+        const parts = String(fullName || "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        const firstName = parts.shift() || "";
+        const lastName = parts.join(" ");
+
+        return { firstName, lastName };
+      }
+
+      function readPaymentContact() {
+        return (
+          safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+          safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+          {}
+        );
+      }
+
+      function storePaymentContact(contact) {
+        safeStorageSet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
+        safeStorageSet(localStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
+      }
+
+      function cleanZipCode(value) {
+        return cleanDigits(value).slice(0, 8);
+      }
+
+      function formatZipCode(value) {
+        const digits = cleanZipCode(value);
+
+        if (digits.length <= 5) {
+          return digits;
+        }
+
+        return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+      }
+
+      function formatCardNumber(value) {
+        return cleanDigits(value)
+          .slice(0, 16)
+          .replace(/(\d{4})(?=\d)/g, "$1 ")
+          .trim();
+      }
+
+      function formatCpfCnpj(value) {
+        const digits = cleanDigits(value).slice(0, 14);
+
+        if (digits.length <= 11) {
+          return digits
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        }
+
+        return digits
+          .replace(/^(\d{2})(\d)/, "$1.$2")
+          .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+          .replace(/\.(\d{3})(\d)/, ".$1/$2")
+          .replace(/(\d{4})(\d)/, "$1-$2");
+      }
+
+      function buildPaymentAddressLabel(contact) {
+        const parts = [
+          contact.streetName,
+          contact.neighborhood,
+          contact.city && contact.state
+            ? `${contact.city} - ${contact.state}`
+            : contact.city || contact.state,
+        ].filter(Boolean);
+
+        return parts.join(", ");
+      }
+
+      function syncPaymentContactFields() {
         const cachedContact = readPaymentContact();
-        const updatedContact = {
+        const fallbackFullName =
+          document.getElementById("fullName")?.value?.trim() || "";
+        const fallbackEmail =
+          document.getElementById("email")?.value?.trim() || "";
+        const fallbackPhone =
+          document.getElementById("phone")?.value?.trim() || "";
+
+        const paymentFullNameInput = document.getElementById("paymentFullName");
+        const paymentEmailInput = document.getElementById("paymentEmail");
+        const paymentPhoneInput = document.getElementById("paymentPhone");
+        const paymentZipCodeInput = document.getElementById("paymentZipCode");
+        const paymentStreetNumberInput = document.getElementById(
+          "paymentStreetNumber",
+        );
+        const paymentStreetNameInput =
+          document.getElementById("paymentStreetName");
+
+        if (paymentFullNameInput && !paymentFullNameInput.value.trim()) {
+          paymentFullNameInput.value =
+            cachedContact.fullName || fallbackFullName;
+        }
+
+        if (paymentEmailInput && !paymentEmailInput.value.trim()) {
+          paymentEmailInput.value = cachedContact.email || fallbackEmail;
+        }
+
+        if (paymentPhoneInput && !paymentPhoneInput.value.trim()) {
+          paymentPhoneInput.value = cachedContact.phone || fallbackPhone;
+        }
+
+        if (paymentZipCodeInput && !paymentZipCodeInput.value.trim()) {
+          paymentZipCodeInput.value = formatZipCode(
+            cachedContact.zipCode || "",
+          );
+        }
+
+        if (
+          paymentStreetNumberInput &&
+          !paymentStreetNumberInput.value.trim()
+        ) {
+          paymentStreetNumberInput.value = cachedContact.streetNumber || "";
+        }
+
+        if (paymentStreetNameInput && !paymentStreetNameInput.value.trim()) {
+          paymentStreetNameInput.value =
+            buildPaymentAddressLabel(cachedContact);
+        }
+      }
+
+      function getPreferredPayerData() {
+        const fullName =
+          document.getElementById("paymentFullName")?.value?.trim() ||
+          document.getElementById("fullName")?.value?.trim() ||
+          "";
+        const email =
+          document.getElementById("paymentEmail")?.value?.trim() ||
+          document.getElementById("email")?.value?.trim() ||
+          "";
+        const phone =
+          document.getElementById("paymentPhone")?.value?.trim() ||
+          document.getElementById("phone")?.value?.trim() ||
+          "";
+        const zipCode = cleanZipCode(
+          document.getElementById("paymentZipCode")?.value || "",
+        );
+        const streetNumber =
+          document.getElementById("paymentStreetNumber")?.value?.trim() || "";
+        const streetName =
+          document.getElementById("paymentStreetName")?.value?.trim() || "";
+        const { firstName, lastName } = splitFullName(fullName);
+        const cachedContact = readPaymentContact();
+
+        return {
+          fullName,
+          email,
+          phone,
+          zipCode,
+          streetNumber,
+          streetName: cachedContact.streetName || streetName,
+          neighborhood: cachedContact.neighborhood || "",
+          city: cachedContact.city || "",
+          state: cachedContact.state || "",
+          firstName,
+          lastName,
+        };
+      }
+
+      async function lookupZipCode() {
+        const zipCodeInput = document.getElementById("paymentZipCode");
+        const streetNameInput = document.getElementById("paymentStreetName");
+
+        if (!zipCodeInput || !streetNameInput) {
+          return;
+        }
+
+        const zipCode = cleanZipCode(zipCodeInput.value);
+        zipCodeInput.value = formatZipCode(zipCode);
+
+        if (zipCode.length !== 8) {
+          return;
+        }
+
+        try {
+          streetNameInput.value = "Buscando endereco...";
+          const response = await fetch(
+            `https://viacep.com.br/ws/${zipCode}/json/`,
+          );
+          const data = await response.json();
+
+          if (!response.ok || data.erro) {
+            throw new Error("CEP nao encontrado.");
+          }
+
+          const cachedContact = readPaymentContact();
+          const updatedContact = {
             ...cachedContact,
             zipCode,
-            streetName: data.logradouro || '',
-            neighborhood: data.bairro || '',
-            city: data.localidade || '',
-            state: data.uf || ''
-        };
+            streetName: data.logradouro || "",
+            neighborhood: data.bairro || "",
+            city: data.localidade || "",
+            state: data.uf || "",
+          };
 
-        storePaymentContact(updatedContact);
-        streetNameInput.value = buildPaymentAddressLabel(updatedContact) || (data.logradouro || '');
-    } catch (error) {
-        streetNameInput.value = 'Nao foi possivel buscar o endereco pelo CEP.';
-    }
-}
+          storePaymentContact(updatedContact);
+          streetNameInput.value =
+            buildPaymentAddressLabel(updatedContact) || data.logradouro || "";
+        } catch (error) {
+          streetNameInput.value =
+            "Nao foi possivel buscar o endereco pelo CEP.";
+        }
+      }
 
-function buildRecurringStorageKey(paymentId) {
-    return `fitboryRecurring:${paymentId}`;
-}
+      function buildRecurringStorageKey(paymentId) {
+        return `fitboryRecurring:${paymentId}`;
+      }
 
-function buildPendingSignupStorageKey(paymentId) {
-    return `${PENDING_SIGNUP_STORAGE_PREFIX}${paymentId}`;
-}
+      function buildPendingSignupStorageKey(paymentId) {
+        return `${PENDING_SIGNUP_STORAGE_PREFIX}${paymentId}`;
+      }
 
-function readRecurringData(paymentId) {
-    if (!paymentId) return null;
+      function readRecurringData(paymentId) {
+        if (!paymentId) return null;
 
-    return (
-        safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
-        safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
-        null
-    );
-}
+        return (
+          safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
+          safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
+          null
+        );
+      }
 
-function readPendingSignup(paymentId) {
-    if (!paymentId) return null;
+      function readPendingSignup(paymentId) {
+        if (!paymentId) return null;
 
-    return safeStorageGet(localStorage, buildPendingSignupStorageKey(paymentId));
-}
+        return safeStorageGet(
+          localStorage,
+          buildPendingSignupStorageKey(paymentId),
+        );
+      }
 
-function readLatestPendingSignup() {
-    const latestPaymentId =
-        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+      function readLatestPendingSignup() {
+        const latestPaymentId =
+          safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) ||
+          null;
 
-    if (!latestPaymentId) {
-        return null;
-    }
+        if (!latestPaymentId) {
+          return null;
+        }
 
-    return readPendingSignup(latestPaymentId);
-}
+        return readPendingSignup(latestPaymentId);
+      }
 
-function persistPendingSignupRecord(record) {
-    if (!record?.paymentId) return;
+      function persistPendingSignupRecord(record) {
+        if (!record?.paymentId) return;
 
-    safeStorageSet(localStorage, buildPendingSignupStorageKey(record.paymentId), record);
-    safeStorageSet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY, record.paymentId);
-}
+        safeStorageSet(
+          localStorage,
+          buildPendingSignupStorageKey(record.paymentId),
+          record,
+        );
+        safeStorageSet(
+          localStorage,
+          LATEST_PENDING_SIGNUP_STORAGE_KEY,
+          record.paymentId,
+        );
+      }
 
-function storeRecurringData(paymentId, recurringData) {
-    if (!paymentId || !recurringData) return;
+      function storeRecurringData(paymentId, recurringData) {
+        if (!paymentId || !recurringData) return;
 
-    safeStorageSet(sessionStorage, buildRecurringStorageKey(paymentId), recurringData);
-    safeStorageSet(localStorage, buildRecurringStorageKey(paymentId), recurringData);
-}
+        safeStorageSet(
+          sessionStorage,
+          buildRecurringStorageKey(paymentId),
+          recurringData,
+        );
+        safeStorageSet(
+          localStorage,
+          buildRecurringStorageKey(paymentId),
+          recurringData,
+        );
+      }
 
-function storePendingSignup(paymentId, plan, recurringData, contact, recoveryToken) {
-    if (!paymentId || !plan || !recurringData) return;
-
-    const existingRecord = readPendingSignup(paymentId);
-    const now = new Date().toISOString();
-
-    persistPendingSignupRecord({
+      function storePendingSignup(
         paymentId,
         plan,
         recurringData,
-        recoveryToken: recoveryToken || existingRecord?.recoveryToken || null,
-        contact: contact || existingRecord?.contact || null,
-        status: 'payment_approved_pending_signup',
-        createdAt: existingRecord?.createdAt || now,
-        updatedAt: now
-    });
-}
+        contact,
+        recoveryToken,
+      ) {
+        if (!paymentId || !plan || !recurringData) return;
 
-function clearPendingSignup(paymentId) {
-    if (!paymentId) return;
+        const existingRecord = readPendingSignup(paymentId);
+        const now = new Date().toISOString();
 
-    safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
-    safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
-    safeStorageRemove(localStorage, buildPendingSignupStorageKey(paymentId));
+        persistPendingSignupRecord({
+          paymentId,
+          plan,
+          recurringData,
+          recoveryToken: recoveryToken || existingRecord?.recoveryToken || null,
+          contact: contact || existingRecord?.contact || null,
+          status: "payment_approved_pending_signup",
+          createdAt: existingRecord?.createdAt || now,
+          updatedAt: now,
+        });
+      }
 
-    const latestPaymentId =
-        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+      function clearPendingSignup(paymentId) {
+        if (!paymentId) return;
 
-    if (latestPaymentId === paymentId) {
-        safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
-    }
-}
+        safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
+        safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
+        safeStorageRemove(
+          localStorage,
+          buildPendingSignupStorageKey(paymentId),
+        );
 
-function renderPendingSignupNotice() {
-    const pendingSignup = readLatestPendingSignup();
+        const latestPaymentId =
+          safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) ||
+          null;
 
-    if (
-        !pendingSignup ||
-        pendingSignup.status === 'signup_completed' ||
-        !pendingSignup.paymentId ||
-        !pendingSignup.plan
-    ) {
-        return;
-    }
+        if (latestPaymentId === paymentId) {
+          safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
+        }
+      }
 
-    if (document.getElementById('pendingSignupNotice')) {
-        return;
-    }
+      function renderPendingSignupNotice() {
+        const pendingSignup = readLatestPendingSignup();
 
-    const notice = document.createElement('div');
-    notice.id = 'pendingSignupNotice';
-    notice.style.cssText = [
-        'position:fixed',
-        'right:20px',
-        'bottom:20px',
-        'z-index:10050',
-        'max-width:360px',
-        'padding:16px',
-        'border-radius:18px',
-        'background:#ffffff',
-        'color:#142033',
-        'box-shadow:0 18px 40px rgba(0,0,0,.28)',
-        'border:1px solid rgba(156,255,0,.28)'
-    ].join(';');
+        if (
+          !pendingSignup ||
+          pendingSignup.status === "signup_completed" ||
+          !pendingSignup.paymentId ||
+          !pendingSignup.plan
+        ) {
+          return;
+        }
 
-    const recoveryTokenQuery = pendingSignup.recoveryToken
-        ? `&recoveryToken=${encodeURIComponent(pendingSignup.recoveryToken)}`
-        : '';
+        if (document.getElementById("pendingSignupNotice")) {
+          return;
+        }
 
-    notice.innerHTML = `
+        const notice = document.createElement("div");
+        notice.id = "pendingSignupNotice";
+        notice.style.cssText = [
+          "position:fixed",
+          "right:20px",
+          "bottom:20px",
+          "z-index:10050",
+          "max-width:360px",
+          "padding:16px",
+          "border-radius:18px",
+          "background:#ffffff",
+          "color:#142033",
+          "box-shadow:0 18px 40px rgba(0,0,0,.28)",
+          "border:1px solid rgba(156,255,0,.28)",
+        ].join(";");
+
+        const recoveryTokenQuery = pendingSignup.recoveryToken
+          ? `&recoveryToken=${encodeURIComponent(pendingSignup.recoveryToken)}`
+          : "";
+
+        notice.innerHTML = `
         <div style="font-weight:800;margin-bottom:6px;">Cadastro pendente encontrado</div>
         <div style="font-size:.95rem;line-height:1.5;color:#526072;margin-bottom:12px;">
             Encontramos uma compra aprovada neste navegador. Continue do ponto em que parou sem precisar pagar novamente.
@@ -1323,135 +1537,151 @@ function renderPendingSignupNotice() {
         </div>
     `;
 
-    document.body.appendChild(notice);
+        document.body.appendChild(notice);
 
-    document
-        .getElementById('dismissPendingSignupNotice')
-        ?.addEventListener('click', () => notice.remove());
-}
+        document
+          .getElementById("dismissPendingSignupNotice")
+          ?.addEventListener("click", () => notice.remove());
+      }
 
-function buildCardFormData() {
-    return {
-        cardNumber: cleanDigits(document.getElementById('paymentCardNumber')?.value || ''),
-        expiryMonth: cleanDigits(document.getElementById('paymentExpiryMonth')?.value || ''),
-        expiryYear: cleanDigits(document.getElementById('paymentExpiryYear')?.value || ''),
-        cvv: cleanDigits(document.getElementById('paymentCvv')?.value || ''),
-        cpfCnpj: cleanDigits(document.getElementById('paymentCpfCnpj')?.value || '')
-    };
-}
+      function buildCardFormData() {
+        return {
+          cardNumber: cleanDigits(
+            document.getElementById("paymentCardNumber")?.value || "",
+          ),
+          expiryMonth: cleanDigits(
+            document.getElementById("paymentExpiryMonth")?.value || "",
+          ),
+          expiryYear: cleanDigits(
+            document.getElementById("paymentExpiryYear")?.value || "",
+          ),
+          cvv: cleanDigits(document.getElementById("paymentCvv")?.value || ""),
+          cpfCnpj: cleanDigits(
+            document.getElementById("paymentCpfCnpj")?.value || "",
+          ),
+        };
+      }
 
-async function submitCardPayment() {
-    const messageArea = document.getElementById('messagePaymentArea');
+      async function submitCardPayment() {
+        const messageArea = document.getElementById("messagePaymentArea");
 
-    try {
-        const preferredPayer = getPreferredPayerData();
-        const cardFormData = buildCardFormData();
+        try {
+          const preferredPayer = getPreferredPayerData();
+          const cardFormData = buildCardFormData();
 
-        if (!preferredPayer.fullName) {
-            throw new Error('Preencha o nome completo do titular.');
-        }
+          if (!preferredPayer.fullName) {
+            throw new Error("Preencha o nome completo do titular.");
+          }
 
-        if (!preferredPayer.email) {
-            throw new Error('Preencha um e-mail valido antes de concluir o pagamento.');
-        }
+          if (!preferredPayer.email) {
+            throw new Error(
+              "Preencha um e-mail valido antes de concluir o pagamento.",
+            );
+          }
 
-        if (!preferredPayer.phone) {
-            throw new Error('Preencha um telefone valido antes de concluir o pagamento.');
-        }
+          if (!preferredPayer.phone) {
+            throw new Error(
+              "Preencha um telefone valido antes de concluir o pagamento.",
+            );
+          }
 
-        if (!preferredPayer.zipCode || preferredPayer.zipCode.length !== 8) {
-            throw new Error('Preencha um CEP valido antes de concluir o pagamento.');
-        }
+          if (!preferredPayer.zipCode || preferredPayer.zipCode.length !== 8) {
+            throw new Error(
+              "Preencha um CEP valido antes de concluir o pagamento.",
+            );
+          }
 
-        if (!preferredPayer.streetNumber) {
-            throw new Error('Preencha o numero do endereco antes de concluir o pagamento.');
-        }
+          if (!preferredPayer.streetNumber) {
+            throw new Error(
+              "Preencha o numero do endereco antes de concluir o pagamento.",
+            );
+          }
 
-        if (cardFormData.cardNumber.length < 13) {
-            throw new Error('Preencha um numero de cartao valido.');
-        }
+          if (cardFormData.cardNumber.length < 13) {
+            throw new Error("Preencha um numero de cartao valido.");
+          }
 
-        if (cardFormData.expiryMonth.length !== 2) {
-            throw new Error('Preencha o mes de vencimento com 2 digitos.');
-        }
+          if (cardFormData.expiryMonth.length !== 2) {
+            throw new Error("Preencha o mes de vencimento com 2 digitos.");
+          }
 
-        if (cardFormData.expiryYear.length !== 4) {
-            throw new Error('Preencha o ano de vencimento com 4 digitos.');
-        }
+          if (cardFormData.expiryYear.length !== 4) {
+            throw new Error("Preencha o ano de vencimento com 4 digitos.");
+          }
 
-        if (cardFormData.cvv.length < 3) {
-            throw new Error('Preencha um CVV valido.');
-        }
+          if (cardFormData.cvv.length < 3) {
+            throw new Error("Preencha um CVV valido.");
+          }
 
-        if (cardFormData.cpfCnpj.length < 11) {
-            throw new Error('Preencha um CPF valido do titular.');
-        }
+          if (cardFormData.cpfCnpj.length < 11) {
+            throw new Error("Preencha um CPF valido do titular.");
+          }
 
-        storePaymentContact(preferredPayer);
+          storePaymentContact(preferredPayer);
 
-        messageArea.innerHTML = `
+          messageArea.innerHTML = `
             <div class="message success">
                 Processando pagamento...
             </div>
         `;
 
-        const response = await fetch('/api/create-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const response = await fetch("/api/create-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                plan: selectedPlan,
-                method: 'card',
-                email: preferredPayer.email,
-                phone: preferredPayer.phone,
-                zipCode: preferredPayer.zipCode,
-                streetName: preferredPayer.streetName,
-                streetNumber: preferredPayer.streetNumber,
-                neighborhood: preferredPayer.neighborhood,
-                city: preferredPayer.city,
-                state: preferredPayer.state,
-                cardholderName: preferredPayer.fullName,
-                cardNumber: cardFormData.cardNumber,
-                expiryMonth: cardFormData.expiryMonth,
-                expiryYear: cardFormData.expiryYear,
-                cvv: cardFormData.cvv,
-                cpfCnpj: cardFormData.cpfCnpj
-            })
-        });
+              plan: selectedPlan,
+              method: "card",
+              email: preferredPayer.email,
+              phone: preferredPayer.phone,
+              zipCode: preferredPayer.zipCode,
+              streetName: preferredPayer.streetName,
+              streetNumber: preferredPayer.streetNumber,
+              neighborhood: preferredPayer.neighborhood,
+              city: preferredPayer.city,
+              state: preferredPayer.state,
+              cardholderName: preferredPayer.fullName,
+              cardNumber: cardFormData.cardNumber,
+              expiryMonth: cardFormData.expiryMonth,
+              expiryYear: cardFormData.expiryYear,
+              cvv: cardFormData.cvv,
+              cpfCnpj: cardFormData.cpfCnpj,
+            }),
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        console.log('RETORNO /api/create-payment:', data);
+          console.log("RETORNO /api/create-payment:", data);
 
-        if (response.ok && data.status === 'AWAITING_RISK_ANALYSIS') {
+          if (response.ok && data.status === "AWAITING_RISK_ANALYSIS") {
             messageArea.innerHTML = `
                 <div class="message warning">
-                    ${data.message || 'Seu pagamento esta em analise. Aguarde alguns instantes ou tente outro cartao.'}
+                    ${data.message || "Seu pagamento esta em analise. Aguarde alguns instantes ou tente outro cartao."}
                 </div>
             `;
             return;
-        }
+          }
 
-        if (!response.ok || !data.success) {
+          if (!response.ok || !data.success) {
             messageArea.innerHTML = `
                 <div class="message error">
-                    ${data.message || 'Nao foi possivel concluir sua compra agora. Tente novamente.'}
+                    ${data.message || "Nao foi possivel concluir sua compra agora. Tente novamente."}
                 </div>
             `;
             return;
-        }
+          }
 
-        if (data.paymentId && data.recurringData) {
+          if (data.paymentId && data.recurringData) {
             storeRecurringData(data.paymentId, data.recurringData);
             storePendingSignup(
-                data.paymentId,
-                selectedPlan,
-                data.recurringData,
-                preferredPayer,
-                data.recoveryToken
+              data.paymentId,
+              selectedPlan,
+              data.recurringData,
+              preferredPayer,
+              data.recoveryToken,
             );
-        }
+          }
 
-        if (data.approved) {
+          if (data.approved) {
             messageArea.innerHTML = `
                 <div class="message success">
                     Pagamento aprovado! Redirecionando para criar sua conta.
@@ -1459,188 +1689,222 @@ async function submitCardPayment() {
             `;
 
             setTimeout(() => {
-                const redirectUrl = new URL('/success.html', window.location.origin);
-                redirectUrl.searchParams.set('plan', selectedPlan);
-                redirectUrl.searchParams.set('paymentId', data.paymentId);
+              const redirectUrl = new URL(
+                "/success.html",
+                window.location.origin,
+              );
+              redirectUrl.searchParams.set("plan", selectedPlan);
+              redirectUrl.searchParams.set("paymentId", data.paymentId);
 
-                if (data.recoveryToken) {
-                    redirectUrl.searchParams.set('recoveryToken', data.recoveryToken);
-                }
+              if (data.recoveryToken) {
+                redirectUrl.searchParams.set(
+                  "recoveryToken",
+                  data.recoveryToken,
+                );
+              }
 
-                window.location.href = redirectUrl.toString();
+              window.location.href = redirectUrl.toString();
             }, 900);
 
             return;
+          }
+
+          messageArea.innerHTML = `
+            <div class="message error">
+                Pagamento retornou com status ${data.status || "desconhecido"}.
+            </div>
+        `;
+        } catch (error) {
+          console.error("Erro pagamento cartão:", error);
+
+          messageArea.innerHTML = `
+            <div class="message error">
+                ${error.message || "Erro ao processar pagamento com cartão."}
+            </div>
+        `;
+        }
+      }
+
+      function openModal() {
+        document.getElementById("signupModal").classList.add("show");
+      }
+
+      function closeModal() {
+        document.getElementById("signupModal").classList.remove("show");
+        document.getElementById("signupForm").reset();
+        document.getElementById("messageArea").innerHTML = "";
+      }
+
+      function openPaymentModal(plan) {
+        selectedPlan = plan;
+        selectedPaymentMethod = "card";
+        paymentData = null;
+
+        const titles = {
+          starter: "FitBody Starter",
+          premium: "FitBody Pro",
+        };
+
+        document.getElementById("paymentModalTitle").textContent =
+          `Pagamento - ${titles[plan]}`;
+        document.getElementById("priceDisplay").textContent =
+          getPlanPriceLabel(plan);
+        document.getElementById("messagePaymentArea").innerHTML = "";
+        document.getElementById("paymentActionText").textContent =
+          "Preencha os dados do cartao para concluir sua assinatura com seguranca.";
+        syncPaymentContactFields();
+
+        document.getElementById("paymentModal").classList.add("show");
+
+        selectPayment("card");
+      }
+
+      function closePaymentModal() {
+        document.getElementById("paymentModal").classList.remove("show");
+        document.getElementById("messagePaymentArea").innerHTML = "";
+      }
+
+      function selectPayment(method) {
+        selectedPaymentMethod = method;
+
+        const btn = document.getElementById("mpBtn");
+
+        if (document.getElementById("mpOption")) {
+          document.getElementById("mpOption").classList.add("active");
         }
 
-        messageArea.innerHTML = `
-            <div class="message error">
-                Pagamento retornou com status ${data.status || 'desconhecido'}.
-            </div>
-        `;
-    } catch (error) {
-        console.error('Erro pagamento cartão:', error);
+        document.getElementById("cardPaymentArea").classList.add("show");
 
-        messageArea.innerHTML = `
-            <div class="message error">
-                ${error.message || 'Erro ao processar pagamento com cartão.'}
-            </div>
-        `;
-    }
-}
+        if (btn) {
+          btn.style.display = "inline-block";
+          btn.disabled = false;
+        }
 
-function openModal() {
-    document.getElementById('signupModal').classList.add('show');
-}
+        document.getElementById("messagePaymentArea").innerHTML = "";
+        document.getElementById("paymentActionText").textContent =
+          "Preencha os dados do cartao para concluir sua assinatura.";
+      }
 
-function closeModal() {
-    document.getElementById('signupModal').classList.remove('show');
-    document.getElementById('signupForm').reset();
-    document.getElementById('messageArea').innerHTML = '';
-}
+      document
+        .getElementById("paymentZipCode")
+        ?.addEventListener("input", (event) => {
+          event.target.value = formatZipCode(event.target.value);
+        });
 
-function openPaymentModal(plan) {
-    selectedPlan = plan;
-    selectedPaymentMethod = 'card';
-    paymentData = null;
+      document
+        .getElementById("paymentZipCode")
+        ?.addEventListener("blur", () => {
+          lookupZipCode().catch(() => {});
+        });
 
-    const titles = {
-        starter: 'Fitbory Starter',
-        premium: 'Fitbory Pro'
-    };
+      document
+        .getElementById("paymentStreetNumber")
+        ?.addEventListener("input", (event) => {
+          const cachedContact = readPaymentContact();
+          storePaymentContact({
+            ...cachedContact,
+            streetNumber: event.target.value.trim(),
+          });
+        });
 
-    document.getElementById('paymentModalTitle').textContent = `Pagamento - ${titles[plan]}`;
-    document.getElementById('priceDisplay').textContent = getPlanPriceLabel(plan);
-    document.getElementById('messagePaymentArea').innerHTML = '';
-    document.getElementById('paymentActionText').textContent =
-        'Preencha os dados do cartao para concluir sua assinatura com seguranca.';
-    syncPaymentContactFields();
+      document
+        .getElementById("paymentStreetName")
+        ?.addEventListener("input", (event) => {
+          const cachedContact = readPaymentContact();
+          storePaymentContact({
+            ...cachedContact,
+            streetName: event.target.value.trim(),
+          });
+        });
 
-    document.getElementById('paymentModal').classList.add('show');
+      document
+        .getElementById("paymentCardNumber")
+        ?.addEventListener("input", (event) => {
+          event.target.value = formatCardNumber(event.target.value);
+        });
 
-    selectPayment('card');
-}
+      document
+        .getElementById("paymentCpfCnpj")
+        ?.addEventListener("input", (event) => {
+          event.target.value = formatCpfCnpj(event.target.value);
+        });
 
-function closePaymentModal() {
-    document.getElementById('paymentModal').classList.remove('show');
-    document.getElementById('messagePaymentArea').innerHTML = '';
-}
+      document
+        .getElementById("paymentExpiryMonth")
+        ?.addEventListener("input", (event) => {
+          event.target.value = cleanDigits(event.target.value).slice(0, 2);
+        });
 
-function selectPayment(method) {
-    selectedPaymentMethod = method;
+      document
+        .getElementById("paymentExpiryYear")
+        ?.addEventListener("input", (event) => {
+          event.target.value = cleanDigits(event.target.value).slice(0, 4);
+        });
 
-    const btn = document.getElementById('mpBtn');
+      document
+        .getElementById("paymentCvv")
+        ?.addEventListener("input", (event) => {
+          event.target.value = cleanDigits(event.target.value).slice(0, 4);
+        });
 
-    if (document.getElementById('mpOption')) {
-        document.getElementById('mpOption').classList.add('active');
-    }
+      document
+        .getElementById("signupForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
 
-    document.getElementById('cardPaymentArea').classList.add('show');
+          const fullName = document.getElementById("fullName").value;
+          const phone = document.getElementById("phone").value;
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+          const confirmPassword =
+            document.getElementById("confirmPassword").value;
+          const messageArea = document.getElementById("messageArea");
 
-    if (btn) {
-        btn.style.display = 'inline-block';
-        btn.disabled = false;
-    }
+          messageArea.innerHTML = "";
 
-    document.getElementById('messagePaymentArea').innerHTML = '';
-    document.getElementById('paymentActionText').textContent =
-        'Preencha os dados do cartao para concluir sua assinatura.';
-}
+          if (password !== confirmPassword) {
+            messageArea.innerHTML =
+              '<div class="message error">As senhas não coincidem!</div>';
+            return;
+          }
 
-document.getElementById('paymentZipCode')?.addEventListener('input', (event) => {
-    event.target.value = formatZipCode(event.target.value);
-});
-
-document.getElementById('paymentZipCode')?.addEventListener('blur', () => {
-    lookupZipCode().catch(() => {});
-});
-
-document.getElementById('paymentStreetNumber')?.addEventListener('input', (event) => {
-    const cachedContact = readPaymentContact();
-    storePaymentContact({
-        ...cachedContact,
-        streetNumber: event.target.value.trim()
-    });
-});
-
-document.getElementById('paymentStreetName')?.addEventListener('input', (event) => {
-    const cachedContact = readPaymentContact();
-    storePaymentContact({
-        ...cachedContact,
-        streetName: event.target.value.trim()
-    });
-});
-
-document.getElementById('paymentCardNumber')?.addEventListener('input', (event) => {
-    event.target.value = formatCardNumber(event.target.value);
-});
-
-document.getElementById('paymentCpfCnpj')?.addEventListener('input', (event) => {
-    event.target.value = formatCpfCnpj(event.target.value);
-});
-
-document.getElementById('paymentExpiryMonth')?.addEventListener('input', (event) => {
-    event.target.value = cleanDigits(event.target.value).slice(0, 2);
-});
-
-document.getElementById('paymentExpiryYear')?.addEventListener('input', (event) => {
-    event.target.value = cleanDigits(event.target.value).slice(0, 4);
-});
-
-document.getElementById('paymentCvv')?.addEventListener('input', (event) => {
-    event.target.value = cleanDigits(event.target.value).slice(0, 4);
-});
-
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const fullName = document.getElementById('fullName').value;
-    const phone = document.getElementById('phone').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const messageArea = document.getElementById('messageArea');
-
-    messageArea.innerHTML = '';
-
-    if (password !== confirmPassword) {
-        messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          try {
+            const response = await fetch("/api/signup", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
                 fullName,
                 phone,
                 email,
                 password,
-                plan: 'free'
-            })
+                plan: "free",
+              }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+              messageArea.innerHTML =
+                '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
+
+              setTimeout(() => {
+                window.location.href =
+                  data.loginUrl || "https://gerenciaralunos.vercel.app/login";
+              }, 2000);
+            } else {
+              messageArea.innerHTML =
+                '<div class="message error">' +
+                (data.message || "Ocorreu um erro!") +
+                "</div>";
+            }
+          } catch (error) {
+            console.error("Signup Error:", error);
+            messageArea.innerHTML =
+              '<div class="message error">Erro de conexão. Tente novamente!</div>';
+          }
         });
 
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando...</div>';
-
-            setTimeout(() => {
-                window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
-            }, 2000);
-        } else {
-            messageArea.innerHTML = '<div class="message error">' + (data.message || 'Ocorreu um erro!') + '</div>';
-        }
-    } catch (error) {
-        console.error('Signup Error:', error);
-        messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
-    }
-});
-
-renderPendingSignupNotice();
-</script>
-
-
-</body>
+      renderPendingSignupNotice();
+    </script>
+  </body>
 </html>

@@ -1,548 +1,639 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagamento Aprovado! - Fitborypro</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pagamento Aprovado! - FitBodyPro</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      .success-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+        padding: 100px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .success-content {
+        background: white;
+        border-radius: 20px;
+        padding: 50px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+      }
+      .success-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+      }
+      .success-title {
+        font-size: 2rem;
+        color: #1a1a2e;
+        margin-bottom: 15px;
+        font-weight: 700;
+      }
+      .success-desc {
+        color: #555;
+        margin-bottom: 30px;
+        font-size: 1.1rem;
+      }
+      .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-family: "Poppins", sans-serif;
+      }
+      .form-group input:focus {
+        outline: none;
+        border-color: #00cc6a;
+      }
+      .btn-submit {
+        width: 100%;
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #1a1a2e;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+        font-family: "Poppins", sans-serif;
+        margin-top: 10px;
+      }
+      .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
+      }
+      .message {
+        text-align: center;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .message.warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .login-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        background: linear-gradient(90deg, #1ee4b7, #9cff00);
+        color: #05070d;
+
+        padding: 12px 24px;
+        border-radius: 12px;
+
+        text-decoration: none;
+        font-weight: 700;
+
+        transition: 0.3s;
+      }
+
+      .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(156, 255, 0, 0.35);
+      }
+
+      @media (max-width: 768px) {
         .success-container {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
-            padding: 100px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+          padding: 180px 16px 64px;
         }
+
         .success-content {
-            background: white;
-            border-radius: 20px;
-            padding: 50px;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
+          padding: 32px 22px;
         }
-        .success-icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
-        }
+
         .success-title {
-            font-size: 2rem;
-            color: #1a1a2e;
-            margin-bottom: 15px;
-            font-weight: 700;
+          font-size: 1.7rem;
         }
+
         .success-desc {
-            color: #555;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
+          font-size: 1rem;
         }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
+      }
+
+      @media (max-width: 480px) {
+        .success-icon {
+          font-size: 4rem;
         }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
+
+        .success-title {
+          font-size: 1.5rem;
         }
+
+        .btn-submit,
         .form-group input {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: 'Poppins', sans-serif;
+          font-size: 0.95rem;
         }
-        .form-group input:focus {
-            outline: none;
-            border-color: #00cc6a;
-        }
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
-            color: #1a1a2e;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            font-family: 'Poppins', sans-serif;
-            margin-top: 10px;
-        }
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 204, 106, 0.4);
-        }
-        .message {
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .message.warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-.login-btn{
-    display:flex;
-    align-items:center;
-    gap:10px;
-
-    background:linear-gradient(90deg,#1ee4b7,#9cff00);
-    color:#05070d;
-
-    padding:12px 24px;
-    border-radius:12px;
-
-    text-decoration:none;
-    font-weight:700;
-
-    transition:.3s;
-}
-
-.login-btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 0 20px rgba(156,255,0,.35);
-}
-
-        @media (max-width: 768px) {
-            .success-container {
-                padding: 180px 16px 64px;
-            }
-
-            .success-content {
-                padding: 32px 22px;
-            }
-
-            .success-title {
-                font-size: 1.7rem;
-            }
-
-            .success-desc {
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .success-icon {
-                font-size: 4rem;
-            }
-
-            .success-title {
-                font-size: 1.5rem;
-            }
-
-            .btn-submit,
-            .form-group input {
-                font-size: 0.95rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <header class="header" style="position: absolute; top: 0; left: 0; right: 0;">
-        <div class="container">
-            <div class="logo">
-                <a href="index.html"><img src="logo.png" alt="Fitborypro" class="logo-img"></a>
-            </div>
-            <nav class="nav">
-                <a href="sobre.html" class="nav-link">Sobre</a>
-                <a href="planos.html" class="nav-link">Planos</a>
-                <div class="nav-actions">
-                    <a href="https://alunos-lovat.vercel.app/login" class="login-btn secondary">Area Aluno</a>
-                    <a href="https://gerenciaralunos.vercel.app/login" class="login-btn primary">Area Personal</a>
-                </div>
-            </nav>
+  </head>
+  <body>
+    <header
+      class="header"
+      style="position: absolute; top: 0; left: 0; right: 0"
+    >
+      <div class="container">
+        <div class="logo">
+          <a href="index.html"
+            ><img src="logo.png" alt="FitBodyPro" class="logo-img"
+          /></a>
         </div>
+        <nav class="nav">
+          <a href="sobre.html" class="nav-link">Sobre</a>
+          <a href="planos.html" class="nav-link">Planos</a>
+          <div class="nav-actions">
+            <a
+              href="https://alunos-lovat.vercel.app/login"
+              class="login-btn secondary"
+              >Area Aluno</a
+            >
+            <a
+              href="https://gerenciaralunos.vercel.app/login"
+              class="login-btn primary"
+              >Area Personal</a
+            >
+          </div>
+        </nav>
+      </div>
     </header>
 
     <div class="success-container">
-        <div class="success-content">
-            <div class="success-icon">🎉</div>
-            <h1 class="success-title">Pagamento Confirmado!</h1>
-            <p class="success-desc">Finalize seu cadastro para liberar seu acesso ao FitboryPro.</p>
-            <div id="messageArea"></div>
-            <form id="signupForm">
-                <div class="form-group">
-                    <label for="fullName">Nome completo</label>
-                    <input type="text" id="fullName" name="fullName" required placeholder="Seu nome completo">
-                </div>
-                <div class="form-group">
-                    <label for="phone">Telefone</label>
-                    <input type="tel" id="phone" name="phone" required placeholder="(11) 99999-9999">
-                </div>
-                <div class="form-group">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required placeholder="Sua senha">
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Confirmar senha</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirme sua senha">
-                </div>
-                <button type="submit" class="btn-submit">Criar Conta</button>
-            </form>
-        </div>
+      <div class="success-content">
+        <div class="success-icon">🎉</div>
+        <h1 class="success-title">Pagamento Confirmado!</h1>
+        <p class="success-desc">
+          Finalize seu cadastro para liberar seu acesso ao FitBodyPro.
+        </p>
+        <div id="messageArea"></div>
+        <form id="signupForm">
+          <div class="form-group">
+            <label for="fullName">Nome completo</label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              required
+              placeholder="Seu nome completo"
+            />
+          </div>
+          <div class="form-group">
+            <label for="phone">Telefone</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="seu@email.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              placeholder="Sua senha"
+            />
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirmar senha</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              required
+              placeholder="Confirme sua senha"
+            />
+          </div>
+          <button type="submit" class="btn-submit">Criar Conta</button>
+        </form>
+      </div>
     </div>
 
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <a href="index.html"><img src="logo.png" alt="Fitborypro" class="footer-logo-img"></a>
-                </div>
-                <p class="footer-text">Fitborypro para web e app, com entrada gratuita para comecar.</p>
-                <div class="store-links">
-                    <a href="https://apps.apple.com/br/app/fitbody-pro/id6760191189" class="store-badge" target="_blank" rel="noopener noreferrer">
-                        <span class="store-badge-icon"></span>
-                        <span class="store-badge-text">
-                            <span class="store-badge-label">iPhone para alunos</span>
-                            <span class="store-badge-name">App Store</span>
-                        </span>
-                    </a>
-                    <span class="store-badge disabled">
-                        <span class="store-badge-icon">▶</span>
-                        <span class="store-badge-text">
-                            <span class="store-badge-label">Android</span>
-                            <span class="store-badge-name">Em breve</span>
-                        </span>
-                    </span>
-                </div>
-                <p class="store-note">No momento, o app iOS esta disponivel apenas para alunos. Versao Android em breve.</p>
-            </div>
-            <p class="copyright">&copy; 2026 Fitborypro. Todos os direitos reservados.</p>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-logo">
+            <a href="index.html"
+              ><img src="logo.png" alt="FitBodyPro" class="footer-logo-img"
+            /></a>
+          </div>
+          <p class="footer-text">
+            FitBodyPro para web e app, com entrada gratuita para comecar.
+          </p>
+          <div class="store-links">
+            <a
+              href="https://apps.apple.com/br/app/fitbody-pro/id6760191189"
+              class="store-badge"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="store-badge-icon"></span>
+              <span class="store-badge-text">
+                <span class="store-badge-label">iPhone para alunos</span>
+                <span class="store-badge-name">App Store</span>
+              </span>
+            </a>
+            <span class="store-badge disabled">
+              <span class="store-badge-icon">▶</span>
+              <span class="store-badge-text">
+                <span class="store-badge-label">Android</span>
+                <span class="store-badge-name">Em breve</span>
+              </span>
+            </span>
+          </div>
+          <p class="store-note">
+            No momento, o app iOS esta disponivel apenas para alunos. Versao
+            Android em breve.
+          </p>
         </div>
+        <p class="copyright">
+          &copy; 2026 FitBodyPro. Todos os direitos reservados.
+        </p>
+      </div>
     </footer>
 
-<script>
-const PAYMENT_CONTACT_STORAGE_KEY = 'fitboryPaymentContact';
-const PENDING_SIGNUP_STORAGE_PREFIX = 'fitboryPendingSignup:';
-const LATEST_PENDING_SIGNUP_STORAGE_KEY = 'fitboryPendingSignupLatest';
+    <script>
+      const PAYMENT_CONTACT_STORAGE_KEY = "fitboryPaymentContact";
+      const PENDING_SIGNUP_STORAGE_PREFIX = "fitboryPendingSignup:";
+      const LATEST_PENDING_SIGNUP_STORAGE_KEY = "fitboryPendingSignupLatest";
 
-function safeStorageGet(storage, key) {
-    try {
-        return JSON.parse(storage.getItem(key) || 'null');
-    } catch (error) {
-        return null;
-    }
-}
+      function safeStorageGet(storage, key) {
+        try {
+          return JSON.parse(storage.getItem(key) || "null");
+        } catch (error) {
+          return null;
+        }
+      }
 
-function safeStorageSet(storage, key, value) {
-    try {
-        storage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-        // Ignore storage write failures to avoid blocking signup recovery.
-    }
-}
+      function safeStorageSet(storage, key, value) {
+        try {
+          storage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          // Ignore storage write failures to avoid blocking signup recovery.
+        }
+      }
 
-function safeStorageRemove(storage, key) {
-    try {
-        storage.removeItem(key);
-    } catch (error) {
-        // Ignore cleanup failures without interrupting the user flow.
-    }
-}
+      function safeStorageRemove(storage, key) {
+        try {
+          storage.removeItem(key);
+        } catch (error) {
+          // Ignore cleanup failures without interrupting the user flow.
+        }
+      }
 
-function buildRecurringStorageKey(paymentId) {
-    return `fitboryRecurring:${paymentId}`;
-}
+      function buildRecurringStorageKey(paymentId) {
+        return `fitboryRecurring:${paymentId}`;
+      }
 
-function buildPendingSignupStorageKey(paymentId) {
-    return `${PENDING_SIGNUP_STORAGE_PREFIX}${paymentId}`;
-}
+      function buildPendingSignupStorageKey(paymentId) {
+        return `${PENDING_SIGNUP_STORAGE_PREFIX}${paymentId}`;
+      }
 
-function readPaymentContact() {
-    return (
-        safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-        safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-        {}
-    );
-}
+      function readPaymentContact() {
+        return (
+          safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+          safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
+          {}
+        );
+      }
 
-function readRecurringData(paymentId) {
-    if (!paymentId) return null;
+      function readRecurringData(paymentId) {
+        if (!paymentId) return null;
 
-    return (
-        safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
-        safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
-        null
-    );
-}
+        return (
+          safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
+          safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
+          null
+        );
+      }
 
-function readPendingSignup(paymentId) {
-    if (!paymentId) return null;
+      function readPendingSignup(paymentId) {
+        if (!paymentId) return null;
 
-    return safeStorageGet(localStorage, buildPendingSignupStorageKey(paymentId));
-}
+        return safeStorageGet(
+          localStorage,
+          buildPendingSignupStorageKey(paymentId),
+        );
+      }
 
-function readLatestPendingSignup() {
-    const latestPaymentId =
-        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+      function readLatestPendingSignup() {
+        const latestPaymentId =
+          safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) ||
+          null;
 
-    if (!latestPaymentId) {
-        return null;
-    }
-
-    return readPendingSignup(latestPaymentId);
-}
-
-function resolvePendingContext() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const latestPendingSignup = readLatestPendingSignup();
-    const recoveryTokenFromUrl =
-        urlParams.get('recoveryToken') ||
-        urlParams.get('recovery_token') ||
-        null;
-    const paymentIdFromUrl =
-        urlParams.get('paymentId') ||
-        urlParams.get('paymentid') ||
-        urlParams.get('payment_id') ||
-        urlParams.get('collection_id') ||
-        urlParams.get('id');
-    const paymentId = paymentIdFromUrl || latestPendingSignup?.paymentId || null;
-    const plan = urlParams.get('plan') || latestPendingSignup?.plan || 'starter';
-    const pendingSignup = paymentId
-        ? readPendingSignup(paymentId) || latestPendingSignup
-        : latestPendingSignup;
-    const recoveryToken =
-        recoveryTokenFromUrl || pendingSignup?.recoveryToken || null;
-
-    if (!paymentIdFromUrl && paymentId) {
-        const nextUrl = new URL('/success.html', window.location.origin);
-        nextUrl.searchParams.set('plan', plan);
-        nextUrl.searchParams.set('paymentId', paymentId);
-
-        if (recoveryToken) {
-            nextUrl.searchParams.set('recoveryToken', recoveryToken);
+        if (!latestPaymentId) {
+          return null;
         }
 
-        window.history.replaceState({}, '', nextUrl.toString());
-    }
+        return readPendingSignup(latestPaymentId);
+      }
 
-    return {
-        paymentId,
-        plan,
-        pendingSignup,
-        recoveryToken
-    };
-}
+      function resolvePendingContext() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const latestPendingSignup = readLatestPendingSignup();
+        const recoveryTokenFromUrl =
+          urlParams.get("recoveryToken") ||
+          urlParams.get("recovery_token") ||
+          null;
+        const paymentIdFromUrl =
+          urlParams.get("paymentId") ||
+          urlParams.get("paymentid") ||
+          urlParams.get("payment_id") ||
+          urlParams.get("collection_id") ||
+          urlParams.get("id");
+        const paymentId =
+          paymentIdFromUrl || latestPendingSignup?.paymentId || null;
+        const plan =
+          urlParams.get("plan") || latestPendingSignup?.plan || "starter";
+        const pendingSignup = paymentId
+          ? readPendingSignup(paymentId) || latestPendingSignup
+          : latestPendingSignup;
+        const recoveryToken =
+          recoveryTokenFromUrl || pendingSignup?.recoveryToken || null;
 
-function getRecoveredRecurringData(paymentId, pendingSignup) {
-    return readRecurringData(paymentId) || pendingSignup?.recurringData || null;
-}
+        if (!paymentIdFromUrl && paymentId) {
+          const nextUrl = new URL("/success.html", window.location.origin);
+          nextUrl.searchParams.set("plan", plan);
+          nextUrl.searchParams.set("paymentId", paymentId);
 
-function hasCompleteRecurringData(recurringData) {
-    return Boolean(
-        recurringData &&
-            recurringData.providerCustomerId &&
-            recurringData.providerSubscriptionId &&
-            recurringData.providerPaymentMethodToken &&
-            recurringData.remoteIp
-    );
-}
+          if (recoveryToken) {
+            nextUrl.searchParams.set("recoveryToken", recoveryToken);
+          }
 
-function hydratePendingContactFields(pendingSignup) {
-    const storedContact = readPaymentContact();
-    const contact = pendingSignup?.contact || {};
-    const fullNameInput = document.getElementById('fullName');
-    const phoneInput = document.getElementById('phone');
-    const emailInput = document.getElementById('email');
+          window.history.replaceState({}, "", nextUrl.toString());
+        }
 
-    if (fullNameInput && !fullNameInput.value.trim()) {
-        fullNameInput.value = contact.fullName || storedContact.fullName || '';
-    }
+        return {
+          paymentId,
+          plan,
+          pendingSignup,
+          recoveryToken,
+        };
+      }
 
-    if (phoneInput && !phoneInput.value.trim()) {
-        phoneInput.value = contact.phone || storedContact.phone || '';
-    }
+      function getRecoveredRecurringData(paymentId, pendingSignup) {
+        return (
+          readRecurringData(paymentId) || pendingSignup?.recurringData || null
+        );
+      }
 
-    if (emailInput && !emailInput.value.trim()) {
-        emailInput.value = contact.email || storedContact.email || '';
-    }
-}
+      function hasCompleteRecurringData(recurringData) {
+        return Boolean(
+          recurringData &&
+          recurringData.providerCustomerId &&
+          recurringData.providerSubscriptionId &&
+          recurringData.providerPaymentMethodToken &&
+          recurringData.remoteIp,
+        );
+      }
 
-function markPendingSignupCompleted(paymentId) {
-    if (!paymentId) return;
+      function hydratePendingContactFields(pendingSignup) {
+        const storedContact = readPaymentContact();
+        const contact = pendingSignup?.contact || {};
+        const fullNameInput = document.getElementById("fullName");
+        const phoneInput = document.getElementById("phone");
+        const emailInput = document.getElementById("email");
 
-    const existingRecord = readPendingSignup(paymentId);
+        if (fullNameInput && !fullNameInput.value.trim()) {
+          fullNameInput.value =
+            contact.fullName || storedContact.fullName || "";
+        }
 
-    if (existingRecord) {
-        safeStorageSet(localStorage, buildPendingSignupStorageKey(paymentId), {
-            ...existingRecord,
-            status: 'signup_completed',
-            completedAt: new Date().toISOString()
-        });
-    }
+        if (phoneInput && !phoneInput.value.trim()) {
+          phoneInput.value = contact.phone || storedContact.phone || "";
+        }
 
-    safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
-    safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
+        if (emailInput && !emailInput.value.trim()) {
+          emailInput.value = contact.email || storedContact.email || "";
+        }
+      }
 
-    const latestPaymentId =
-        safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) || null;
+      function markPendingSignupCompleted(paymentId) {
+        if (!paymentId) return;
 
-    if (latestPaymentId === paymentId) {
-        safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
-    }
-}
+        const existingRecord = readPendingSignup(paymentId);
 
-async function renderRecoveryHint(context) {
-    const messageArea = document.getElementById('messageArea');
+        if (existingRecord) {
+          safeStorageSet(
+            localStorage,
+            buildPendingSignupStorageKey(paymentId),
+            {
+              ...existingRecord,
+              status: "signup_completed",
+              completedAt: new Date().toISOString(),
+            },
+          );
+        }
 
-    if (!messageArea || context.plan === 'free' || !context.paymentId) {
-        return;
-    }
+        safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
+        safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
 
-    const recurringData = getRecoveredRecurringData(
-        context.paymentId,
-        context.pendingSignup
-    );
+        const latestPaymentId =
+          safeStorageGet(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY) ||
+          null;
 
-    if (hasCompleteRecurringData(recurringData)) {
-        messageArea.innerHTML = `
+        if (latestPaymentId === paymentId) {
+          safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
+        }
+      }
+
+      async function renderRecoveryHint(context) {
+        const messageArea = document.getElementById("messageArea");
+
+        if (!messageArea || context.plan === "free" || !context.paymentId) {
+          return;
+        }
+
+        const recurringData = getRecoveredRecurringData(
+          context.paymentId,
+          context.pendingSignup,
+        );
+
+        if (hasCompleteRecurringData(recurringData)) {
+          messageArea.innerHTML = `
             <div class="message warning">
                 Encontramos sua compra neste navegador. Finalize sua senha abaixo para concluir o acesso sem pagar novamente.
             </div>
         `;
-        return;
-    }
+          return;
+        }
 
-    try {
-        const response = await fetch('/api/check-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: context.paymentId })
-        });
-        const data = await response.json();
+        try {
+          const response = await fetch("/api/check-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentId: context.paymentId }),
+          });
+          const data = await response.json();
 
-        if (response.ok && data.approved) {
+          if (response.ok && data.approved) {
             messageArea.innerHTML = `
                 <div class="message warning">
                     Seu pagamento foi localizado, mas nao conseguimos concluir o cadastro automaticamente neste navegador.
                     Volte para a pagina de planos e toque em Retomar cadastro para continuar.
                 </div>
             `;
+          }
+        } catch (error) {
+          // Ignore recovery lookup failures and keep manual retry available.
         }
-    } catch (error) {
-        // Ignore recovery lookup failures and keep manual retry available.
-    }
-}
+      }
 
-const pendingContext = resolvePendingContext();
-hydratePendingContactFields(pendingContext.pendingSignup);
-renderRecoveryHint(pendingContext);
+      const pendingContext = resolvePendingContext();
+      hydratePendingContactFields(pendingContext.pendingSignup);
+      renderRecoveryHint(pendingContext);
 
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const plan = pendingContext.plan;
-    const paymentId = pendingContext.paymentId;
-    const recoveryToken = pendingContext.recoveryToken;
+      document
+        .getElementById("signupForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const plan = pendingContext.plan;
+          const paymentId = pendingContext.paymentId;
+          const recoveryToken = pendingContext.recoveryToken;
 
-    const name = document.getElementById('fullName').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const messageArea = document.getElementById('messageArea');
+          const name = document.getElementById("fullName").value.trim();
+          const phone = document.getElementById("phone").value.trim();
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          const confirmPassword =
+            document.getElementById("confirmPassword").value;
+          const messageArea = document.getElementById("messageArea");
 
-    messageArea.innerHTML = '';
+          messageArea.innerHTML = "";
 
-    if (password !== confirmPassword) {
-        messageArea.innerHTML = '<div class="message error">As senhas não coincidem!</div>';
-        return;
-    }
+          if (password !== confirmPassword) {
+            messageArea.innerHTML =
+              '<div class="message error">As senhas não coincidem!</div>';
+            return;
+          }
 
-    if (plan !== 'free' && !paymentId) {
-        messageArea.innerHTML = '<div class="message error">ID do pagamento não encontrado.</div>';
-        return;
-    }
+          if (plan !== "free" && !paymentId) {
+            messageArea.innerHTML =
+              '<div class="message error">ID do pagamento não encontrado.</div>';
+            return;
+          }
 
-    let recurringData = null;
-    recurringData = getRecoveredRecurringData(paymentId, pendingContext.pendingSignup);
+          let recurringData = null;
+          recurringData = getRecoveredRecurringData(
+            paymentId,
+            pendingContext.pendingSignup,
+          );
 
-    console.log('PAYMENT ID:', paymentId);
-    console.log('RECURRING DATA:', recurringData);
+          console.log("PAYMENT ID:", paymentId);
+          console.log("RECURRING DATA:", recurringData);
 
-    if (plan !== 'free') {
-        if (!hasCompleteRecurringData(recurringData)) {
-            messageArea.innerHTML = `
+          if (plan !== "free") {
+            if (!hasCompleteRecurringData(recurringData)) {
+              messageArea.innerHTML = `
                 <div class="message error">
                     Encontramos sua compra, mas nao foi possivel concluir o cadastro automaticamente.
                     Volte para a pagina de planos e use a opcao Retomar cadastro para continuar.
                 </div>
             `;
 
-            console.error('DADOS RECORRENTES INCOMPLETOS:', recurringData);
-            return;
-        }
-    }
+              console.error("DADOS RECORRENTES INCOMPLETOS:", recurringData);
+              return;
+            }
+          }
 
-    const payload = {
-        fullName: name,
-        phone,
-        email,
-        password,
-        plan,
-        billingCycle: 'monthly',
-        paymentStatus:
-            plan !== 'free'
+          const payload = {
+            fullName: name,
+            phone,
+            email,
+            password,
+            plan,
+            billingCycle: "monthly",
+            paymentStatus:
+              plan !== "free"
                 ? recurringData?.paymentStatus ||
                   recurringData?.paymentRawPayload?.payment?.status ||
-                  'RECEIVED'
+                  "RECEIVED"
                 : undefined,
-        paymentProvider: plan !== 'free' ? 'asaas' : undefined,
-        paymentId: plan !== 'free' ? paymentId : undefined,
-        recoveryToken: plan !== 'free' ? recoveryToken : undefined,
-        ...(recurringData || {})
-    };
+            paymentProvider: plan !== "free" ? "asaas" : undefined,
+            paymentId: plan !== "free" ? paymentId : undefined,
+            recoveryToken: plan !== "free" ? recoveryToken : undefined,
+            ...(recurringData || {}),
+          };
 
-    console.log('ENVIANDO PARA /api/signup:', payload);
+          console.log("ENVIANDO PARA /api/signup:", payload);
 
-    try {
-        const response = await fetch('/api/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+          try {
+            const response = await fetch("/api/signup", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        console.log('RETORNO /api/signup:', data);
+            console.log("RETORNO /api/signup:", data);
 
-        if (response.ok && data.success) {
-            messageArea.innerHTML = '<div class="message success">Conta criada com sucesso! Redirecionando para seu acesso.</div>';
+            if (response.ok && data.success) {
+              messageArea.innerHTML =
+                '<div class="message success">Conta criada com sucesso! Redirecionando para seu acesso.</div>';
 
-            if (paymentId) {
+              if (paymentId) {
                 markPendingSignupCompleted(paymentId);
+              }
+
+              setTimeout(() => {
+                window.location.href =
+                  data.loginUrl || "https://gerenciaralunos.vercel.app/login";
+              }, 2000);
+            } else {
+              messageArea.innerHTML =
+                '<div class="message error">' +
+                (data.message || data.error || "Ocorreu um erro!") +
+                "</div>";
             }
-
-            setTimeout(() => {
-                window.location.href = data.loginUrl || 'https://gerenciaralunos.vercel.app/login';
-            }, 2000);
-        } else {
-            messageArea.innerHTML = '<div class="message error">' + (data.message || data.error || 'Ocorreu um erro!') + '</div>';
-        }
-
-    } catch (error) {
-        console.error('Signup Error:', error);
-        messageArea.innerHTML = '<div class="message error">Erro de conexão. Tente novamente!</div>';
-    }
-});
-</script>
-</body>
+          } catch (error) {
+            console.error("Signup Error:", error);
+            messageArea.innerHTML =
+              '<div class="message error">Erro de conexão. Tente novamente!</div>';
+          }
+        });
+    </script>
+  </body>
 </html>
