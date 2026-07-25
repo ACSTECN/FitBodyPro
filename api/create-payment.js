@@ -2,7 +2,7 @@ const { createRecoveryToken } = require("./recovery-token");
 
 const PLAN_DETAILS = {
   starter: { title: "FitBody Starter", price: 14.9 },
-  premium: { title: "FitBody Pro", price: 39.9 },
+  premium: { title: "FitBody Premium", price: 39.9 },
 };
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
