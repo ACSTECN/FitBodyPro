@@ -1031,6 +1031,10 @@ body {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 14px;
+    }
+
     .header {
         padding: 4px 0 6px;
     }
@@ -1130,7 +1134,7 @@ body {
     }
 
     .hero.hero-home {
-        padding: 56px 0 42px;
+        padding: 34px 0 24px;
         text-align: center;
     }
 
@@ -1155,43 +1159,218 @@ body {
     .audience-card,
     .capability-card,
     .highlight-card {
-        padding: 22px;
+        padding: 18px;
     }
 
     .hero-note {
+        font-size: 0.95rem;
+        margin: 0 auto 20px;
         margin-left: auto;
         margin-right: auto;
     }
 
-    .hero-actions,
-    .hero-metrics {
-        justify-content: center;
+    .hero-title {
+        font-size: 2rem;
+        margin-bottom: 12px;
     }
+
+    .hero-subtitle {
+        font-size: 1.02rem;
+        margin-bottom: 8px;
+    }
+
+    .hero-subtitle-2 {
+        font-size: 1.18rem;
+        margin-bottom: 18px;
+    }
+
+    .hero-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 18px;
+    }
+
     .hero-actions .btn-primary,
     .hero-actions .btn-secondary {
         width: 100%;
-        max-width: 320px;
+        max-width: none;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        border-radius: 16px;
     }
 
     .hero-metrics {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .metric-card {
+        padding: 12px 10px;
+        border-radius: 14px;
+    }
+
+    .metric-value {
+        font-size: 1.18rem;
+        margin-bottom: 6px;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        line-height: 1.35;
+    }
+
+    .hero-panel-header {
+        margin-bottom: 14px;
+    }
+
+    .hero-panel-title,
+    .differential-copy h3 {
+        font-size: 1.34rem;
+        line-height: 1.2;
+    }
+
+    .hero-panel-text,
+    .differential-copy p,
+    .benefit-text,
+    .capability-text,
+    .audience-text,
+    .highlight-text,
+    .quote-text {
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+
+    .hero-panel-list,
+    .differential-card-stack {
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .hero-panel-item,
+    .differential-mini-card {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .hero-panel-footer {
+        gap: 8px;
+        padding-top: 14px;
+    }
+
+    .hero-panel-stat strong {
+        font-size: 0.98rem;
+    }
+
+    .hero-panel-stat span {
+        font-size: 0.78rem;
+    }
+
+    .content-section,
+    .testimonials-section {
+        padding: 56px 0;
+    }
+
+    .section-eyebrow {
+        margin-bottom: 10px;
+        font-size: 0.72rem;
+    }
+
+    .section-lead {
+        margin: -18px auto 0;
+        font-size: 0.94rem;
+        line-height: 1.55;
+    }
+
+    .benefit-grid,
+    .proof-grid,
+    .audience-grid,
+    .capability-grid,
+    .highlight-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 28px;
+    }
+
+    .benefit-card,
+    .quote-card,
+    .audience-card,
+    .capability-card,
+    .highlight-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .benefit-badge,
+    .capability-marker {
+        min-width: 38px;
+        height: 38px;
+        margin-bottom: 12px;
+        font-size: 0.86rem;
+    }
+
+    .benefit-title,
+    .capability-title,
+    .audience-title,
+    .highlight-title {
+        font-size: 1.05rem;
+        margin-bottom: 8px;
+    }
+
+    .highlight-value {
+        font-size: 1.45rem;
+        margin-bottom: 8px;
+    }
+
+    .highlight-label {
+        margin-bottom: 6px;
+        font-size: 0.92rem;
+    }
+
+    .differential-spotlight {
+        margin-top: 28px;
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    .differential-pills {
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .differential-pill {
+        padding: 8px 10px;
+        font-size: 0.8rem;
     }
 
     .testimonial-card,
     .testimonial-card.reverse {
-        flex-direction: column;
-        padding: 40px;
+        gap: 18px;
+        padding: 22px;
+    }
+
+    .quote-avatar {
+        width: 42px;
+        height: 42px;
+    }
+
+    .store-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
     }
 
     .avatar-placeholder {
-        width: 180px;
-        height: 180px;
-        font-size: 3rem;
+        width: 132px;
+        height: 132px;
+        font-size: 2.2rem;
     }
 
     .section-title {
-        font-size: 2rem;
-        margin-bottom: 32px;
+        font-size: 1.72rem;
+        margin-bottom: 24px;
     }
 
     .plans-grid {
@@ -1216,17 +1395,47 @@ body {
     }
 
     .store-links {
-        flex-direction: column;
-        align-items: center;
+        align-items: stretch;
     }
 
     .store-badge {
         width: 100%;
-        max-width: 320px;
+        min-width: 0;
+        max-width: none;
+        padding: 10px 12px;
+        border-radius: 14px;
+        gap: 10px;
     }
 
     .footer-logo-img {
-        height: 150px;
+        height: 108px;
+        margin-bottom: 10px;
+    }
+
+    .footer {
+        padding: 42px 0 24px;
+    }
+
+    .footer-text {
+        font-size: 1rem;
+        margin-bottom: 18px;
+    }
+
+    .store-note {
+        font-size: 0.88rem;
+        margin-bottom: 18px;
+    }
+
+    .store-badge-icon {
+        font-size: 1.5rem;
+    }
+
+    .store-badge-label {
+        font-size: 0.62rem;
+    }
+
+    .store-badge-name {
+        font-size: 1rem;
     }
 }
 
@@ -1246,6 +1455,20 @@ body {
     .nav {
         gap: 8px;
         padding: 12px;
+    }
+
+    .hero-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-metrics,
+    .benefit-grid,
+    .proof-grid,
+    .audience-grid,
+    .capability-grid,
+    .highlight-grid,
+    .store-links {
+        grid-template-columns: 1fr;
     }
 
     .nav-link {
@@ -1273,25 +1496,25 @@ body {
 
 @media (max-width: 480px) {
     .container {
-        padding: 0 16px;
+        padding: 0 14px;
     }
 
     .hero-title {
-        font-size: 2.1rem;
+        font-size: 1.8rem;
     }
 
     .hero-subtitle,
     .hero-subtitle-2 {
-        font-size: 1.1rem;
+        font-size: 0.98rem;
     }
 
     .section-title {
-        font-size: 1.75rem;
+        font-size: 1.55rem;
     }
 
     .hero-panel-title,
     .differential-copy h3 {
-        font-size: 1.5rem;
+        font-size: 1.22rem;
     }
 
     .metric-card,
@@ -1299,6 +1522,6 @@ body {
     .benefit-card,
     .quote-card,
     .highlight-card {
-        border-radius: 18px;
+        border-radius: 16px;
     }
 }
