@@ -92,6 +92,19 @@
         align-items: stretch;
       }
 
+      .plans-mobile-shell {
+        position: relative;
+      }
+
+      .plans-viewport {
+        width: 100%;
+      }
+
+      .plans-nav,
+      .plans-pagination {
+        display: none;
+      }
+
       .plan-card {
         background: linear-gradient(180deg, #0d111c 0%, #080b12 100%);
         border: 1px solid rgba(156, 255, 0, 0.15);
@@ -617,16 +630,38 @@
           margin-bottom: 24px;
         }
 
+        .plans-mobile-shell {
+          padding: 0 18px 30px;
+        }
+
+        .plans-viewport {
+          overflow: hidden;
+        }
+
         .plans-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 14px;
+          display: flex;
+          grid-template-columns: none;
+          gap: 12px;
+          overflow-x: auto;
+          padding: 6px 4px 10px;
+          scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .plans-grid::-webkit-scrollbar {
+          display: none;
         }
 
         .plan-card,
         .plan-card.featured {
+          flex: 0 0 calc(100% - 68px);
+          min-width: calc(100% - 68px);
+          scroll-snap-align: center;
           transform: none;
-          padding: 16px 12px;
-          border-radius: 16px;
+          padding: 18px 14px;
+          border-radius: 20px;
         }
 
         .plan-card.featured:hover,
@@ -635,29 +670,28 @@
         }
 
         .plan-card.featured {
-          grid-column: auto;
-          padding-top: 42px !important;
+          padding-top: 48px !important;
         }
 
         .plan-badge {
-          height: 32px;
+          height: 34px;
           font-size: 11px;
-          border-radius: 16px 16px 0 0;
+          border-radius: 20px 20px 0 0;
         }
 
         .plan-name {
-          font-size: 18px;
-          margin: 6px 0 8px;
+          font-size: 22px;
+          margin: 4px 0 8px;
         }
 
         .plan-description,
         .plan-features li {
-          font-size: 0.8rem;
-          line-height: 1.35;
+          font-size: 0.85rem;
+          line-height: 1.4;
         }
 
         .plan-description {
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         .plan-features li {
@@ -665,26 +699,77 @@
         }
 
         .plan-price {
-          margin: 10px 0 12px;
+          margin: 8px 0 12px;
         }
 
         .plan-price .currency {
-          font-size: 15px;
+          font-size: 18px;
         }
 
         .plan-price .value {
-          font-size: 28px;
+          font-size: 38px;
         }
 
         .plan-price .period {
-          font-size: 12px;
+          font-size: 13px;
         }
 
         .plan-btn {
           margin-top: 12px;
-          padding: 10px;
-          font-size: 0.82rem;
-          border-radius: 10px;
+          padding: 12px;
+          font-size: 0.88rem;
+          border-radius: 12px;
+        }
+
+        .plans-nav {
+          position: absolute;
+          top: 50%;
+          z-index: 3;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 38px;
+          height: 38px;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          border-radius: 999px;
+          background: rgba(8, 11, 18, 0.92);
+          color: #fff;
+          font-size: 18px;
+          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+          transform: translateY(-50%);
+        }
+
+        .plans-nav:disabled {
+          opacity: 0.35;
+        }
+
+        .plans-nav-prev {
+          left: 0;
+        }
+
+        .plans-nav-next {
+          right: 0;
+        }
+
+        .plans-pagination {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 8px;
+        }
+
+        .plans-dot {
+          width: 8px;
+          height: 8px;
+          border: none;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.24);
+          transition: width 0.2s ease, background 0.2s ease;
+        }
+
+        .plans-dot.is-active {
+          width: 22px;
+          background: #9cff00;
         }
 
         .modal {
@@ -785,31 +870,39 @@
           font-size: 28px;
         }
 
-        .plan-card,
-        .plan-card.featured {
-          padding: 14px 10px;
+        .plans-mobile-shell {
+          padding: 0 14px 28px;
         }
 
-        .plans-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .plan-card,
+        .plan-card.featured {
+          flex-basis: calc(100% - 54px);
+          min-width: calc(100% - 54px);
+          padding: 16px 12px;
         }
 
         .plan-badge {
           font-size: 10px;
-          height: 28px;
+          height: 30px;
         }
 
         .plan-price .value {
-          font-size: 24px;
+          font-size: 32px;
         }
 
         .plan-name {
-          font-size: 16px;
+          font-size: 19px;
         }
 
         .plan-description,
         .plan-features li {
-          font-size: 0.76rem;
+          font-size: 0.8rem;
+        }
+
+        .plans-nav {
+          width: 34px;
+          height: 34px;
+          font-size: 16px;
         }
 
         .modal-content h2 {
@@ -843,13 +936,11 @@
       }
 
       @media (max-width: 360px) {
-        .plans-grid {
-          grid-template-columns: 1fr;
-        }
-
         .plan-card,
         .plan-card.featured {
-          padding: 16px 12px;
+          flex-basis: calc(100% - 40px);
+          min-width: calc(100% - 40px);
+          padding: 15px 11px;
         }
 
         .plan-name {
@@ -913,77 +1004,100 @@
       <div class="container">
         <h2 class="section-title">Escolha o seu plano</h2>
 
-        <div class="plans-grid">
-          <div class="plan-card">
-            <h3 class="plan-name">FitBody Free</h3>
-            <div class="plan-price">
-              <span class="currency">R$</span>
-              <span class="value">0</span>
-              <span class="period">/mês</span>
-            </div>
-            <p class="plan-description">
-              Ideal para conhecer a plataforma e começar com 1 aluno.
-            </p>
-            <ul class="plan-features">
-              <li>✅ Acesso completo ao app</li>
-              <li>✅ 1 aluno cadastrado</li>
-              <li>✅ Gestão simples para começar</li>
-            </ul>
-            <button class="plan-btn free" onclick="openModal()">
-              Adquirir
-            </button>
-          </div>
+        <div class="plans-mobile-shell">
+          <button
+            type="button"
+            class="plans-nav plans-nav-prev"
+            aria-label="Ver plano anterior"
+          >
+            &#10094;
+          </button>
+          <div class="plans-viewport" id="plansViewport">
+            <div class="plans-grid" id="plansGrid">
+              <div class="plan-card">
+                <h3 class="plan-name">FitBody Free</h3>
+                <div class="plan-price">
+                  <span class="currency">R$</span>
+                  <span class="value">0</span>
+                  <span class="period">/mês</span>
+                </div>
+                <p class="plan-description">
+                  Ideal para conhecer a plataforma e começar com 1 aluno.
+                </p>
+                <ul class="plan-features">
+                  <li>✅ Acesso completo ao app</li>
+                  <li>✅ 1 aluno cadastrado</li>
+                  <li>✅ Gestão simples para começar</li>
+                </ul>
+                <button class="plan-btn free" onclick="openModal()">
+                  Adquirir
+                </button>
+              </div>
 
-          <div class="plan-card featured">
-            <div class="plan-badge">MAIS POPULAR</div>
-            <h3 class="plan-name">FitBody Starter</h3>
-            <div class="plan-price">
-              <span class="currency">R$</span>
-              <span class="value">14,90</span>
-              <span class="period">/mês</span>
-            </div>
-            <p class="plan-description">
-              Perfeito para personal que quer crescer com até 5 alunos ativos.
-            </p>
-            <ul class="plan-features">
-              <li>✅ Acesso completo ao app</li>
-              <li>✅ Até 5 alunos cadastrados</li>
-              <li>✅ Treinos e acompanhamento organizados</li>
-              <li>✅ Experiência profissional para seus alunos</li>
-            </ul>
-            <button
-              class="plan-btn starter"
-              onclick="openPaymentModal('starter')"
-            >
-              Adquirir
-            </button>
-          </div>
+              <div class="plan-card featured">
+                <div class="plan-badge">MAIS POPULAR</div>
+                <h3 class="plan-name">FitBody Starter</h3>
+                <div class="plan-price">
+                  <span class="currency">R$</span>
+                  <span class="value">14,90</span>
+                  <span class="period">/mês</span>
+                </div>
+                <p class="plan-description">
+                  Perfeito para personal que quer crescer com até 5 alunos ativos.
+                </p>
+                <ul class="plan-features">
+                  <li>✅ Acesso completo ao app</li>
+                  <li>✅ Até 5 alunos cadastrados</li>
+                  <li>✅ Treinos e acompanhamento organizados</li>
+                  <li>✅ Experiência profissional para seus alunos</li>
+                </ul>
+                <button
+                  class="plan-btn starter"
+                  onclick="openPaymentModal('starter')"
+                >
+                  Adquirir
+                </button>
+              </div>
 
-          <div class="plan-card">
-            <h3 class="plan-name">FitBody Premium</h3>
-            <div class="plan-price">
-              <span class="currency">R$</span>
-              <span class="value">39,90</span>
-              <span class="period">/mês</span>
+              <div class="plan-card">
+                <h3 class="plan-name">FitBody Premium</h3>
+                <div class="plan-price">
+                  <span class="currency">R$</span>
+                  <span class="value">39,90</span>
+                  <span class="period">/mês</span>
+                </div>
+                <p class="plan-description">
+                  Plano completo para escalar seu atendimento com liberdade total.
+                </p>
+                <ul class="plan-features">
+                  <li>✅ Acesso completo ao app</li>
+                  <li>✅ Alunos ilimitados</li>
+                  <li>✅ Relatórios avançados</li>
+                  <li>✅ Personalização completa</li>
+                  <li>✅ Estrutura pronta para crescer</li>
+                </ul>
+                <button
+                  class="plan-btn premium"
+                  onclick="openPaymentModal('premium')"
+                >
+                  Adquirir
+                </button>
+              </div>
             </div>
-            <p class="plan-description">
-              Plano completo para escalar seu atendimento com liberdade total.
-            </p>
-            <ul class="plan-features">
-              <li>✅ Acesso completo ao app</li>
-              <li>✅ Alunos ilimitados</li>
-              <li>✅ Relatórios avançados</li>
-              <li>✅ Personalização completa</li>
-              <li>✅ Estrutura pronta para crescer</li>
-            </ul>
-            <button
-              class="plan-btn premium"
-              onclick="openPaymentModal('premium')"
-            >
-              Adquirir
-            </button>
           </div>
+          <button
+            type="button"
+            class="plans-nav plans-nav-next"
+            aria-label="Ver proximo plano"
+          >
+            &#10095;
+          </button>
         </div>
+        <div
+          class="plans-pagination"
+          id="plansPagination"
+          aria-label="Navegacao entre os planos"
+        ></div>
       </div>
     </section>
 
@@ -1915,6 +2029,117 @@
         selectPayment("card");
       }
 
+      function initPlansCarousel() {
+        const viewport = document.getElementById("plansViewport");
+        const grid = document.getElementById("plansGrid");
+        const pagination = document.getElementById("plansPagination");
+        const prevButton = document.querySelector(".plans-nav-prev");
+        const nextButton = document.querySelector(".plans-nav-next");
+        const cards = grid ? Array.from(grid.querySelectorAll(".plan-card")) : [];
+
+        if (
+          !viewport ||
+          !grid ||
+          !pagination ||
+          !prevButton ||
+          !nextButton ||
+          !cards.length
+        ) {
+          return;
+        }
+
+        let activeIndex = 0;
+        let dots = [];
+        let ticking = false;
+        const defaultIndex = Math.min(1, cards.length - 1);
+
+        function getTargets() {
+          return cards.map((card) => {
+            const centerOffset = Math.max(
+              (viewport.clientWidth - card.offsetWidth) / 2,
+              0,
+            );
+
+            return Math.max(card.offsetLeft - centerOffset, 0);
+          });
+        }
+
+        function updateControls(index) {
+          activeIndex = index;
+
+          dots.forEach((dot, dotIndex) => {
+            dot.classList.toggle("is-active", dotIndex === index);
+            dot.setAttribute(
+              "aria-current",
+              dotIndex === index ? "true" : "false",
+            );
+          });
+
+          const isMobile = window.innerWidth <= 768;
+          prevButton.disabled = !isMobile || index === 0;
+          nextButton.disabled = !isMobile || index === cards.length - 1;
+        }
+
+        function detectNearestIndex() {
+          const targets = getTargets();
+          const currentScroll = grid.scrollLeft;
+
+          return targets.reduce((closestIndex, target, index) => {
+            return Math.abs(target - currentScroll) <
+              Math.abs(targets[closestIndex] - currentScroll)
+              ? index
+              : closestIndex;
+          }, 0);
+        }
+
+        function goToCard(index, behavior = "smooth") {
+          const safeIndex = Math.max(0, Math.min(index, cards.length - 1));
+
+          if (window.innerWidth > 768) {
+            updateControls(defaultIndex);
+            return;
+          }
+
+          const targets = getTargets();
+          grid.scrollTo({
+            left: targets[safeIndex] || 0,
+            behavior,
+          });
+          updateControls(safeIndex);
+        }
+
+        dots = cards.map((card, index) => {
+          const dot = document.createElement("button");
+          dot.type = "button";
+          dot.className = "plans-dot";
+          dot.setAttribute("aria-label", `Ir para o plano ${index + 1}`);
+          dot.addEventListener("click", () => goToCard(index));
+          pagination.appendChild(dot);
+          return dot;
+        });
+
+        prevButton.addEventListener("click", () => goToCard(activeIndex - 1));
+        nextButton.addEventListener("click", () => goToCard(activeIndex + 1));
+
+        grid.addEventListener("scroll", () => {
+          if (window.innerWidth > 768 || ticking) return;
+
+          ticking = true;
+          window.requestAnimationFrame(() => {
+            updateControls(detectNearestIndex());
+            ticking = false;
+          });
+        });
+
+        window.addEventListener("resize", () => {
+          const targetIndex =
+            window.innerWidth <= 768 ? activeIndex : defaultIndex;
+          goToCard(targetIndex, "auto");
+        });
+
+        goToCard(defaultIndex, "auto");
+      }
+
       function closePaymentModal() {
         document.getElementById("paymentModal").classList.remove("show");
         document.getElementById("messagePaymentArea").innerHTML = "";
@@ -2061,6 +2286,7 @@
         });
 
       renderPendingSignupNotice();
+      initPlansCarousel();
     </script>
     <script src="mobile-menu.js"></script>
   </body>
