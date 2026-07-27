@@ -635,7 +635,7 @@
         }
 
         .plan-card.featured {
-          grid-column: 1 / -1;
+          grid-column: auto;
           padding-top: 54px !important;
         }
 
@@ -777,7 +777,7 @@
         }
 
         .plans-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .plan-badge {
@@ -815,6 +815,21 @@
         .brick-shell {
           min-height: 520px;
           padding: 8px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .plans-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .plan-card,
+        .plan-card.featured {
+          padding: 16px 12px;
+        }
+
+        .plan-name {
+          font-size: 20px;
         }
       }
     </style>
