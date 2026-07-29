@@ -1,5 +1,8 @@
 const { decodeRecoveryToken } = require('./recovery-token');
 
+const PERSONAL_LOGIN_URL = 'https://app.fitbodyproapp.com/login';
+const STUDENT_LOGIN_URL = 'https://aluno.fitbodyproapp.com/login';
+
 function pickFirstDefined(...values) {
     for (const value of values) {
         if (value !== undefined && value !== null && value !== '') {
@@ -212,6 +215,18 @@ function validateRecurringFields(recurringFields) {
     return missing;
 }
 
+function normalizeLoginUrl(loginUrl) {
+    if (!loginUrl || typeof loginUrl !== 'string') {
+        return null;
+    }
+
+    const trimmed = loginUrl.trim();
+
+    return trimmed
+        .replace('https://gerenciaralunos.vercel.app/login', PERSONAL_LOGIN_URL)
+        .replace('https://alunos-lovat.vercel.app/login', STUDENT_LOGIN_URL);
+}
+
 module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({
@@ -342,12 +357,13 @@ module.exports = async function handler(req, res) {
         );
 
         const data = await response.json();
+        const normalizedLoginUrl = normalizeLoginUrl(data.loginUrl);
 
         return res.status(response.status).json({
             success: response.ok,
             message: data.message || data.error || 'Retorno da Supabase',
             recurringReady: data.recurringReady,
-            loginUrl: data.loginUrl,
+            loginUrl: normalizedLoginUrl || PERSONAL_LOGIN_URL,
             enviadoParaSupabase: body,
             supabase: data
         });
