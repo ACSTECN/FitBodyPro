@@ -3,6 +3,16 @@ const { decodeRecoveryToken } = require('./recovery-token');
 const PERSONAL_LOGIN_URL = 'https://app.fitbodyproapp.com/login';
 const STUDENT_LOGIN_URL = 'https://aluno.fitbodyproapp.com/login';
 
+function setSecurityHeaders(res) {
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+}
+
 function pickFirstDefined(...values) {
     for (const value of values) {
         if (value !== undefined && value !== null && value !== '') {
@@ -71,6 +81,19 @@ function buildRecurringFields(reqBody, recoveryContext) {
         explicitRawPayload?.creditCardToken,
         recoveryRawPayload?.creditCardToken
     );
+    const providerCustomerId = pickFirstDefined(
+        recoveredRecurringData.providerCustomerId,
+        reqBody.providerCustomerId,
+        explicitRawPayload?.customer?.id,
+        recoveryRawPayload?.customer?.id
+    );
+    const providerSubscriptionId = pickFirstDefined(
+        recoveredRecurringData.providerSubscriptionId,
+        reqBody.providerSubscriptionId,
+        reqBody.subscriptionId,
+        explicitRawPayload?.subscription?.id,
+        recoveryRawPayload?.subscription?.id
+    );
     const remoteIp = pickFirstDefined(
         recoveredRecurringData.remoteIp,
         reqBody.remoteIp,
@@ -87,24 +110,31 @@ function buildRecurringFields(reqBody, recoveryContext) {
         recoveryRawPayload?.creditCardHolderInfo,
         recoveryRawPayload?.payment?.creditCardHolderInfo
     );
+    const providerReference = pickFirstDefined(
+        recoveredRecurringData.providerReference,
+        reqBody.providerReference,
+        explicitRawPayload?.payment?.invoiceNumber,
+        explicitRawPayload?.payment?.externalReference,
+        explicitRawPayload?.payment?.id,
+        recoveryRawPayload?.payment?.externalReference,
+        recoveryRawPayload?.payment?.id
+    );
     const paymentRawPayload = {
-        ...recoveryRawPayload,
-        ...explicitRawPayload,
-        creditCardToken: pickFirstDefined(
-            explicitRawPayload?.creditCardToken,
-            recoveryRawPayload?.creditCardToken,
-            providerPaymentMethodToken
+        paymentId: pickFirstDefined(
+            recoveredRecurringData.firstPaymentProviderPaymentId,
+            reqBody.firstPaymentProviderPaymentId,
+            explicitRawPayload?.payment?.id,
+            recoveryRawPayload?.payment?.id
         ),
-        remoteIp: pickFirstDefined(
-            explicitRawPayload?.remoteIp,
-            recoveryRawPayload?.remoteIp,
-            remoteIp
+        status: pickFirstDefined(
+            recoveredRecurringData.paymentStatus,
+            reqBody.paymentStatus,
+            explicitRawPayload?.payment?.status,
+            recoveryRawPayload?.payment?.status
         ),
-        creditCardHolderInfo: pickFirstDefined(
-            explicitRawPayload?.creditCardHolderInfo,
-            recoveryRawPayload?.creditCardHolderInfo,
-            creditCardHolderInfo
-        )
+        providerCustomerId,
+        providerSubscriptionId,
+        providerReference
     };
 
     return {
@@ -119,27 +149,14 @@ function buildRecurringFields(reqBody, recoveryContext) {
             reqBody.paymentCurrency,
             'BRL'
         ),
-        providerReference: pickFirstDefined(
-            recoveredRecurringData.providerReference,
-            reqBody.providerReference,
-            explicitRawPayload?.payment?.invoiceNumber,
-            explicitRawPayload?.payment?.externalReference,
-            explicitRawPayload?.payment?.id,
-            recoveryRawPayload?.payment?.externalReference,
-            recoveryRawPayload?.payment?.id
-        ),
+        providerReference,
         paymentDescription: pickFirstDefined(
             recoveredRecurringData.paymentDescription,
             reqBody.paymentDescription,
             explicitRawPayload?.payment?.description,
             recoveryRawPayload?.payment?.description
         ),
-        providerCustomerId: pickFirstDefined(
-            recoveredRecurringData.providerCustomerId,
-            reqBody.providerCustomerId,
-            explicitRawPayload?.customer?.id,
-            recoveryRawPayload?.customer?.id
-        ),
+        providerCustomerId,
         providerCardId: pickFirstDefined(
             recoveredRecurringData.providerCardId,
             reqBody.providerCardId,
@@ -178,13 +195,7 @@ function buildRecurringFields(reqBody, recoveryContext) {
         ),
         remoteIp,
         creditCardHolderInfo,
-        providerSubscriptionId: pickFirstDefined(
-            recoveredRecurringData.providerSubscriptionId,
-            reqBody.providerSubscriptionId,
-            reqBody.subscriptionId,
-            explicitRawPayload?.subscription?.id,
-            recoveryRawPayload?.subscription?.id
-        ),
+        providerSubscriptionId,
         paymentRawPayload
     };
 }
@@ -228,6 +239,8 @@ function normalizeLoginUrl(loginUrl) {
 }
 
 module.exports = async function handler(req, res) {
+    setSecurityHeaders(res);
+
     if (req.method !== 'POST') {
         return res.status(405).json({
             success: false,
@@ -280,8 +293,7 @@ module.exports = async function handler(req, res) {
         if (isPaidPlan && !finalPaymentId) {
             return res.status(400).json({
                 success: false,
-                message: 'PaymentId não chegou na API.',
-                recebido: req.body
+                message: 'PaymentId não chegou na API.'
             });
         }
 
@@ -304,9 +316,7 @@ module.exports = async function handler(req, res) {
                 return res.status(400).json({
                     success: false,
                     message: 'Dados recorrentes incompletos. Conta paga não criada.',
-                    missingRecurringFields,
-                    recebido: req.body,
-                    recurringFields
+                    missingRecurringFields
                 });
             }
         }
@@ -364,8 +374,7 @@ module.exports = async function handler(req, res) {
             message: data.message || data.error || 'Retorno da Supabase',
             recurringReady: data.recurringReady,
             loginUrl: normalizedLoginUrl || PERSONAL_LOGIN_URL,
-            enviadoParaSupabase: body,
-            supabase: data
+            plan: data.plan || finalPlan
         });
     } catch (error) {
         console.error('Signup Error:', error);
@@ -373,7 +382,6 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({
             success: false,
             message: 'Erro interno',
-            error: error.message
         });
     }
 };

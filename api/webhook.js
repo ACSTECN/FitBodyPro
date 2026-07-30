@@ -6,9 +6,18 @@ const ASAAS_API_BASE_URL =
     ? "https://api-sandbox.asaas.com/v3"
     : "https://api.asaas.com/v3");
 
+function setSecurityHeaders(res) {
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+}
+
 module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  setSecurityHeaders(res);
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,OPTIONS,PATCH,DELETE,POST,PUT",
@@ -60,12 +69,6 @@ module.exports = async function handler(req, res) {
     );
 
     const paymentData = await paymentResponse.json();
-
-    console.log("Asaas webhook event:", {
-      event,
-      paymentId,
-      status: paymentData?.status || payment?.status || null,
-    });
 
     return res.status(200).json({ success: true });
   } catch (error) {

@@ -347,20 +347,14 @@
 
       function readPaymentContact() {
         return (
-          safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-          safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-          {}
+          safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) || {}
         );
       }
 
       function readRecurringData(paymentId) {
         if (!paymentId) return null;
 
-        return (
-          safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
-          safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
-          null
-        );
+        return safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId));
       }
 
       function readPendingSignup(paymentId) {
@@ -428,9 +422,7 @@
       }
 
       function getRecoveredRecurringData(paymentId, pendingSignup) {
-        return (
-          readRecurringData(paymentId) || pendingSignup?.recurringData || null
-        );
+        return readRecurringData(paymentId);
       }
 
       function hasCompleteRecurringData(recurringData) {
@@ -500,6 +492,15 @@
           return;
         }
 
+        if (context.recoveryToken) {
+          messageArea.innerHTML = `
+            <div class="message warning">
+                Encontramos sua compra neste navegador. Finalize sua senha abaixo para concluir o acesso sem pagar novamente.
+            </div>
+        `;
+          return;
+        }
+
         const recurringData = getRecoveredRecurringData(
           context.paymentId,
           context.pendingSignup,
@@ -508,7 +509,7 @@
         if (hasCompleteRecurringData(recurringData)) {
           messageArea.innerHTML = `
             <div class="message warning">
-                Encontramos sua compra neste navegador. Finalize sua senha abaixo para concluir o acesso sem pagar novamente.
+                Encontramos sua compra nesta sessao. Finalize sua senha abaixo para concluir o acesso sem pagar novamente.
             </div>
         `;
           return;
@@ -531,7 +532,6 @@
             `;
           }
         } catch (error) {
-          // Ignore recovery lookup failures and keep manual retry available.
         }
       }
 
@@ -569,25 +569,19 @@
             return;
           }
 
-          let recurringData = null;
-          recurringData = getRecoveredRecurringData(
-            paymentId,
-            pendingContext.pendingSignup,
-          );
+          if (plan !== "free" && !recoveryToken) {
+            const recurringData = getRecoveredRecurringData(
+              paymentId,
+              pendingContext.pendingSignup,
+            );
 
-          console.log("PAYMENT ID:", paymentId);
-          console.log("RECURRING DATA:", recurringData);
-
-          if (plan !== "free") {
             if (!hasCompleteRecurringData(recurringData)) {
               messageArea.innerHTML = `
                 <div class="message error">
-                    Encontramos sua compra, mas nao foi possivel concluir o cadastro automaticamente.
-                    Volte para a pagina de planos e use a opcao Retomar cadastro para continuar.
+                    Nao foi possivel confirmar o contexto do pagamento nesta pagina.
+                    Volte para a pagina de planos e toque em Retomar cadastro para continuar.
                 </div>
             `;
-
-              console.error("DADOS RECORRENTES INCOMPLETOS:", recurringData);
               return;
             }
           }
@@ -599,19 +593,11 @@
             password,
             plan,
             billingCycle: "monthly",
-            paymentStatus:
-              plan !== "free"
-                ? recurringData?.paymentStatus ||
-                  recurringData?.paymentRawPayload?.payment?.status ||
-                  "RECEIVED"
-                : undefined,
+            paymentStatus: plan !== "free" ? "RECEIVED" : undefined,
             paymentProvider: plan !== "free" ? "asaas" : undefined,
             paymentId: plan !== "free" ? paymentId : undefined,
             recoveryToken: plan !== "free" ? recoveryToken : undefined,
-            ...(recurringData || {}),
           };
-
-          console.log("ENVIANDO PARA /api/signup:", payload);
 
           try {
             const response = await fetch("/api/signup", {
@@ -621,8 +607,6 @@
             });
 
             const data = await response.json();
-
-            console.log("RETORNO /api/signup:", data);
 
             if (response.ok && data.success) {
               messageArea.innerHTML =
@@ -643,7 +627,6 @@
                 "</div>";
             }
           } catch (error) {
-            console.error("Signup Error:", error);
             messageArea.innerHTML =
               '<div class="message error">Erro de conexão. Tente novamente!</div>';
           }

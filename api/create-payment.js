@@ -12,9 +12,40 @@ const ASAAS_API_BASE_URL =
     ? "https://api-sandbox.asaas.com/v3"
     : "https://api.asaas.com/v3");
 
-function setCorsHeaders(res) {
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://fitbodyproapp.com",
+  "https://www.fitbodyproapp.com",
+];
+
+function getAllowedOrigins() {
+  const configured = String(process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured])];
+}
+
+function setSecurityHeaders(res) {
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+}
+
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  const allowedOrigins = getAllowedOrigins();
+  const allowOrigin = origin && allowedOrigins.includes(origin) ? origin : null;
+
   res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  if (allowOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Vary", "Origin");
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
@@ -627,7 +658,8 @@ async function createCardPayment(req, reqBody) {
 }
 
 module.exports = async function handler(req, res) {
-  setCorsHeaders(res);
+  setSecurityHeaders(res);
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -637,6 +669,13 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({
       success: false,
       message: "Método não permitido",
+    });
+  }
+
+  if (req.headers.origin && !getAllowedOrigins().includes(req.headers.origin)) {
+    return res.status(403).json({
+      success: false,
+      message: "Origem não permitida.",
     });
   }
 
@@ -689,6 +728,31 @@ module.exports = async function handler(req, res) {
     const recoveryToken = approved
       ? createRecoveryToken(recoveryPayload)
       : null;
+    const recurringData =
+      approved && recoveryToken
+        ? null
+        : {
+            paymentStatus: payment?.status || null,
+            paymentAmount: payment?.value ?? getSelectedPlan(plan)?.price ?? null,
+            paymentCurrency: "BRL",
+            providerReference:
+              payment?.invoiceNumber ||
+              payment?.externalReference ||
+              payment?.id ||
+              null,
+            paymentDescription:
+              payment?.description || getSelectedPlan(plan)?.title || null,
+            providerCustomerId: customer?.id || null,
+            providerCardId: creditCardToken || subscription?.id || null,
+            providerPaymentMethodToken: creditCardToken || null,
+            paymentMethodId: "credit_card",
+            issuerId: cardBrand,
+            cardBrand,
+            cardLastFour,
+            firstPaymentProviderPaymentId: payment?.id || null,
+            remoteIp: remoteIp || null,
+            providerSubscriptionId: subscription?.id || null,
+          };
 
     return res.status(200).json({
       version: "asaas-first-charge-plus-subscription-v1",
@@ -702,38 +766,7 @@ module.exports = async function handler(req, res) {
       statusDetail: payment?.status || null,
       message: buildStatusMessage(payment?.status),
       recurringReady: Boolean(customer?.id && subscription?.id),
-      recurringData: {
-        paymentStatus: payment?.status || null,
-        paymentAmount: payment?.value ?? getSelectedPlan(plan)?.price ?? null,
-        paymentCurrency: "BRL",
-        providerReference:
-          payment?.invoiceNumber ||
-          payment?.externalReference ||
-          payment?.id ||
-          null,
-        paymentDescription:
-          payment?.description || getSelectedPlan(plan)?.title || null,
-        providerCustomerId: customer?.id || null,
-        providerCardId: creditCardToken || subscription?.id || null,
-        providerPaymentMethodToken: creditCardToken || null,
-        paymentMethodId: "credit_card",
-        issuerId: cardBrand,
-        cardBrand,
-        cardLastFour,
-        firstPaymentProviderPaymentId: payment?.id || null,
-        remoteIp: remoteIp || null,
-        creditCardHolderInfo: creditCardHolderInfo || null,
-        providerSubscriptionId: subscription?.id || null,
-        paymentRawPayload: {
-          customer,
-          payment,
-          tokenization,
-          subscription,
-          creditCardToken: creditCardToken || null,
-          remoteIp: remoteIp || null,
-          creditCardHolderInfo: creditCardHolderInfo || null,
-        },
-      },
+      recurringData,
     });
   } catch (error) {
     console.error("Asaas Payment Error:", error);
@@ -743,7 +776,6 @@ module.exports = async function handler(req, res) {
       approved: false,
       recurringReady: false,
       message: buildCustomerFacingErrorMessage(error),
-      error: error.data || error.message,
     });
   }
 };

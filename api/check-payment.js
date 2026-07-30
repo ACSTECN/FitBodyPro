@@ -5,6 +5,30 @@ const ASAAS_API_BASE_URL =
     ? "https://api-sandbox.asaas.com/v3"
     : "https://api.asaas.com/v3");
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://fitbodyproapp.com",
+  "https://www.fitbodyproapp.com",
+];
+
+function getAllowedOrigins() {
+  const configured = String(process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured])];
+}
+
+function setSecurityHeaders(res) {
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+}
+
 function isApprovedStatus(status) {
   return ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"].includes(
     String(status || "").toUpperCase(),
@@ -12,8 +36,17 @@ function isApprovedStatus(status) {
 }
 
 module.exports = async function handler(req, res) {
+  setSecurityHeaders(res);
+
+  const origin = req.headers.origin;
+  const allowedOrigins = getAllowedOrigins();
+  const allowOrigin = origin && allowedOrigins.includes(origin) ? origin : null;
+
   res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  if (allowOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Vary", "Origin");
+  }
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,OPTIONS,PATCH,DELETE,POST,PUT",
@@ -29,6 +62,10 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Método não permitido" });
+  }
+
+  if (origin && !allowOrigin) {
+    return res.status(403).json({ message: "Origem não permitida." });
   }
 
   try {
@@ -72,7 +109,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       approved: isApprovedStatus(paymentData.status),
       status: paymentData.status,
-      data: paymentData,
     });
   } catch (error) {
     console.error("Check Payment Error:", error);

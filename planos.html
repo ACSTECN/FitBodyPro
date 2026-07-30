@@ -1442,15 +1442,12 @@
 
       function readPaymentContact() {
         return (
-          safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-          safeStorageGet(localStorage, PAYMENT_CONTACT_STORAGE_KEY) ||
-          {}
+          safeStorageGet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY) || {}
         );
       }
 
       function storePaymentContact(contact) {
         safeStorageSet(sessionStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
-        safeStorageSet(localStorage, PAYMENT_CONTACT_STORAGE_KEY, contact);
       }
 
       function cleanZipCode(value) {
@@ -1648,11 +1645,7 @@
       function readRecurringData(paymentId) {
         if (!paymentId) return null;
 
-        return (
-          safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId)) ||
-          safeStorageGet(localStorage, buildRecurringStorageKey(paymentId)) ||
-          null
-        );
+        return safeStorageGet(sessionStorage, buildRecurringStorageKey(paymentId));
       }
 
       function readPendingSignup(paymentId) {
@@ -1699,21 +1692,15 @@
           buildRecurringStorageKey(paymentId),
           recurringData,
         );
-        safeStorageSet(
-          localStorage,
-          buildRecurringStorageKey(paymentId),
-          recurringData,
-        );
       }
 
       function storePendingSignup(
         paymentId,
         plan,
-        recurringData,
         contact,
         recoveryToken,
       ) {
-        if (!paymentId || !plan || !recurringData) return;
+        if (!paymentId || !plan) return;
 
         const existingRecord = readPendingSignup(paymentId);
         const now = new Date().toISOString();
@@ -1721,7 +1708,6 @@
         persistPendingSignupRecord({
           paymentId,
           plan,
-          recurringData,
           recoveryToken: recoveryToken || existingRecord?.recoveryToken || null,
           contact: contact || existingRecord?.contact || null,
           status: "payment_approved_pending_signup",
@@ -1734,7 +1720,6 @@
         if (!paymentId) return;
 
         safeStorageRemove(sessionStorage, buildRecurringStorageKey(paymentId));
-        safeStorageRemove(localStorage, buildRecurringStorageKey(paymentId));
         safeStorageRemove(
           localStorage,
           buildPendingSignupStorageKey(paymentId),
@@ -1747,6 +1732,21 @@
         if (latestPaymentId === paymentId) {
           safeStorageRemove(localStorage, LATEST_PENDING_SIGNUP_STORAGE_KEY);
         }
+      }
+
+      function clearCardInputs() {
+        const ids = [
+          "paymentCardNumber",
+          "paymentExpiryMonth",
+          "paymentExpiryYear",
+          "paymentCvv",
+          "paymentCpfCnpj",
+        ];
+
+        ids.forEach((id) => {
+          const input = document.getElementById(id);
+          if (input) input.value = "";
+        });
       }
 
       function renderPendingSignupNotice() {
@@ -1919,8 +1919,7 @@
           });
 
           const data = await response.json();
-
-          console.log("RETORNO /api/create-payment:", data);
+          clearCardInputs();
 
           if (response.ok && data.status === "AWAITING_RISK_ANALYSIS") {
             messageArea.innerHTML = `
@@ -1940,13 +1939,20 @@
             return;
           }
 
-          if (data.paymentId && data.recurringData) {
+          if (data.paymentId && data.recurringData && !data.recoveryToken) {
             storeRecurringData(data.paymentId, data.recurringData);
+          }
+
+          if (data.paymentId) {
+            const minimalContact = {
+              fullName: preferredPayer.fullName || "",
+              email: preferredPayer.email || "",
+              phone: preferredPayer.phone || "",
+            };
             storePendingSignup(
               data.paymentId,
               selectedPlan,
-              data.recurringData,
-              preferredPayer,
+              minimalContact,
               data.recoveryToken,
             );
           }
@@ -1985,8 +1991,6 @@
             </div>
         `;
         } catch (error) {
-          console.error("Erro pagamento cartão:", error);
-
           messageArea.innerHTML = `
             <div class="message error">
                 ${error.message || "Erro ao processar pagamento com cartão."}
@@ -2279,7 +2283,6 @@
                 "</div>";
             }
           } catch (error) {
-            console.error("Signup Error:", error);
             messageArea.innerHTML =
               '<div class="message error">Erro de conexão. Tente novamente!</div>';
           }
